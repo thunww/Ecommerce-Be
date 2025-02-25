@@ -1,58 +1,43 @@
-// models/shop_review.js
+// models/shopReview.js
 const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
+const Shop = require('./shop'); // Import Shop model
+const User = require('./user'); // Import User model
 
-module.exports = (sequelize) => {
-  class ShopReview extends Model {
-    static associate(models) {
-      this.belongsTo(models.Shop, {
-        foreignKey: 'shop_id',
-        as: 'shop',
-      });
-      this.belongsTo(models.User, {
-        foreignKey: 'user_id',
-        as: 'user',
-      });
-    }
-  }
+class ShopReview extends Model {}
 
-  ShopReview.init(
-    {
-      shop_review_id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      shop_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      user_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      rating: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        validate: {
-          min: 1,
-          max: 5,
-        },
-      },
-      comment: {
-        type: DataTypes.TEXT,
-      },
-      created_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
+ShopReview.init(
+  {
+    rating: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        min: 1,
+        max: 5,
       },
     },
-    {
-      sequelize,
-      modelName: 'ShopReview',
-      tableName: 'Shop_Reviews',
-      timestamps: false,
-    }
-  );
+    comment: {
+      type: DataTypes.TEXT,
+    },
+  },
+  {
+    sequelize,
+    modelName: 'ShopReview',
+    tableName: 'Shop_Reviews',
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+  }
+);
 
-  return ShopReview;
-};
+ShopReview.belongsTo(Shop, {
+  foreignKey: 'shop_id',
+  onDelete: 'CASCADE',
+});
+
+ShopReview.belongsTo(User, {
+  foreignKey: 'user_id',
+  onDelete: 'CASCADE',
+});
+
+module.exports = ShopReview;

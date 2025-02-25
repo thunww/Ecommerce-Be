@@ -1,46 +1,46 @@
-/** @type {import('sequelize-cli').Migration} */
 'use strict';
 
 module.exports = {
-  up: async (queryInterface, Sequelize) => {
+  async up(queryInterface, Sequelize) {
     await queryInterface.createTable('Categories', {
       category_id: {
-        type: Sequelize.INTEGER,
-        primaryKey: true,
+        allowNull: false,
         autoIncrement: true,
+        primaryKey: true,
+        type: Sequelize.INTEGER
       },
       category_name: {
         type: Sequelize.STRING(100),
-        allowNull: false,
+        allowNull: false
       },
       parent_id: {
         type: Sequelize.INTEGER,
         allowNull: true,
         references: {
-          model: 'Categories', // self-referencing for parent-child relationships
-          key: 'category_id',
-        },
+          model: 'Categories',
+          key: 'category_id'
+        }
       },
       description: {
         type: Sequelize.STRING(255),
-        allowNull: true,
+        allowNull: true
       },
       image: {
         type: Sequelize.STRING(255),
-        allowNull: true,
+        allowNull: true
       },
       created_at: {
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW,
+        allowNull: false,
+        type: Sequelize.DATE
       },
       updated_at: {
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW,
-      },
+        allowNull: false,
+        type: Sequelize.DATE
+      }
     });
   },
 
-  down: async (queryInterface, Sequelize) => {
+  async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Categories');
-  },
+  }
 };

@@ -1,44 +1,46 @@
-// migrations/xxxx-create-user-roles.js
-'use strict';
-
-/** @type {import('sequelize-cli').Migration} */
+// migrations/[timestamp]-create-userRoles.js
 module.exports = {
-  async up(queryInterface, Sequelize) {
+  up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('User_Roles', {
       user_role_id: {
-        allowNull: false,
+        type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER,
+        allowNull: false,
       },
       user_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Users',
+          model: 'Users', // Tên bảng Users
           key: 'user_id',
         },
-        onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
       role_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Roles',
+          model: 'Roles', // Tên bảng Roles
           key: 'role_id',
         },
-        onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
       assigned_at: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
+      created_at: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+      },
+      updated_at: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+      },
     });
   },
-
-  async down(queryInterface, Sequelize) {
+  down: async (queryInterface) => {
     await queryInterface.dropTable('User_Roles');
   },
 };

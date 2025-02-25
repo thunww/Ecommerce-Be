@@ -1,84 +1,54 @@
-// models/suborder.js
+// models/sub_order.js
 const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
+const Order = require('./order');
+const Shop = require('./shop');
+const Payment = require('./payment');
+const Shipment = require('./shipment');
+const OrderItem = require('./orderitem');
 
-module.exports = (sequelize) => {
-  class SubOrder extends Model {
-    static associate(models) {
-      // SubOrder belongs to Order
-      this.belongsTo(models.Order, {
-        foreignKey: 'order_id',
-        as: 'order',
-      });
+class SubOrder extends Model {}
 
-      // SubOrder belongs to Shop
-      this.belongsTo(models.Shop, {
-        foreignKey: 'shop_id',
-        as: 'shop',
-      });
-
-      // SubOrder has many OrderItems
-      this.hasMany(models.OrderItem, {
-        foreignKey: 'sub_order_id',
-        as: 'order_items',
-      });
-
-      // SubOrder has one Payment
-      this.hasOne(models.Payment, {
-        foreignKey: 'sub_order_id',
-        as: 'payment',
-      });
-
-      // SubOrder has one Shipment
-      this.hasOne(models.Shipment, {
-        foreignKey: 'sub_order_id',
-        as: 'shipment',
-      });
-    }
-  }
-
-  SubOrder.init(
-    {
-      sub_order_id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      order_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      shop_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      total_price: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
-      },
-      shipping_fee: {
-        type: DataTypes.DECIMAL(10, 2),
-        defaultValue: 0.0,
-      },
-      status: {
-        type: DataTypes.ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled'),
-        defaultValue: 'pending',
-      },
-      created_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-      updated_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
+SubOrder.init(
+  {
+    total_price: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+    shipping_fee: {
+      type: DataTypes.DECIMAL(10, 2),
+      defaultValue: 0.00,
+    },
+    status: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: 'pending',
+      validate: {
+        isIn: [['pending', 'processing', 'shipped', 'delivered', 'cancelled']],
       },
     },
-    {
-      sequelize,
-      modelName: 'SubOrder',
-      tableName: 'Sub_Orders',
-      timestamps: false,
-    }
-  );
+  },
+  {
+    sequelize,
+    modelName: 'SubOrder',
+    tableName: 'Sub_Orders',
+    timestamps: true,
+  }
+);
 
-  return SubOrder;
-};
+// Quan hệ SubOrder - Order: Một SubOrder thuộc về một Order
+SubOrder.belongsTo(Order, { foreignKey: 'order_id' });
+
+// Quan hệ SubOrder - Shop: Một SubOrder thuộc về một Shop
+SubOrder.belongsTo(Shop, { foreignKey: 'shop_id' });
+
+// Quan hệ SubOrder - Payment: Một SubOrder có thể có một Payment
+SubOrder.hasOne(Payment, { foreignKey: 'sub_order_id' });
+
+// Quan hệ SubOrder - Shipment: Một SubOrder có thể có một Shipment
+SubOrder.hasOne(Shipment, { foreignKey: 'sub_order_id' });
+
+// Quan hệ SubOrder - OrderItem: Một SubOrder có thể có nhiều OrderItem
+SubOrder.hasMany(OrderItem, { foreignKey: 'sub_order_id' });
+
+module.exports = SubOrder;

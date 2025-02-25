@@ -1,95 +1,43 @@
-// models/shop.js
 const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
+const User = require('./user');
+const Product = require('./product');
+const SubOrder = require('./suborder');
+const ShopReview = require('./shopreview');
 
-module.exports = (sequelize) => {
-  class Shop extends Model {
-    static associate(models) {
-      // Shop belongs to User (owner)
-      this.belongsTo(models.User, {
-        foreignKey: 'owner_id',
-        as: 'owner',
-      });
+class Shop extends Model {}
 
-      // Shop has many Products
-      this.hasMany(models.Product, {
-        foreignKey: 'shop_id',
-        as: 'products',
-      });
+Shop.init({
+  shop_name: { type: DataTypes.STRING(100), allowNull: false, unique: true },
+  description: { type: DataTypes.TEXT, allowNull: true },
+  logo: { type: DataTypes.STRING(255), allowNull: true },
+  banner: { type: DataTypes.STRING(255), allowNull: true },
+  rating: { type: DataTypes.DECIMAL(3,2), defaultValue: 0.00 },
+  followers: { type: DataTypes.INTEGER, defaultValue: 0 },
+  total_products: { type: DataTypes.INTEGER, defaultValue: 0 },
+  address: { type: DataTypes.STRING(255), allowNull: true },
+  status: { type: DataTypes.STRING(20), defaultValue: 'active', validate: { isIn: [['active', 'suspended', 'closed']] } },
+}, {
+  sequelize,
+  modelName: 'Shop',
+  timestamps: true,
+  tableName: 'Shops'
+});
 
-      // Shop has many ShopReviews
-      this.hasMany(models.ShopReview, {
-        foreignKey: 'shop_id',
-        as: 'reviews',
-      });
+// Quan hệ: Shop -> User (1:N)
+Shop.belongsTo(User, { foreignKey: 'owner_id' });
+User.hasMany(Shop, { foreignKey: 'owner_id' });
 
-      // Shop has many SubOrders (vì mỗi shop có thể có nhiều đơn hàng con)
-      this.hasMany(models.SubOrder, {
-        foreignKey: 'shop_id',
-        as: 'sub_orders',
-      });
-    }
-  }
+// Quan hệ: Shop -> Product (1:N)
+Shop.hasMany(Product, { foreignKey: 'shop_id' });
+Product.belongsTo(Shop, { foreignKey: 'shop_id' });
 
-  Shop.init(
-    {
-      shop_id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      owner_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      shop_name: {
-        type: DataTypes.STRING(100),
-        allowNull: false,
-        unique: true,
-      },
-      description: {
-        type: DataTypes.TEXT,
-      },
-      logo: {
-        type: DataTypes.STRING(255),
-      },
-      banner: {
-        type: DataTypes.STRING(255),
-      },
-      rating: {
-        type: DataTypes.DECIMAL(3, 2),
-        defaultValue: 0.0,
-      },
-      followers: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-      },
-      total_products: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-      },
-      address: {
-        type: DataTypes.STRING(255),
-      },
-      status: {
-        type: DataTypes.ENUM('active', 'suspended', 'closed'),
-        defaultValue: 'active',
-      },
-      created_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-      updated_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-    },
-    {
-      sequelize,
-      modelName: 'Shop',
-      tableName: 'Shops',
-      timestamps: false,
-    }
-  );
+// Quan hệ: Shop -> ShopReview (1:N)
+Shop.hasMany(ShopReview, { foreignKey: 'shop_id' });
+ShopReview.belongsTo(Shop, { foreignKey: 'shop_id' });
 
-  return Shop;
-};
+// Quan hệ: Shop -> SubOrder (1:N)
+Shop.hasMany(SubOrder, { foreignKey: 'shop_id' });
+SubOrder.belongsTo(Shop, { foreignKey: 'shop_id' });
+
+module.exports = Shop;

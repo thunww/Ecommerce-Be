@@ -1,28 +1,38 @@
-/** @type {import('sequelize-cli').Migration} */
-'use strict';
-
+// migrations/[timestamp]-create-payments.js
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('Payments', {
       payment_id: {
         type: Sequelize.INTEGER,
-        primaryKey: true,
         autoIncrement: true,
+        primaryKey: true,
+        allowNull: false,
       },
       sub_order_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
+        references: {
+          model: 'Sub_Orders', // Tên bảng Sub_Orders
+          key: 'sub_order_id',
+        },
+        onDelete: 'CASCADE',
       },
       payment_method: {
-        type: Sequelize.ENUM('cod', 'credit_card', 'momo', 'bank_transfer'),
+        type: Sequelize.STRING,
         allowNull: false,
+        validate: {
+          isIn: [['cod', 'credit_card', 'momo', 'bank_transfer']],
+        },
       },
       status: {
-        type: Sequelize.ENUM('pending', 'paid', 'failed', 'refunded'),
+        type: Sequelize.STRING,
         defaultValue: 'pending',
+        validate: {
+          isIn: [['pending', 'paid', 'failed', 'refunded']],
+        },
       },
       transaction_id: {
-        type: Sequelize.STRING(100),
+        type: Sequelize.STRING,
         unique: true,
       },
       amount: {
@@ -31,15 +41,19 @@ module.exports = {
       },
       paid_at: {
         type: Sequelize.DATE,
+        allowNull: true,
       },
       created_at: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+      },
+      updated_at: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
     });
   },
-
-  down: async (queryInterface, Sequelize) => {
+  down: async (queryInterface) => {
     await queryInterface.dropTable('Payments');
   },
 };

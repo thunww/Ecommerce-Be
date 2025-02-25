@@ -1,15 +1,11 @@
-// migrations/xxxx-create-shop-reviews.js
-'use strict';
-
-/** @type {import('sequelize-cli').Migration} */
+// migrations/2025xxxxxx-create-shop-review.js
 module.exports = {
-  async up(queryInterface, Sequelize) {
+  up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('Shop_Reviews', {
-      shop_review_id: {
-        allowNull: false,
+      review_id: {
+        type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER,
       },
       shop_id: {
         type: Sequelize.INTEGER,
@@ -18,7 +14,6 @@ module.exports = {
           model: 'Shops',
           key: 'shop_id',
         },
-        onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
       user_id: {
@@ -28,7 +23,6 @@ module.exports = {
           model: 'Users',
           key: 'user_id',
         },
-        onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
       rating: {
@@ -44,12 +38,16 @@ module.exports = {
       },
       created_at: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        defaultValue: Sequelize.NOW,
+      },
+      updated_at: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
       },
     });
   },
 
-  async down(queryInterface, Sequelize) {
+  down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('Shop_Reviews');
   },
 };

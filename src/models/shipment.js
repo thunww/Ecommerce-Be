@@ -1,61 +1,57 @@
 // models/shipment.js
 const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
+const SubOrder = require('./suborder');
+const User = require('./user');
 
-module.exports = (sequelize) => {
-  class Shipment extends Model {
-    static associate(models) {
-      this.belongsTo(models.SubOrder, {
-        foreignKey: 'sub_order_id',
-        as: 'subOrder',
-      });
-      this.belongsTo(models.User, {
-        foreignKey: 'shipper_id',
-        as: 'shipper',
-      });
-    }
-  }
+class Shipment extends Model {}
 
-  Shipment.init(
-    {
-      shipment_id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      sub_order_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      shipper_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      tracking_number: {
-        type: DataTypes.STRING(50),
-        unique: true,
-      },
-      status: {
-        type: DataTypes.ENUM('waiting', 'in_transit', 'delivered', 'failed'),
-        defaultValue: 'waiting',
-      },
-      estimated_delivery_date: {
-        type: DataTypes.DATE,
-      },
-      actual_delivery_date: {
-        type: DataTypes.DATE,
-      },
-      created_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
+Shipment.init(
+  {
+    tracking_number: {
+      type: DataTypes.STRING(50),
+      unique: true,
+      allowNull: false,
     },
-    {
-      sequelize,
-      modelName: 'Shipment',
-      tableName: 'Shipments',
-      timestamps: false,
-    }
-  );
+    status: {
+      type: DataTypes.ENUM('waiting', 'in_transit', 'delivered', 'failed'),
+      defaultValue: 'waiting',
+    },
+    estimated_delivery_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    actual_delivery_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+  },
+  {
+    sequelize,
+    modelName: 'Shipment',
+    tableName: 'Shipments',
+    timestamps: true,
+  }
+);
 
-  return Shipment;
-};
+// Quan hệ với SubOrder
+Shipment.belongsTo(SubOrder, {
+  foreignKey: 'sub_order_id',
+  onDelete: 'CASCADE',
+});
+
+// Quan hệ với User (shipper)
+Shipment.belongsTo(User, {
+  foreignKey: 'shipper_id',
+  onDelete: 'CASCADE',
+});
+
+module.exports = Shipment;

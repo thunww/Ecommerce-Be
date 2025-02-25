@@ -1,59 +1,52 @@
-// models/product_review.js
+// models/productReview.js
 const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
+const Product = require('./product');
+const User = require('./user');
 
-module.exports = (sequelize) => {
-  class ProductReview extends Model {
-    static associate(models) {
-      this.belongsTo(models.Product, {
-        foreignKey: 'product_id',
-        as: 'product',
-      });
-      this.belongsTo(models.User, {
-        foreignKey: 'user_id',
-        as: 'user',
-      });
-    }
-  }
+class ProductReview extends Model {}
 
-  ProductReview.init(
-    {
-      review_id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      product_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      user_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      rating: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        validate: {
-          min: 1,
-          max: 5,
-        },
-      },
-      comment: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
-      created_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
+ProductReview.init(
+  {
+    rating: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        min: 1,
+        max: 5,
       },
     },
-    {
-      sequelize,
-      modelName: 'ProductReview',
-      tableName: 'Product_Reviews',
-      timestamps: false,
-    }
-  );
+    comment: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+  },
+  {
+    sequelize,
+    modelName: 'ProductReview',
+    tableName: 'Product_Reviews',
+    timestamps: true,
+  }
+);
 
-  return ProductReview;
-};
+// Quan hệ với Product
+ProductReview.belongsTo(Product, {
+  foreignKey: 'product_id',
+  onDelete: 'CASCADE',
+});
+
+// Quan hệ với User
+ProductReview.belongsTo(User, {
+  foreignKey: 'user_id',
+  onDelete: 'CASCADE',
+});
+
+module.exports = ProductReview;

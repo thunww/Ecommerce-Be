@@ -1,38 +1,34 @@
-// migrations/xxxx-create-shipments.js
-'use strict';
-
-/** @type {import('sequelize-cli').Migration} */
+// migrations/[timestamp]-create-shipments.js
 module.exports = {
-  async up(queryInterface, Sequelize) {
+  up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('Shipments', {
       shipment_id: {
-        allowNull: false,
+        type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER,
+        allowNull: false,
       },
       sub_order_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Sub_Orders',
+          model: 'Sub_Orders', // Tên bảng Sub_Orders
           key: 'sub_order_id',
         },
-        onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
       shipper_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Users',
+          model: 'Users', // Tên bảng Users
           key: 'user_id',
         },
-        onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
       tracking_number: {
         type: Sequelize.STRING(50),
+        allowNull: false,
         unique: true,
       },
       status: {
@@ -41,18 +37,23 @@ module.exports = {
       },
       estimated_delivery_date: {
         type: Sequelize.DATE,
+        allowNull: true,
       },
       actual_delivery_date: {
         type: Sequelize.DATE,
+        allowNull: true,
       },
       created_at: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
+      updated_at: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+      },
     });
   },
-
-  async down(queryInterface, Sequelize) {
+  down: async (queryInterface) => {
     await queryInterface.dropTable('Shipments');
   },
 };

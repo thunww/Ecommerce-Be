@@ -1,13 +1,12 @@
-/** @type {import('sequelize-cli').Migration} */
-'use strict';
-
+// migrations/[timestamp]-create-coupons.js
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('Coupons', {
       coupon_id: {
         type: Sequelize.INTEGER,
-        primaryKey: true,
         autoIncrement: true,
+        primaryKey: true,
+        allowNull: false,
       },
       code: {
         type: Sequelize.STRING(20),
@@ -40,12 +39,56 @@ module.exports = {
       },
       created_at: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+      },
+      updated_at: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+      },
+    });
+
+    await queryInterface.createTable('User_Coupons', {
+      user_coupon_id: {
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+        allowNull: false,
+      },
+      user_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'Users', // liên kết với bảng Users
+          key: 'user_id',
+        },
+        onDelete: 'CASCADE',
+      },
+      coupon_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'Coupons', // liên kết với bảng Coupons
+          key: 'coupon_id',
+        },
+        onDelete: 'CASCADE',
+      },
+      used_at: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+      created_at: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+      },
+      updated_at: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
     });
   },
 
-  down: async (queryInterface, Sequelize) => {
+  down: async (queryInterface) => {
+    await queryInterface.dropTable('User_Coupons');
     await queryInterface.dropTable('Coupons');
   },
 };

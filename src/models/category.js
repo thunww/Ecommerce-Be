@@ -1,69 +1,40 @@
-// models/category.js
 const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
+const Product = require('./product'); // Import Product model để khai báo quan hệ
 
-module.exports = (sequelize) => {
-  class Category extends Model {
-    static associate(models) {
-      // Category may have many child categories (self-referencing association)
-      this.hasMany(models.Category, {
-        foreignKey: 'parent_id',
-        as: 'subcategories',
-      });
+class Category extends Model {}
 
-      // Category belongs to a parent category
-      this.belongsTo(models.Category, {
-        foreignKey: 'parent_id',
-        as: 'parentCategory',
-      });
-
-      // Category has many Products
-      this.hasMany(models.Product, {
-        foreignKey: 'category_id',
-        as: 'products',
-      });
-    }
-  }
-
-  Category.init(
-    {
-      category_id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      category_name: {
-        type: DataTypes.STRING(100),
-        allowNull: false,
-      },
-      parent_id: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
-      description: {
-        type: DataTypes.STRING(255),
-        allowNull: true,
-      },
-      image: {
-        type: DataTypes.STRING(255),
-        allowNull: true,
-      },
-      created_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-      updated_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
+Category.init(
+  {
+    category_name: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
     },
-    {
-      sequelize,
-      modelName: 'Category',
-      tableName: 'Categories',
-      timestamps: false,
-      underscored: true,
-    }
-  );
+    parent_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    description: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    image: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+  },
+  {
+    sequelize,
+    modelName: 'Category',
+    tableName: 'Categories',
+    timestamps: true,
+  }
+);
 
-  return Category;
-};
+// Quan hệ Category với Category (Danh mục con thuộc về danh mục cha)
+Category.belongsTo(Category, { foreignKey: 'parent_id', as: 'parentCategory' });
+
+// Quan hệ Category với nhiều Product
+Category.hasMany(Product, { foreignKey: 'category_id' });
+
+module.exports = Category;

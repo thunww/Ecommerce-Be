@@ -1,69 +1,50 @@
 // models/orderItem.js
 const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
+const SubOrder = require('./suborder');
+const Product = require('./product');
 
-module.exports = (sequelize) => {
-  class OrderItem extends Model {
-    static associate(models) {
-      // OrderItem belongs to SubOrder
-      this.belongsTo(models.SubOrder, {
-        foreignKey: 'sub_order_id',
-        as: 'sub_order',
-      });
+class OrderItem extends Model {}
 
-      // OrderItem belongs to Product
-      this.belongsTo(models.Product, {
-        foreignKey: 'product_id',
-        as: 'product',
-      });
-    }
-  }
-
-  OrderItem.init(
-    {
-      order_item_id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      sub_order_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      product_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      quantity: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      price: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
-      },
-      discount: {
-        type: DataTypes.DECIMAL(5, 2),
-        defaultValue: 0.00,
-      },
-      total: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
-        get() {
-          const quantity = this.getDataValue('quantity') || 0;
-          const price = this.getDataValue('price') || 0;
-          const discount = this.getDataValue('discount') || 0;
-          return (quantity * price - discount).toFixed(2);
-        },
+OrderItem.init(
+  {
+    quantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    price: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+    discount: {
+      type: DataTypes.DECIMAL(5, 2),
+      defaultValue: 0.00,
+    },
+    total: {
+      type: DataTypes.VIRTUAL,
+      get() {
+        return (this.quantity * this.price) - this.discount;
       },
     },
-    {
-      sequelize,
-      modelName: 'OrderItem',
-      tableName: 'Order_Items',
-      timestamps: false,
-      underscored: true,
-    }
-  );
+  },
+  {
+    sequelize,
+    modelName: 'OrderItem',
+    tableName: 'Order_Items',
+    timestamps: true,
+  }
+);
 
-  return OrderItem;
-};
+// Quan hệ với SubOrder
+OrderItem.belongsTo(SubOrder, {
+  foreignKey: 'sub_order_id',
+  onDelete: 'CASCADE',
+});
+
+// Quan hệ với Product
+OrderItem.belongsTo(Product, {
+  foreignKey: 'product_id',
+  onDelete: 'CASCADE',
+});
+
+module.exports = OrderItem;
