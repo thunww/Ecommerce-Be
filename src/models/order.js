@@ -1,103 +1,29 @@
-// models/order.js
 const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
+const User = require('./user');
+const SubOrder = require('./suborder');
 
-module.exports = (sequelize) => {
-  class Order extends Model {
-    static associate(models) {
-      // Order belongs to a User
-      this.belongsTo(models.User, {
-        foreignKey: 'user_id',
-        as: 'user',
-      });
+class Order extends Model {}
 
-      // Order has many SubOrders
-      this.hasMany(models.SubOrder, {
-        foreignKey: 'order_id',
-        as: 'sub_orders',
-      });
+Order.init({
+  total_price: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
+  payment_status: { type: DataTypes.STRING(20), defaultValue: 'unpaid', validate: { isIn: [['unpaid', 'paid', 'refunded']] } },
+  shipping_fee: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0.00 },
+  note: { type: DataTypes.STRING(255), allowNull: true },
+  status: { type: DataTypes.STRING(20), defaultValue: 'pending', validate: { isIn: [['pending', 'processing', 'shipped', 'delivered', 'cancelled']] } },
+}, {
+  sequelize,
+  modelName: 'Order',
+  timestamps: true,
+  tableName: 'Orders'
+});
 
-      // Order has many OrderItems through SubOrders
-      this.hasMany(models.OrderItem, {
-        foreignKey: 'order_id',
-        as: 'order_items',
-      });
+// Quan hệ: Order -> User (N:1)
+Order.belongsTo(User, { foreignKey: 'user_id' });
+User.hasMany(Order, { foreignKey: 'user_id' });
 
-      // Order has one Payment
-      this.hasOne(models.Payment, {
-        foreignKey: 'order_id',
-        as: 'payment',
-      });
+// Quan hệ: Order -> SubOrder (1:N)
+Order.hasMany(SubOrder, { foreignKey: 'order_id' });
+SubOrder.belongsTo(Order, { foreignKey: 'order_id' });
 
-      // Order has one Shipment
-      this.hasOne(models.Shipment, {
-        foreignKey: 'order_id',
-        as: 'shipment',
-      });
-
-      // Order can have many UserCoupons through UserCoupon table
-      this.belongsToMany(models.Coupon, {
-        through: models.UserCoupon,
-        foreignKey: 'order_id',
-        otherKey: 'coupon_id',
-        as: 'coupons',
-      });
-
-      // Order has many Notifications
-      this.hasMany(models.Notification, {
-        foreignKey: 'order_id',
-        as: 'notifications',
-      });
-    }
-  }
-
-  Order.init(
-    {
-      order_id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      user_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      total_price: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
-      },
-      payment_status: {
-        type: DataTypes.ENUM('unpaid', 'paid', 'refunded'),
-        defaultValue: 'unpaid',
-      },
-      shipping_fee: {
-        type: DataTypes.DECIMAL(10, 2),
-        defaultValue: 0.00,
-      },
-      note: {
-        type: DataTypes.STRING(255),
-        allowNull: true,
-      },
-      status: {
-        type: DataTypes.ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled'),
-        defaultValue: 'pending',
-      },
-      created_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-      updated_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-    },
-    {
-      sequelize,
-      modelName: 'Order',
-      tableName: 'Orders',
-      timestamps: false,
-      underscored: true,
-    }
-  );
-
-  return Order;
-};
+module.exports = Order;

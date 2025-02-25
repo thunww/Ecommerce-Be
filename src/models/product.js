@@ -1,114 +1,66 @@
 // models/product.js
 const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
+const ProductImage = require('./productimage');
+const Category = require('./category');
+const Shop = require('./shop');
 
-module.exports = (sequelize) => {
-  class Product extends Model {
-    static associate(models) {
-      // Product belongs to a Shop
-      this.belongsTo(models.Shop, {
-        foreignKey: 'shop_id',
-        as: 'shop',
-      });
+class Product extends Model {}
 
-      // Product belongs to a Category
-      this.belongsTo(models.Category, {
-        foreignKey: 'category_id',
-        as: 'category',
-      });
-
-      // Product has many ProductImages
-      this.hasMany(models.ProductImage, {
-        foreignKey: 'product_id',
-        as: 'images',
-      });
-
-      // Product has many OrderItems
-      this.hasMany(models.OrderItem, {
-        foreignKey: 'product_id',
-        as: 'order_items',
-      });
-
-      // Product has many ProductReviews
-      this.hasMany(models.ProductReview, {
-        foreignKey: 'product_id',
-        as: 'reviews',
-      });
-
-      // Product belongs to many Users through Wishlists
-      this.belongsToMany(models.User, {
-        through: models.Wishlist,
-        foreignKey: 'product_id',
-        otherKey: 'user_id',
-        as: 'wishlisted_by',
-      });
-    }
-  }
-
-  Product.init(
-    {
-      product_id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      shop_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      category_id: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
-      product_name: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
-      },
-      description: {
-        type: DataTypes.TEXT,
-      },
-      price: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
-      },
-      discount: {
-        type: DataTypes.DECIMAL(5, 2),
-        defaultValue: 0.00,
-      },
-      stock: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      sold: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-      },
-      weight: {
-        type: DataTypes.DECIMAL(6, 2),
-      },
-      dimensions: {
-        type: DataTypes.STRING(50),
-      },
-      is_active: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true,
-      },
-      created_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-      updated_at: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
+Product.init(
+  {
+    product_name: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
     },
-    {
-      sequelize,
-      modelName: 'Product',
-      tableName: 'Products',
-      timestamps: false,
-      underscored: true,
-    }
-  );
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    price: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+    discount: {
+      type: DataTypes.DECIMAL(5, 2),
+      defaultValue: 0.00,
+    },
+    stock: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    sold: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    weight: {
+      type: DataTypes.DECIMAL(6, 2),
+      allowNull: true,
+    },
+    dimensions: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+    },
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+  },
+  {
+    sequelize,
+    modelName: 'Product',
+    tableName: 'Products',
+    timestamps: true,
+  }
+);
 
-  return Product;
-};
+// Quan hệ Product với ProductImage (một sản phẩm có thể có nhiều hình ảnh)
+Product.hasMany(ProductImage, { foreignKey: 'product_id' });
+
+// Quan hệ Product với Category (một sản phẩm thuộc về một danh mục)
+Product.belongsTo(Category, { foreignKey: 'category_id', allowNull: true });
+
+// Quan hệ Product với Shop (một sản phẩm thuộc về một cửa hàng)
+Product.belongsTo(Shop, { foreignKey: 'shop_id' });
+
+module.exports = Product;

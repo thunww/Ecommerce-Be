@@ -1,37 +1,19 @@
-// models/role.js
 const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
+const User = require('./user');
 
-module.exports = (sequelize) => {
-  class Role extends Model {
-    static associate(models) {
-      this.belongsToMany(models.User, {
-        through: models.UserRole,
-        foreignKey: 'role_id',
-        as: 'users',
-      });
-    }
-  }
+class Role extends Model {}
 
-  Role.init(
-    {
-      role_id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      role_name: {
-        type: DataTypes.STRING(20),
-        allowNull: false,
-        unique: true,
-      },
-    },
-    {
-      sequelize,
-      modelName: 'Role',
-      tableName: 'Roles',
-      timestamps: false,
-    }
-  );
+Role.init({
+  role_name: { type: DataTypes.STRING(20), allowNull: false, unique: true },
+}, {
+  sequelize,
+  modelName: 'Role',
+  timestamps: false,
+  tableName: 'Roles'
+});
 
-  return Role;
-};
+// Quan hệ: Role -> UserRole -> User
+Role.belongsToMany(User, { through: 'User_Roles', foreignKey: 'role_id' });
+
+module.exports = Role;

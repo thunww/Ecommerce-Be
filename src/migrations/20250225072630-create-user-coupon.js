@@ -1,43 +1,46 @@
-// migrations/xxxx-create-user-coupons.js
-'use strict';
-
-/** @type {import('sequelize-cli').Migration} */
+// migrations/[timestamp]-create-userCoupons.js
 module.exports = {
-  async up(queryInterface, Sequelize) {
+  up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('User_Coupons', {
       user_coupon_id: {
-        allowNull: false,
+        type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER,
+        allowNull: false,
       },
       user_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Users',
+          model: 'Users', // Tên bảng Users
           key: 'user_id',
         },
-        onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
       coupon_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Coupons',
+          model: 'Coupons', // Tên bảng Coupons
           key: 'coupon_id',
         },
-        onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
       used_at: {
         type: Sequelize.DATE,
+        allowNull: true,
+      },
+      created_at: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+      },
+      updated_at: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
     });
   },
-
-  async down(queryInterface, Sequelize) {
+  down: async (queryInterface) => {
     await queryInterface.dropTable('User_Coupons');
   },
 };
