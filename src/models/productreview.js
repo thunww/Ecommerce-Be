@@ -37,16 +37,5 @@ ProductReview.init(
   }
 );
 
-// Quan hệ với Product
-ProductReview.belongsTo(Product, {
-  foreignKey: 'product_id',
-  onDelete: 'CASCADE',
-});
-
-// Quan hệ với User
-ProductReview.belongsTo(User, {
-  foreignKey: 'user_id',
-  onDelete: 'CASCADE',
-});
 
 module.exports = ProductReview;

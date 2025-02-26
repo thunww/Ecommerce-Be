@@ -36,19 +36,6 @@ SubOrder.init(
   }
 );
 
-// Quan hệ SubOrder - Order: Một SubOrder thuộc về một Order
-SubOrder.belongsTo(Order, { foreignKey: 'order_id' });
 
-// Quan hệ SubOrder - Shop: Một SubOrder thuộc về một Shop
-SubOrder.belongsTo(Shop, { foreignKey: 'shop_id' });
-
-// Quan hệ SubOrder - Payment: Một SubOrder có thể có một Payment
-SubOrder.hasOne(Payment, { foreignKey: 'sub_order_id' });
-
-// Quan hệ SubOrder - Shipment: Một SubOrder có thể có một Shipment
-SubOrder.hasOne(Shipment, { foreignKey: 'sub_order_id' });
-
-// Quan hệ SubOrder - OrderItem: Một SubOrder có thể có nhiều OrderItem
-SubOrder.hasMany(OrderItem, { foreignKey: 'sub_order_id' });
 
 module.exports = SubOrder;

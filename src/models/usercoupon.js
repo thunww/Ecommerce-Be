@@ -35,8 +35,5 @@ UserCoupon.init(
   }
 );
 
-// Quan hệ 1 user_coupon thuộc về 1 user và 1 coupon
-UserCoupon.belongsTo(User, { foreignKey: 'user_id' });
-UserCoupon.belongsTo(Coupon, { foreignKey: 'coupon_id' });
 
 module.exports = UserCoupon;

@@ -42,16 +42,6 @@ Shipment.init(
   }
 );
 
-// Quan hệ với SubOrder
-Shipment.belongsTo(SubOrder, {
-  foreignKey: 'sub_order_id',
-  onDelete: 'CASCADE',
-});
 
-// Quan hệ với User (shipper)
-Shipment.belongsTo(User, {
-  foreignKey: 'shipper_id',
-  onDelete: 'CASCADE',
-});
 
 module.exports = Shipment;

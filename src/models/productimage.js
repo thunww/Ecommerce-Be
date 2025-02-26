@@ -28,7 +28,6 @@ ProductImage.init(
   }
 );
 
-// Quan hệ ProductImage với Product (một hình ảnh sản phẩm thuộc về một sản phẩm)
-ProductImage.belongsTo(Product, { foreignKey: 'product_id', allowNull: false });
+
 
 module.exports = ProductImage;

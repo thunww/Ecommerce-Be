@@ -46,10 +46,6 @@ Payment.init(
   }
 );
 
-// Quan hệ với SubOrder
-Payment.belongsTo(SubOrder, {
-  foreignKey: 'sub_order_id',
-  onDelete: 'CASCADE',
-});
+
 
 module.exports = Payment;

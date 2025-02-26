@@ -30,14 +30,6 @@ ShopReview.init(
   }
 );
 
-ShopReview.belongsTo(Shop, {
-  foreignKey: 'shop_id',
-  onDelete: 'CASCADE',
-});
 
-ShopReview.belongsTo(User, {
-  foreignKey: 'user_id',
-  onDelete: 'CASCADE',
-});
 
 module.exports = ShopReview;

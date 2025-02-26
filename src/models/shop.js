@@ -24,20 +24,5 @@ Shop.init({
   tableName: 'Shops'
 });
 
-// Quan hệ: Shop -> User (1:N)
-Shop.belongsTo(User, { foreignKey: 'owner_id' });
-User.hasMany(Shop, { foreignKey: 'owner_id' });
-
-// Quan hệ: Shop -> Product (1:N)
-Shop.hasMany(Product, { foreignKey: 'shop_id' });
-Product.belongsTo(Shop, { foreignKey: 'shop_id' });
-
-// Quan hệ: Shop -> ShopReview (1:N)
-Shop.hasMany(ShopReview, { foreignKey: 'shop_id' });
-ShopReview.belongsTo(Shop, { foreignKey: 'shop_id' });
-
-// Quan hệ: Shop -> SubOrder (1:N)
-Shop.hasMany(SubOrder, { foreignKey: 'shop_id' });
-SubOrder.belongsTo(Shop, { foreignKey: 'shop_id' });
 
 module.exports = Shop;

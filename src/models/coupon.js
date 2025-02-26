@@ -1,4 +1,4 @@
-// models/coupon.js
+
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 const UserCoupon = require('./usercoupon');
@@ -45,7 +45,6 @@ Coupon.init(
   }
 );
 
-// Quan hệ 1 coupon có thể được sử dụng bởi nhiều người dùng
-Coupon.hasMany(UserCoupon, { foreignKey: 'coupon_id' });
+
 
 module.exports = Coupon;

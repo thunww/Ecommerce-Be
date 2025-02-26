@@ -1,6 +1,6 @@
 // models/userRole.js
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const sequelize = require('../config/database'); // ✅ Import đúng instance
 const User = require('./user');
 const Role = require('./role');
 
@@ -14,7 +14,7 @@ UserRole.init(
     },
   },
   {
-    sequelize,
+    sequelize, // ✅ Đảm bảo không bị undefined
     modelName: 'UserRole',
     tableName: 'User_Roles',
     timestamps: true,
@@ -23,16 +23,8 @@ UserRole.init(
   }
 );
 
-// Quan hệ với User
-UserRole.belongsTo(User, {
-  foreignKey: 'user_id',
-  onDelete: 'CASCADE',
-});
-
-// Quan hệ với Role
-UserRole.belongsTo(Role, {
-  foreignKey: 'role_id',
-  onDelete: 'CASCADE',
-});
+// Quan hệ
+UserRole.belongsTo(User, { foreignKey: 'user_id', onDelete: 'CASCADE' });
+UserRole.belongsTo(Role, { foreignKey: 'role_id', onDelete: 'CASCADE' });
 
 module.exports = UserRole;

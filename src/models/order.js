@@ -18,12 +18,6 @@ Order.init({
   tableName: 'Orders'
 });
 
-// Quan hệ: Order -> User (N:1)
-Order.belongsTo(User, { foreignKey: 'user_id' });
-User.hasMany(Order, { foreignKey: 'user_id' });
 
-// Quan hệ: Order -> SubOrder (1:N)
-Order.hasMany(SubOrder, { foreignKey: 'order_id' });
-SubOrder.belongsTo(Order, { foreignKey: 'order_id' });
 
 module.exports = Order;

@@ -1,4 +1,4 @@
-// models/notification.js
+
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 const User = require('./user');
@@ -28,10 +28,6 @@ Notification.init(
   }
 );
 
-// Quan hệ với User (Một thông báo thuộc về một người dùng)
-Notification.belongsTo(User, {
-  foreignKey: 'user_id',
-  onDelete: 'CASCADE',
-});
+
 
 module.exports = Notification;

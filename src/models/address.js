@@ -1,4 +1,4 @@
-// models/address.js
+
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 const User = require('./user');
@@ -43,8 +43,5 @@ Address.init(
     timestamps: true,
   }
 );
-
-// Quan hệ Address - User: Một Address thuộc về một User
-Address.belongsTo(User, { foreignKey: 'user_id' });
 
 module.exports = Address;

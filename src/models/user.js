@@ -29,13 +29,6 @@ User.init({
   tableName: 'Users'
 });
 
-// Quan hệ: User -> UserRole -> Role
-User.belongsToMany(Role, { through: 'User_Roles', foreignKey: 'user_id' });
-User.hasMany(Order, { foreignKey: 'user_id' });
-User.hasMany(ProductReview, { foreignKey: 'user_id' });
-User.hasMany(ShopReview, { foreignKey: 'user_id' });
-User.hasMany(Wishlist, { foreignKey: 'user_id' });
-User.hasMany(UserCoupon, { foreignKey: 'user_id' });
-User.hasMany(Notification, { foreignKey: 'user_id' });
+
 
 module.exports = User;

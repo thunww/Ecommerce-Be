@@ -1,6 +1,6 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Product = require('./product'); // Import Product model để khai báo quan hệ
+const Product = require('./product'); 
 
 class Category extends Model {}
 
@@ -31,10 +31,5 @@ Category.init(
   }
 );
 
-// Quan hệ Category với Category (Danh mục con thuộc về danh mục cha)
-Category.belongsTo(Category, { foreignKey: 'parent_id', as: 'parentCategory' });
-
-// Quan hệ Category với nhiều Product
-Category.hasMany(Product, { foreignKey: 'category_id' });
 
 module.exports = Category;

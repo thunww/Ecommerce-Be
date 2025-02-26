@@ -23,16 +23,5 @@ Wishlist.init(
   }
 );
 
-// Quan hệ với User
-Wishlist.belongsTo(User, {
-  foreignKey: 'user_id',
-  onDelete: 'CASCADE',
-});
-
-// Quan hệ với Product
-Wishlist.belongsTo(Product, {
-  foreignKey: 'product_id',
-  onDelete: 'CASCADE',
-});
 
 module.exports = Wishlist;

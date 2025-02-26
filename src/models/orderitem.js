@@ -1,4 +1,4 @@
-// models/orderItem.js
+
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 const SubOrder = require('./suborder');
@@ -35,16 +35,6 @@ OrderItem.init(
   }
 );
 
-// Quan hệ với SubOrder
-OrderItem.belongsTo(SubOrder, {
-  foreignKey: 'sub_order_id',
-  onDelete: 'CASCADE',
-});
 
-// Quan hệ với Product
-OrderItem.belongsTo(Product, {
-  foreignKey: 'product_id',
-  onDelete: 'CASCADE',
-});
 
 module.exports = OrderItem;

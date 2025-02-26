@@ -54,13 +54,6 @@ Product.init(
   }
 );
 
-// Quan hệ Product với ProductImage (một sản phẩm có thể có nhiều hình ảnh)
-Product.hasMany(ProductImage, { foreignKey: 'product_id' });
 
-// Quan hệ Product với Category (một sản phẩm thuộc về một danh mục)
-Product.belongsTo(Category, { foreignKey: 'category_id', allowNull: true });
-
-// Quan hệ Product với Shop (một sản phẩm thuộc về một cửa hàng)
-Product.belongsTo(Shop, { foreignKey: 'shop_id' });
 
 module.exports = Product;
