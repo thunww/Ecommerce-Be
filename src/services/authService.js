@@ -1,8 +1,8 @@
 const User = require("../models/user");
 const Role = require("../models/role")
 const UserRole = require("../models/userrole");
-const jwt = require("jsonwebtoken");
-const hashPassword = require("../utils/hashPassword");
+const {hashPassword,comparePassword} = require("../utils/hashPassword");
+const {generateToken} = require("../config/jwt")
 require("dotenv").config();
 
 const registerUser = async (username, email, password) => {
@@ -26,22 +26,37 @@ const registerUser = async (username, email, password) => {
 };
 
 const loginUser = async (email, password) => {
-  if (!email || !password) {
-    throw new Error("Missing email or password");
-  }
-
+  // Tìm user theo email
   const user = await User.findOne({ where: { email } });
-
-  if (!user || !(await bcrypt.compare(password, user.password))) {
-    throw new Error("Invalid credentials");
+  if (!user) {
+    throw new Error('Email does not exist!');
+  }
+  const isMatch = comparePassword(password, user.password);
+  if (!isMatch) {
+    throw new Error('Incorrect password!');
   }
 
-  const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, {
-    expiresIn: "1h",
-  });
+  const userRole = await UserRole.findOne({ where: { user_id: user.user_id } });
+  if (!userRole) {
+    throw new Error('User has no assigned role!');
+  }
 
-  return { token, user };
+
+  const role = await Role.findOne({ where: { role_id: userRole.role_id } });
+
+  const token = generateToken({ user_id: user.user_id, email: user.email, role: role.role_name });
+
+  return {
+    message: "Login successful",
+    token,
+    user: {
+      user_id: user.user_id,
+      email: user.email,
+      role: role.role_name,
+    }
+  };
 };
+
 
 
 module.exports = { registerUser, loginUser };

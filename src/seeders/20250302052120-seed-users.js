@@ -31,6 +31,19 @@ module.exports = {
         profile_picture: null,
         is_verified: false,
       },
+      {
+        user_id: 3,
+        first_name: 'Admin',
+        last_name: 'User',
+        username: 'admin',
+        password: await bcrypt.hash('admin', 5),// Mật khẩu là 'admin123'
+        email: 'admin@example.com',
+        phone: '000000000',
+        gender: 'male',
+        date_of_birth: '1985-12-12',
+        profile_picture: null,
+        is_verified: true,
+      },
     ]);
   },
 
