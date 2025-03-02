@@ -1,11 +1,13 @@
 //Cac quan he cua DB
 module.exports = (db) => {
-    const { User, Role, Address, Category, Coupon, Notification, Order, SubOrder, OrderItem, Payment, Product, ProductImage, ProductReview, Shop, ShopReview, Shipment, Wishlist, UserCoupon } = db;
-  
+    const { User, Role, UserRole, Address, Category, Coupon, Notification, Order, SubOrder, OrderItem, Payment, Product, ProductImage, ProductReview, Shop, ShopReview, Shipment, Wishlist, UserCoupon } = db;
     //Quan hệ User - Role (N-N)
     User.belongsToMany(Role, { through: 'User_Roles', foreignKey: 'user_id' });
     Role.belongsToMany(User, { through: 'User_Roles', foreignKey: 'role_id' });
-  
+
+    UserRole.belongsTo(User, { foreignKey: 'user_id', onDelete: 'CASCADE' });
+    UserRole.belongsTo(Role, { foreignKey: 'role_id', onDelete: 'CASCADE' });
+
     //  Quan hệ User - Address (1-N)
     Address.belongsTo(User, { foreignKey: 'user_id' });
     User.hasMany(Address, { foreignKey: 'user_id' });

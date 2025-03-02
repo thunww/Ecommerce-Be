@@ -1,7 +1,6 @@
-// migrations/[timestamp]-create-userRoles.js
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('User_Roles', {
+    await queryInterface.createTable("User_Roles", {
       user_role_id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
@@ -12,35 +11,38 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Users', // Tên bảng Users
-          key: 'user_id',
+          model: "Users", // ✅ Đúng tên bảng
+          key: "user_id",
         },
-        onDelete: 'CASCADE',
+        onDelete: "CASCADE",
       },
       role_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Roles', // Tên bảng Roles
-          key: 'role_id',
+          model: "Roles", // ✅ Đúng tên bảng
+          key: "role_id",
         },
-        onDelete: 'CASCADE',
+        onDelete: "CASCADE",
       },
       assigned_at: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
       },
       created_at: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
       },
       updated_at: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"),
       },
     });
   },
   down: async (queryInterface) => {
-    await queryInterface.dropTable('User_Roles');
+    await queryInterface.dropTable("User_Roles");
   },
 };

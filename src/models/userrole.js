@@ -1,30 +1,46 @@
-// models/userRole.js
-const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/database'); // ✅ Import đúng instance
-const User = require('./user');
-const Role = require('./role');
+const { Model, DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
 
 class UserRole extends Model {}
 
 UserRole.init(
   {
+    user_role_id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "Users",
+        key: "user_id",
+      },
+      onDelete: "CASCADE",
+    },
+    role_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "Roles",
+        key: "role_id",
+      },
+      onDelete: "CASCADE",
+    },
     assigned_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
   },
   {
-    sequelize, // ✅ Đảm bảo không bị undefined
-    modelName: 'UserRole',
-    tableName: 'User_Roles',
+    sequelize,
+    modelName: "UserRole",
+    tableName: "User_Roles",
     timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
+    createdAt: "created_at",
+    updatedAt: "updated_at",
   }
 );
-
-// Quan hệ
-UserRole.belongsTo(User, { foreignKey: 'user_id', onDelete: 'CASCADE' });
-UserRole.belongsTo(Role, { foreignKey: 'role_id', onDelete: 'CASCADE' });
 
 module.exports = UserRole;

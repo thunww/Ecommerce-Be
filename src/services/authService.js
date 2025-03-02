@@ -1,16 +1,28 @@
 const User = require("../models/user");
-const bcrypt = require("bcrypt");
+const Role = require("../models/role")
+const UserRole = require("../models/userrole");
 const jwt = require("jsonwebtoken");
 const hashPassword = require("../utils/hashPassword");
 require("dotenv").config();
 
-const registerUser = async (username, email, password, role) => {
+const registerUser = async (username, email, password) => {
   if (!username || !email || !password) {
     throw new Error("Missing information");
   }
 
+  const existingUser = await User.findOne({ where: { email } });
+  if (existingUser)
+     throw new Error('Email already in use');
+
   const hashedPassword = await hashPassword(password);
-  return await User.create({ username, email, password: hashedPassword, role });
+  const newUser = await User.create({ username, email, password: hashedPassword });
+
+  const customerRole = await Role.findOne({ where: { role_name: 'customer' } });
+  if (!customerRole) throw new Error('Role customer không tồn tại');
+
+  await UserRole.create({ user_id: newUser.user_id, role_id: customerRole.role_id });
+
+  return newUser; 
 };
 
 const loginUser = async (email, password) => {
