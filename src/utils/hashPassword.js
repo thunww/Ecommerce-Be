@@ -7,4 +7,12 @@ const salt = bcrypt.genSaltSync(saltRounds);
   return hash;
 };
 
-module.exports = hashPassword; 
+const comparePassword = (password, hashedPassword) => {
+  return bcrypt.compareSync(password, hashedPassword);
+};
+
+module.exports = {
+  hashPassword,
+  comparePassword
+}
+   
