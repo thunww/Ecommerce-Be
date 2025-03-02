@@ -1,0 +1,14 @@
+const cors = require('cors');
+require('dotenv').config(); 
+
+const configCORS = (app) => {
+  const corsOptions = {
+    origin: process.env.CLIENT_URL || "http://localhost:3000", 
+    methods: ["GET", "POST", "PUT", "DELETE"], 
+    credentials: true 
+  };
+
+  app.use(cors(corsOptions));
+};
+
+module.exports = configCORS;

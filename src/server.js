@@ -1,30 +1,16 @@
-// server.js
-const express = require('express')
-require('dotenv').config();
-const path = require('path')
-const app = express()
-const port = process.env.PORT || 8888 ;
-const hostname = process.env.HOST_NAME;
-const configViewEngine = require('./config/viewengine')
-//const webRoutes = require('./routers/web')
-const connection = require('./config/database');
-//const initAPIRoute = require('./routers/api');
-const { sequelize } = require('./models');
+const dotenv = require("dotenv");
+const sequelize = require("./config/database");
+const app = require("./app");
 
-app.get('/', (req, res) => {
-  res.send('Hello from Node.js backend!');
-});
+dotenv.config();
 
-
-
-sequelize.authenticate()
+// Kết nối database & chạy server
+sequelize
+  .sync()
   .then(() => {
-    console.log('Kết nối thành công!');
+    console.log("Database connected");
+    app.listen(8080, () => console.log("Server running on port 8080"));
   })
-  .catch(err => {
-    console.error('Không thể kết nối:', err);
+  .catch((err) => {
+    console.error("Database connection error:", err);
   });
-
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
