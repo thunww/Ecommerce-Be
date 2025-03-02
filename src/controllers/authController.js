@@ -1,35 +1,35 @@
 const User = require("../models/user");
 const Role = require("../models/role");
 const UserRole = require("../models/userrole");
-const bcrypt = require("bcrypt");
+const {generateToken, verifyToken} = require("../config/jwt")
 const { registerUser, loginUser } = require("../services/authService");
 
 const handleregisterUser = async (req, res) => {
   try {
-
     const { username, email, password } = req.body;
 
-    const user = await registerUser(username, email, password);
+    const result = await registerUser(username, email, password);
 
     return res.status(201).json({
-      message: "Registration successful",
+      message: "User registration successful.",
       user: {
-        user_id: user.user_id,
-        username: user.username,
-        email: user.email,
-        role: "customer",
-      },
+        user_id: result.user_id,
+        username: result.username,
+        email: result.email
+      }
     });
   } catch (error) {
-    return res.status(400).json({ message: error.message });
+    return res.status(400).json({
+      message: error.message
+    });
   }
 };
+
 
 const handleLoginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    // Gọi service xử lý đăng nhập
     const { token, user } = await loginUser(email, password);
     
     res.json({ message: 'Login successful', token, user });
@@ -38,4 +38,29 @@ const handleLoginUser = async (req, res) => {
   }
 };
 
-module.exports = { handleregisterUser, handleLoginUser };
+const verifyEmail = async (req, res) => {
+  const { token } = req.query; // Lấy token từ query string
+
+  if (!token) {
+    return res.status(400).json({ message: 'Token is required' });
+  }
+
+  try {
+    const decoded = verifyToken(token) ;// Giải mã token
+
+    const user = await User.findOne({ where: { user_id: decoded.user_id } });
+    if (!user) {
+      return res.status(400).json({ message: 'User not found' });
+    }
+
+    user.is_verified = true;
+    await user.save();
+
+    return res.status(200).json({ message: 'Email successfully verified' });
+  } catch (error) {
+    return res.status(400).json({ message: 'Invalid or expired token' });
+  }
+};
+
+
+module.exports = { handleregisterUser, handleLoginUser, verifyEmail };
