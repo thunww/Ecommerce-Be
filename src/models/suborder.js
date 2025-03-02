@@ -1,16 +1,23 @@
-// models/sub_order.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Order = require('./order');
-const Shop = require('./shop');
-const Payment = require('./payment');
-const Shipment = require('./shipment');
-const OrderItem = require('./orderitem');
 
 class SubOrder extends Model {}
 
 SubOrder.init(
   {
+    sub_order_id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    order_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    shop_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     total_price: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
@@ -35,7 +42,5 @@ SubOrder.init(
     timestamps: true,
   }
 );
-
-
 
 module.exports = SubOrder;

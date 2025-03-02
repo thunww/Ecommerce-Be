@@ -1,13 +1,23 @@
-// models/productReview.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Product = require('./product');
-const User = require('./user');
 
 class ProductReview extends Model {}
 
 ProductReview.init(
   {
+    review_id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    product_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     rating: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -20,14 +30,6 @@ ProductReview.init(
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    created_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
-    updated_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
   },
   {
     sequelize,
@@ -36,6 +38,5 @@ ProductReview.init(
     timestamps: true,
   }
 );
-
 
 module.exports = ProductReview;

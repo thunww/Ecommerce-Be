@@ -1,17 +1,27 @@
-// models/shipment.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const SubOrder = require('./suborder');
-const User = require('./user');
 
 class Shipment extends Model {}
 
 Shipment.init(
   {
+    shipment_id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    sub_order_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    shipper_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     tracking_number: {
       type: DataTypes.STRING(50),
-      unique: true,
       allowNull: false,
+      unique: true,
     },
     status: {
       type: DataTypes.ENUM('waiting', 'in_transit', 'delivered', 'failed'),
@@ -25,14 +35,6 @@ Shipment.init(
       type: DataTypes.DATE,
       allowNull: true,
     },
-    created_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
-    updated_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
   },
   {
     sequelize,
@@ -41,7 +43,5 @@ Shipment.init(
     timestamps: true,
   }
 );
-
-
 
 module.exports = Shipment;

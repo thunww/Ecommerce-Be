@@ -1,13 +1,23 @@
-// models/wishlist.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const User = require('./user');
-const Product = require('./product');
 
 class Wishlist extends Model {}
 
 Wishlist.init(
   {
+    wishlist_id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    product_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     added_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
@@ -18,10 +28,7 @@ Wishlist.init(
     modelName: 'Wishlist',
     tableName: 'Wishlists',
     timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
   }
 );
-
 
 module.exports = Wishlist;

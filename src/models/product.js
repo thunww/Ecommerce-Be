@@ -1,4 +1,3 @@
-// models/product.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 const ProductImage = require('./productimage');
@@ -9,6 +8,11 @@ class Product extends Model {}
 
 Product.init(
   {
+    product_id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     product_name: {
       type: DataTypes.STRING(255),
       allowNull: false,
@@ -45,6 +49,24 @@ Product.init(
       type: DataTypes.BOOLEAN,
       defaultValue: true,
     },
+    shop_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Shops',
+        key: 'shop_id',
+      },
+      onDelete: 'CASCADE',
+    },
+    category_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'Categories',
+        key: 'category_id',
+      },
+      onDelete: 'SET NULL',
+    },
   },
   {
     sequelize,
@@ -53,7 +75,6 @@ Product.init(
     timestamps: true,
   }
 );
-
 
 
 module.exports = Product;

@@ -1,12 +1,19 @@
-
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const User = require('./user');
 
 class Address extends Model {}
 
 Address.init(
   {
+    address_id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     recipient_name: {
       type: DataTypes.STRING(100),
       allowNull: false,

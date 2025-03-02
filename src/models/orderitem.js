@@ -1,13 +1,23 @@
-
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const SubOrder = require('./suborder');
-const Product = require('./product');
 
 class OrderItem extends Model {}
 
 OrderItem.init(
   {
+    order_item_id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    sub_order_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    product_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     quantity: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -21,10 +31,9 @@ OrderItem.init(
       defaultValue: 0.00,
     },
     total: {
-      type: DataTypes.VIRTUAL,
-      get() {
-        return (this.quantity * this.price) - this.discount;
-      },
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+      defaultValue: 0.00,
     },
   },
   {
@@ -34,7 +43,5 @@ OrderItem.init(
     timestamps: true,
   }
 );
-
-
 
 module.exports = OrderItem;

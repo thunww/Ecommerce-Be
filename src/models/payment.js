@@ -1,12 +1,19 @@
-// models/payment.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const SubOrder = require('./suborder');
 
 class Payment extends Model {}
 
 Payment.init(
   {
+    payment_id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    sub_order_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     payment_method: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -33,10 +40,6 @@ Payment.init(
       type: DataTypes.DATE,
       allowNull: true,
     },
-    created_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
   },
   {
     sequelize,
@@ -45,7 +48,5 @@ Payment.init(
     timestamps: true,
   }
 );
-
-
 
 module.exports = Payment;
