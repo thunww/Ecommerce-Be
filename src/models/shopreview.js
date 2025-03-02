@@ -1,13 +1,23 @@
-// models/shopReview.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Shop = require('./shop'); // Import Shop model
-const User = require('./user'); // Import User model
 
 class ShopReview extends Model {}
 
 ShopReview.init(
   {
+    review_id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    shop_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     rating: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -18,6 +28,7 @@ ShopReview.init(
     },
     comment: {
       type: DataTypes.TEXT,
+      allowNull: true,
     },
   },
   {
@@ -25,11 +36,7 @@ ShopReview.init(
     modelName: 'ShopReview',
     tableName: 'Shop_Reviews',
     timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
   }
 );
-
-
 
 module.exports = ShopReview;

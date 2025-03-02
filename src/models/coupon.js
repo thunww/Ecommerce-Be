@@ -1,12 +1,15 @@
-
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const UserCoupon = require('./usercoupon');
 
 class Coupon extends Model {}
 
 Coupon.init(
   {
+    coupon_id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     code: {
       type: DataTypes.STRING(20),
       allowNull: false,
@@ -44,7 +47,5 @@ Coupon.init(
     timestamps: true,
   }
 );
-
-
 
 module.exports = Coupon;

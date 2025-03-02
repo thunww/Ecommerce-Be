@@ -1,8 +1,5 @@
-// models/userCoupon.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Coupon = require('./coupon');
-const User = require('./user');
 
 class UserCoupon extends Model {}
 
@@ -32,8 +29,9 @@ UserCoupon.init(
     modelName: 'UserCoupon',
     tableName: 'User_Coupons',
     timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
   }
 );
-
 
 module.exports = UserCoupon;

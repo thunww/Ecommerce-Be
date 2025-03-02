@@ -1,33 +1,38 @@
-// models/product_image.js
+// models/userCoupon.js
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
-const Product = require('./product');
 
-class ProductImage extends Model {}
+class UserCoupon extends Model {}
 
-ProductImage.init(
+UserCoupon.init(
   {
-    image_url: {
-      type: DataTypes.STRING(255),
+    user_coupon_id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
       allowNull: false,
     },
-    is_primary: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
+    user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
-    uploaded_at: {
+    coupon_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    used_at: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
+      allowNull: true,
     },
   },
   {
     sequelize,
-    modelName: 'ProductImage',
-    tableName: 'Product_Images',
-    timestamps: false,
+    modelName: 'UserCoupon',
+    tableName: 'User_Coupons',
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
   }
 );
 
-
-
-module.exports = ProductImage;
+module.exports = UserCoupon;
