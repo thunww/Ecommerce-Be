@@ -22,6 +22,8 @@ const registerUser = async (username, email, password) => {
     user_id: newUser.user_id,
     email: newUser.email
   });
+
+  console.log(verificationToken);
   try {
     await sendVerificationEmail(newUser.email, verificationToken);
     console.log("Verification email sent successfully.");
@@ -44,7 +46,7 @@ const loginUser = async (email, password) => {
   }
 
   const isMatch = comparePassword(password, user.password);
-  
+
   if (!isMatch) {
     throw new Error('Incorrect password!');
   }

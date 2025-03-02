@@ -1,9 +1,8 @@
 const User = require("../models/user");
 const Role = require("../models/role");
 const UserRole = require("../models/userrole");
-const {generateToken, verifyToken} = require("../config/jwt")
 const { registerUser, loginUser } = require("../services/authService");
-
+const {verifyToken} = require("../config/jwt");
 const handleregisterUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -11,7 +10,7 @@ const handleregisterUser = async (req, res) => {
     const result = await registerUser(username, email, password);
 
     return res.status(201).json({
-      message: "User registration successful.",
+      message: "User registration successful. Please check your email for verification.",
       user: {
         user_id: result.user_id,
         username: result.username,
