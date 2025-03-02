@@ -20,10 +20,10 @@ const registerUser = async (username, email, password) => {
 
   const verificationToken = generateToken({
     user_id: newUser.user_id,
-    email: newUser.email
+    email: newUser.email,
+    role: customerRole.role_name
   });
 
-  console.log(verificationToken);
   try {
     await sendVerificationEmail(newUser.email, verificationToken);
     console.log("Verification email sent successfully.");
@@ -34,7 +34,8 @@ const registerUser = async (username, email, password) => {
    return {
     user_id: newUser.user_id,
     username: newUser.username,
-    email: newUser.email
+    email: newUser.email,
+    role: customerRole.role_name
   };
 };
 

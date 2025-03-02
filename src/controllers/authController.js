@@ -14,7 +14,8 @@ const handleregisterUser = async (req, res) => {
       user: {
         user_id: result.user_id,
         username: result.username,
-        email: result.email
+        email: result.email,
+        role: result.role
       }
     });
   } catch (error) {
