@@ -2,8 +2,8 @@ const User = require("../models/user");
 const Role = require("../models/role");
 const UserRole = require("../models/userrole");
 const {hashPassword,comparePassword} = require("../utils/hashPassword");
-const {generateToken} = require("../config/jwt");
-const {sendVerificationEmail }= require("../utils/sendEmail");
+const {generateToken, verifyToken} = require("../config/jwt");
+const {sendVerificationEmail, sendResetPasswordEmail }= require("../utils/sendEmail");
 
 const registerUser = async (username, email, password) => {
   if (!username || !email || !password) {
@@ -75,6 +75,39 @@ const loginUser = async (email, password) => {
   };
 };
 
+const forgotPassword = async (email) => {
+
+  const user = await User.findOne({ where: { email } });
+  if (!user) {
+    throw new Error("No user found with this email");
+  }
+  
+  const resetToken = generateToken({ userId: user.user_id }, "1h");
+  
+  await sendResetPasswordEmail(email, resetToken);
+  
+  return { message: "Password reset email has been sent" };
+};
+
+const resetPassword = async (token, newPassword) => {
+  if (!token) {
+    throw new Error("Reset token is required");
+  }
+
+  const decoded = verifyToken(token);
+  const userId = decoded.userId;
+
+  const user = await User.findOne({ where: { user_id: userId } });
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const hashedPassword = hashPassword(newPassword);
+  user.password = hashedPassword;
+  await user.save();
+
+  return "Password has been successfully changed";
+};
 
 
-module.exports = { registerUser, loginUser };
+module.exports = { registerUser, loginUser, forgotPassword,resetPassword };
