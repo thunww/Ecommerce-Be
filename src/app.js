@@ -13,7 +13,7 @@ configCORS(app);
 
 // Routes
 app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/", userRoutes);
 
 // Xử lý lỗi 404 (Not Found)
 app.use((req, res, next) => {
