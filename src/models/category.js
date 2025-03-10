@@ -32,7 +32,10 @@ Category.init(
     modelName: 'Category',
     tableName: 'Categories',
     timestamps: true,
+    createdAt: 'created_at', // 👈 Cập nhật đúng với migration
+    updatedAt: 'updated_at', // 👈 Cập nhật đúng với migration
   }
 );
+
 
 module.exports = Category;
