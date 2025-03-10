@@ -14,12 +14,13 @@ const getProductImages = async (product_id) => {
 
 const deleteProductImage = async (image_id) => {
     const image = await ProductImage.findByPk(image_id);
-    if (!image) throw new Error("Ảnh không tồn tại!");
+    if (!image) throw new Error("Image does not exist!");
     await image.destroy();
-    return "Xóa ảnh thành công!";
+    return "Image deleted successfully!";
 };
 
-// ✅ Export theo kiểu object
+
+
 module.exports = {
     uploadProductImage,
     getProductImages,

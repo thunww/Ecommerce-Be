@@ -1,19 +1,18 @@
-//Quản lí sản phẩm, hình ảnh
 
-const {uploadProductImage, getProductImages , deleteProductImage } = require("../services/productImage");
+const { uploadProductImage, getProductImages, deleteProductImage } = require("../services/productImage");
 
 const handleUploadProductImage = async (req, res) => {
     try {
-        console.log("Body nhận được:", req.body);
-        if (!req.file) return res.status(400).json({ message: "Vui lòng chọn ảnh" });
+        if (!req.file)
+            return res.status(400).json({ message: "Please select an image" });
 
         const newImage = await uploadProductImage(
             req.body.product_id,
-            req.file.path,  // URL Cloudinary
+            req.file.path,  // Cloudinary URL
             req.body.is_primary
         );
 
-        res.json({ message: "Upload thành công!", image: newImage });
+        res.json({ message: "Upload successful!", image: newImage });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
