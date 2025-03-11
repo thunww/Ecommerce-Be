@@ -28,11 +28,13 @@ const ShopReview = require('./shopreview');
 const Shipment = require('./shipment');
 const Wishlist = require('./wishlist');
 const UserCoupon = require('./usercoupon');
+const UserRole = require("./userrole");
 
 // 🛠 Gán models vào db
 Object.assign(db, {
   User,
   Role,
+  UserRole,
   Address,
   Category,
   Coupon,

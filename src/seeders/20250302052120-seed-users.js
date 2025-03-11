@@ -36,7 +36,7 @@ module.exports = {
         first_name: 'Admin',
         last_name: 'User',
         username: 'admin',
-        password: await bcrypt.hash('admin', 5),// Mật khẩu là 'admin123'
+        password: await bcrypt.hash('admin', 5),// Mật khẩu là 'admin'
         email: 'admin@example.com',
         phone: '000000000',
         gender: 'male',

@@ -2,11 +2,16 @@
 module.exports = (db) => {
     const { User, Role, UserRole, Address, Category, Coupon, Notification, Order, SubOrder, OrderItem, Payment, Product, ProductImage, ProductReview, Shop, ShopReview, Shipment, Wishlist, UserCoupon } = db;
     //Quan hệ User - Role (N-N)
-    User.belongsToMany(Role, { through: 'User_Roles', foreignKey: 'user_id' });
-    Role.belongsToMany(User, { through: 'User_Roles', foreignKey: 'role_id' });
+    User.belongsToMany(Role, { through: UserRole, foreignKey: 'user_id', as: 'roles' });
+    Role.belongsToMany(User, { through: UserRole, foreignKey: 'role_id', as: 'users' });
 
     UserRole.belongsTo(User, { foreignKey: 'user_id', onDelete: 'CASCADE' });
     UserRole.belongsTo(Role, { foreignKey: 'role_id', onDelete: 'CASCADE' });
+
+    // **Quan trọng:** Thêm quan hệ ngược lại
+    User.hasMany(UserRole, { foreignKey: 'user_id', onDelete: 'CASCADE' });
+    Role.hasMany(UserRole, { foreignKey: 'role_id', onDelete: 'CASCADE' });
+
 
     //  Quan hệ User - Address (1-N)
     Address.belongsTo(User, { foreignKey: 'user_id' });

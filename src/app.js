@@ -6,7 +6,7 @@ const productRoutes = require("./routes/productRoutes");
 const configCORS = require("./config/cors");
 const app = express();
 const bodyParser = require("body-parser");
-
+const adminRoutes = require("./routes/adminRoutes");
 // Middleware
 app.use(express.json());
 
@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true })); // Cho form-data
 // Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/", userRoutes);
-
+app.use("/api/v1/admin", adminRoutes);
 app.use("/uploads", express.static("uploads"));
 
 // Sử dụng API routes
