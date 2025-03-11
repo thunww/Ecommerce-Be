@@ -1,0 +1,70 @@
+module.exports = {
+  up: async (queryInterface, Sequelize) => {
+    await queryInterface.bulkInsert("Products", [
+      {
+        product_name: "iPhone 15 Pro Max",
+        description: "Điện thoại flagship của Apple với chip A17 Pro.",
+        price: 32990000,
+        discount: 5.00,
+        stock: 50,
+        sold: 10,
+        weight: 0.3,
+        dimensions: "160.8 x 78.1 x 7.7 mm",
+        is_active: true,
+        shop_id: 1,
+        category_id: 1,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        product_name: "MacBook Pro M3",
+        description: "Laptop MacBook Pro chạy chip Apple M3 siêu mạnh.",
+        price: 45990000,
+        discount: 10.00,
+        stock: 30,
+        sold: 5,
+        weight: 1.5,
+        dimensions: "355 x 240 x 16 mm",
+        is_active: true,
+        shop_id: 2,
+        category_id: 2,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        product_name: "Giày Nike Air Force 1",
+        description: "Giày thể thao Nike cổ điển, phù hợp mọi phong cách.",
+        price: 2990000,
+        discount: 15.00,
+        stock: 100,
+        sold: 25,
+        weight: 0.8,
+        dimensions: "35 x 25 x 10 cm",
+        is_active: true,
+        shop_id: 3,
+        category_id: 3,
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        product_name: "Tủ lạnh Samsung 500L",
+        description: "Tủ lạnh Samsung Inverter tiết kiệm điện.",
+        price: 12990000,
+        discount: 7.00,
+        stock: 20,
+        sold: 2,
+        weight: 60.0,
+        dimensions: "700 x 1800 x 600 mm",
+        is_active: true,
+        shop_id: 1,
+        category_id: 5,
+        created_at: new Date(),
+        updated_at: new Date(),
+      }
+    ]);
+  },
+
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.bulkDelete("Products", null, {});
+  },
+};

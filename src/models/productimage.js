@@ -1,38 +1,44 @@
-// models/userCoupon.js
-const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { Model, DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
 
-class UserCoupon extends Model {}
+class ProductImage extends Model {}
 
-UserCoupon.init(
+ProductImage.init(
   {
-    user_coupon_id: {
+    image_id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
       allowNull: false,
     },
-    user_id: {
-      type: DataTypes.INTEGER,
+    image_url: {
+      type: DataTypes.STRING(255),
       allowNull: false,
     },
-    coupon_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
+    is_primary: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
-    used_at: {
+    uploaded_at: {
       type: DataTypes.DATE,
-      allowNull: true,
+      defaultValue: DataTypes.NOW,
+    },
+    product_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "products", // Đảm bảo trùng tên bảng thật trong DB
+        key: "product_id", // Đảm bảo trùng với khóa chính của Product
+      },
+      onDelete: "CASCADE",
     },
   },
   {
     sequelize,
-    modelName: 'UserCoupon',
-    tableName: 'User_Coupons',
-    timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
+    modelName: "ProductImage",
+    tableName: "Product_Images",
+    timestamps: false, // Nếu không dùng createdAt, updatedAt
   }
 );
 
-module.exports = UserCoupon;
+module.exports = ProductImage;
