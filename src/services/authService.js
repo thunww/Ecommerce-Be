@@ -39,7 +39,6 @@ const registerUser = async (username, email, password) => {
   };
 };
 
-
 const loginUser = async (email, password) => {
   const user = await User.findOne({ where: { email } });
   if (!user) {
@@ -47,22 +46,26 @@ const loginUser = async (email, password) => {
   }
 
   const isMatch = comparePassword(password, user.password);
-
   if (!isMatch) {
     throw new Error('Incorrect password!');
   }
 
-  if(!user.is_verified){
+  if (!user.is_verified) {
     throw new Error('Please verify your email first!');
   }
 
-  const userRole = await UserRole.findOne({ where: { user_id: user.user_id } });
-  if (!userRole) {
+
+  const userRoles = await UserRole.findAll({ where: { user_id: user.user_id } });
+  if (userRoles.length === 0) {
     throw new Error('User has no assigned role!');
   }
-  const role = await Role.findOne({ where: { role_id: userRole.role_id } });
 
-  const token = generateToken({ user_id: user.user_id, email: user.email, role: role.role_name });
+  const roleIds = userRoles.map(ur => ur.role_id);
+  const roles = await Role.findAll({ where: { role_id: roleIds } });
+
+  const roleNames = roles.map(role => role.role_name);
+
+  const token = generateToken({ user_id: user.user_id, email: user.email, roles: roleNames });
 
   return {
     message: "Login successful",
@@ -70,10 +73,11 @@ const loginUser = async (email, password) => {
     user: {
       user_id: user.user_id,
       email: user.email,
-      role: role.role_name,
+      roles: roleNames, // Trả về danh sách role thay vì 1 role
     }
   };
 };
+
 
 const forgotPassword = async (email) => {
 
