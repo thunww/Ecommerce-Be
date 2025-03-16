@@ -55,7 +55,8 @@ const verifyEmail = async (req, res) => {
     user.is_verified = true;
     await user.save();
 
-    return res.status(200).json({ message: 'Email successfully verified' });
+    return res.redirect("http://localhost:5173/login");
+    
   } catch (error) {
     return res.status(400).json({ message: 'Invalid or expired token' });
   }
