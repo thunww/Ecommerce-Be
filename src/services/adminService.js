@@ -4,7 +4,7 @@ const { User, Role } = require("../models");
 const getAllUsers = async () => {
     try {
         const users = await User.findAll({
-            attributes: ['user_id', 'first_name', 'last_name', 'email','is_verified'],
+            attributes: ['user_id', 'profile_picture','first_name', 'last_name', 'email','is_verified'],
             include: [
                 {
                     model: Role,
