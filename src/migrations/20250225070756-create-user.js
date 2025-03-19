@@ -1,7 +1,11 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('Users', {
-      user_id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
+    await queryInterface.createTable("Users", {
+      user_id: {
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
       first_name: { type: Sequelize.STRING(50), allowNull: true },
       last_name: { type: Sequelize.STRING(50), allowNull: true },
       username: { type: Sequelize.STRING(50), allowNull: false, unique: true },
@@ -12,11 +16,24 @@ module.exports = {
       date_of_birth: { type: Sequelize.DATE, allowNull: true },
       profile_picture: { type: Sequelize.STRING(255), allowNull: true },
       is_verified: { type: Sequelize.BOOLEAN, defaultValue: false },
-      created_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') },
-      updated_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') },
+      status: {
+        type: Sequelize.ENUM("active", "inactive", "banned"),
+        allowNull: false,
+        defaultValue: "active",
+      },
+      created_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.fn("NOW"),
+      },
+      updated_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.fn("NOW"),
+      },
     });
   },
   down: async (queryInterface) => {
-    await queryInterface.dropTable('Users');
+    await queryInterface.dropTable("Users");
   },
 };

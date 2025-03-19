@@ -8,24 +8,59 @@ const {
   handleRemoveRoleFromUser,
   handleDeleteUser,
   handleUpdateUser,
-  handleCreateUser
+  handleCreateUser,
+  handleGetUserById,
 } = require("../controllers/adminController");
 
 const router = express.Router();
 
+router.get(
+  "/users",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  handleGetAllUsers
+);
 
-router.get("/users", authMiddleware, roleMiddleware(["admin"]), handleGetAllUsers);
+router.post(
+  "/users/assign-role",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  handleAssignRoleToUser
+);
 
-router.post("/users/assign-role", authMiddleware, roleMiddleware(["admin"]), handleAssignRoleToUser);
+router.post(
+  "/users/remove-role",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  handleRemoveRoleFromUser
+);
 
-router.post("/users/remove-role", authMiddleware, roleMiddleware(["admin"]), handleRemoveRoleFromUser);
+router.delete(
+  "/users/:userId",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  handleDeleteUser
+);
 
-router.delete("/users/:userId", authMiddleware, roleMiddleware(["admin"]), handleDeleteUser);
+router.put(
+  "/users/:userId",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  handleUpdateUser
+);
 
-router.put("/users/:userId", authMiddleware, roleMiddleware(["admin"]), handleUpdateUser);
+router.post(
+  "/users",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  handleCreateUser
+);
 
-router.post("/users", authMiddleware, roleMiddleware(["admin"]), handleCreateUser);
-
-
+router.get(
+  "/users/:userId",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  handleGetUserById
+);
 
 module.exports = router;

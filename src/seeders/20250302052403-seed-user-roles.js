@@ -1,6 +1,6 @@
 module.exports = {
   up: async (queryInterface) => {
-    await queryInterface.bulkInsert('User_Roles', [
+    await queryInterface.bulkInsert("User_Roles", [
       { user_id: 1, role_id: 1 }, // John Doe - Admin
       { user_id: 2, role_id: 2 }, // Jane Smith - Customer
       { user_id: 3, role_id: 1 }, // Admin User - Admin
@@ -17,13 +17,10 @@ module.exports = {
       { user_id: 13, role_id: 4 }, // User 13 - Vendor
       { user_id: 14, role_id: 1 }, // User 14 - Admin
       { user_id: 15, role_id: 2 }, // User 15 - Customer
-      { user_id: 16, role_id: 3 }, // User 16 - Shipper
-      { user_id: 17, role_id: 4 }, // User 17 - Vendor
-      { user_id: 18, role_id: 2 }, // User 18 - Customer
     ]);
   },
 
   down: async (queryInterface) => {
-    await queryInterface.bulkDelete('User_Roles', null, {});
+    await queryInterface.bulkDelete("User_Roles", null, {});
   },
 };
