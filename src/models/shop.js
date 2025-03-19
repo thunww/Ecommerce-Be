@@ -1,5 +1,5 @@
-const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { Model, DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
 
 class Shop extends Model {}
 
@@ -43,25 +43,26 @@ Shop.init(
       type: DataTypes.INTEGER,
       defaultValue: 0,
     },
+    views: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
     address: {
       type: DataTypes.STRING(255),
       allowNull: true,
     },
     status: {
-      type: DataTypes.STRING(20),
-      defaultValue: 'active',
-      validate: {
-        isIn: [['active', 'suspended', 'closed']],
-      },
+      type: DataTypes.ENUM("active", "inactive", "suspended"),
+      defaultValue: "active",
     },
   },
   {
     sequelize,
-    modelName: 'Shop',
-    tableName: 'Shops',
+    modelName: "Shop",
+    tableName: "Shops",
     timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
+    createdAt: "created_at",
+    updatedAt: "updated_at",
   }
 );
 
