@@ -13,14 +13,14 @@ module.exports = {
       email: { type: Sequelize.STRING(100), allowNull: false, unique: true },
       phone: { type: Sequelize.STRING(15), allowNull: true, unique: true },
       gender: { type: Sequelize.STRING(10), allowNull: true },
-      date_of_birth: { type: Sequelize.DATE, allowNull: true },
-      profile_picture: { type: Sequelize.STRING(255), allowNull: true },
-      is_verified: { type: Sequelize.BOOLEAN, defaultValue: false },
       status: {
         type: Sequelize.ENUM("active", "inactive", "banned"),
         allowNull: false,
         defaultValue: "active",
       },
+      date_of_birth: { type: Sequelize.DATE, allowNull: true },
+      profile_picture: { type: Sequelize.STRING(255), allowNull: true },
+      is_verified: { type: Sequelize.BOOLEAN, defaultValue: false },
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,
@@ -33,6 +33,7 @@ module.exports = {
       },
     });
   },
+
   down: async (queryInterface) => {
     await queryInterface.dropTable("Users");
   },

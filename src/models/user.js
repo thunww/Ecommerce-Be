@@ -17,6 +17,11 @@ User.init(
       allowNull: true,
       validate: { isIn: [["male", "female", "other"]] },
     },
+    status: {
+      type: DataTypes.ENUM("active", "inactive", "banned"),
+      allowNull: false,
+      defaultValue: "active",
+    },
     date_of_birth: { type: DataTypes.DATE, allowNull: true },
     profile_picture: { type: DataTypes.STRING(255), allowNull: true },
     is_verified: { type: DataTypes.BOOLEAN, defaultValue: false },
