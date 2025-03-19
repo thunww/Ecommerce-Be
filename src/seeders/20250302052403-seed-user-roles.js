@@ -17,6 +17,11 @@ module.exports = {
       { user_id: 13, role_id: 4 }, // User 13 - Vendor
       { user_id: 14, role_id: 1 }, // User 14 - Admin
       { user_id: 15, role_id: 2 }, // User 15 - Customer
+      { user_id: 16, role_id: 3 }, // User 16 - Shipper
+      { user_id: 17, role_id: 4 }, // User 17 - Vendor
+      { user_id: 18, role_id: 2 }, // User 18 - Customer
+      { user_id: 18, role_id: 4 },
+      { user_id: 7, role_id: 4 },
     ]);
   },
 
