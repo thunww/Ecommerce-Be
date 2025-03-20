@@ -6,10 +6,9 @@ const {
   handleGetAllUsers,
   handleAssignRoleToUser,
   handleRemoveRoleFromUser,
-  handleDeleteUser,
-  handleUpdateUser,
-  handleCreateUser,
   handleGetUserById,
+  handleBanUser,
+  handleUnbanUser,
 } = require("../controllers/adminController");
 
 const router = express.Router();
@@ -35,32 +34,24 @@ router.post(
   handleRemoveRoleFromUser
 );
 
-router.delete(
-  "/users/:userId",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  handleDeleteUser
-);
-
-router.put(
-  "/users/:userId",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  handleUpdateUser
-);
-
-router.post(
-  "/users",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  handleCreateUser
-);
-
 router.get(
   "/users/:userId",
   authMiddleware,
   roleMiddleware(["admin"]),
   handleGetUserById
+);
+
+router.put(
+  "/users/ban/",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  handleBanUser
+);
+router.put(
+  "/users/unban/",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  handleUnbanUser
 );
 
 module.exports = router;

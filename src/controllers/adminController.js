@@ -2,10 +2,9 @@ const {
   getAllUsers,
   assignRoleToUser,
   removeRoleFromUser,
-  deleteUser,
-  updateUser,
-  createUser,
   getUserById,
+  banUser,
+  unbanUser,
 } = require("../services/adminService");
 
 const handleGetAllUsers = async (req, res) => {
@@ -39,42 +38,6 @@ const handleRemoveRoleFromUser = async (req, res) => {
   }
 };
 
-// Xóa user
-const handleDeleteUser = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const result = await deleteUser(userId);
-    res.status(200).json(result);
-  } catch (error) {
-    console.error("Error deleting user:", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
-  }
-};
-
-// Cập nhật thông tin user
-const handleUpdateUser = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const updateData = req.body;
-    const result = await updateUser(userId, updateData);
-    res.status(200).json(result);
-  } catch (error) {
-    console.error("Error updating user:", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
-  }
-};
-
-const handleCreateUser = async (req, res) => {
-  try {
-    const userData = req.body;
-    const result = await createUser(userData);
-    res.status(201).json(result);
-  } catch (error) {
-    console.error("Error creating user:", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
-  }
-};
-
 const handleGetUserById = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -85,12 +48,51 @@ const handleGetUserById = async (req, res) => {
   }
 };
 
+const handleBanUser = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "User ID is required" });
+    }
+
+    const result = await banUser(userId);
+    res.status(200).json({ result });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+};
+
+const handleUnbanUser = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "User ID is required" });
+    }
+
+    const result = await unbanUser(userId);
+    res.status(200).json({ result });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+};
+
 module.exports = {
   handleGetAllUsers,
   handleAssignRoleToUser,
-  handleDeleteUser,
   handleRemoveRoleFromUser,
-  handleUpdateUser,
-  handleCreateUser,
   handleGetUserById,
+  handleBanUser,
+  handleUnbanUser,
 };
