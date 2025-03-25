@@ -7,7 +7,7 @@ module.exports = {
         description: "Specializing in high-end technology products",
         logo: "https://example.com/images/shop1-logo.jpg",
         banner: "https://example.com/images/shop1-banner.jpg",
-        rating: 4.5,
+        rating: 3.0,
         followers: 1200,
         total_products: 200,
         views: 5000,

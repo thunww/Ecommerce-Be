@@ -7,7 +7,7 @@ module.exports = {
         shop_id: 1,
         total_price: 250.0,
         shipping_fee: 20.0,
-        status: "pending",
+        status: "shipped",
         created_at: new Date(),
         updated_at: new Date(),
       },
