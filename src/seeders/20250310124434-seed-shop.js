@@ -57,7 +57,7 @@ module.exports = {
         total_products: 150,
         views: 5400,
         address: "90 Pham Van Dong, Ho Chi Minh City",
-        status: "active",
+        status: "inactive",
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -72,7 +72,7 @@ module.exports = {
         total_products: 280,
         views: 8600,
         address: "12 Vo Van Kiet, District 2, Ho Chi Minh City",
-        status: "active",
+        status: "inactive",
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -92,7 +92,7 @@ module.exports = {
         updated_at: new Date(),
       },
       {
-        owner_id: 7, // Vendor
+        owner_id: 7,
         shop_name: "Sports & Fitness Gear",
         description: "Premium quality sports and fitness equipment",
         logo: "https://example.com/images/shop7-logo.jpg",
@@ -107,7 +107,7 @@ module.exports = {
         updated_at: new Date(),
       },
       {
-        owner_id: 9, // Vendor
+        owner_id: 5,
         shop_name: "Luxury Jewelry",
         description: "Fine jewelry and watches from top brands",
         logo: "https://example.com/images/shop8-logo.jpg",
@@ -117,12 +117,12 @@ module.exports = {
         total_products: 125,
         views: 9800,
         address: "22 Dong Khoi, District 1, Ho Chi Minh City",
-        status: "active",
+        status: "suspended",
         created_at: new Date(),
         updated_at: new Date(),
       },
       {
-        owner_id: 13, // Vendor
+        owner_id: 10,
         shop_name: "Auto Parts & Accessories",
         description: "Car and motorcycle accessories for every model",
         logo: "https://example.com/images/shop9-logo.jpg",
@@ -132,7 +132,7 @@ module.exports = {
         total_products: 270,
         views: 6100,
         address: "15 Tan Binh Street, Tan Binh District, Ho Chi Minh City",
-        status: "active",
+        status: "suspended",
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -148,6 +148,22 @@ module.exports = {
         total_products: 200,
         views: 5500,
         address: "99 Nguyen Tri Phuong, District 5, Ho Chi Minh City",
+        status: "active",
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        owner_id: 17, // Vendor
+        shop_name: "Musical Instruments Store 2",
+        description:
+          "Providing the best instruments and accessories for musicians",
+        logo: "https://example.com/images/shop10-logo.jpg",
+        banner: "https://example.com/images/shop10-banner.jpg",
+        rating: 4.7,
+        followers: 2000,
+        total_products: 210,
+        views: 550,
+        address: "99 Nguyen Tri Phuong, District 3, Ho Chi Minh City",
         status: "active",
         created_at: new Date(),
         updated_at: new Date(),
