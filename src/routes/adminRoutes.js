@@ -13,45 +13,17 @@ const {
 
 const router = express.Router();
 
-router.get(
-  "/users",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  handleGetAllUsers
-);
 
-router.post(
-  "/users/assign-role",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  handleAssignRoleToUser
-);
+router.get("/users", authMiddleware, roleMiddleware(["admin"]), handleGetAllUsers);
 
-router.post(
-  "/users/remove-role",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  handleRemoveRoleFromUser
-);
+router.post("/users/assign-role", authMiddleware, roleMiddleware(["admin"]), handleAssignRoleToUser);
 
-router.get(
-  "/users/:userId",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  handleGetUserById
-);
+router.post("/users/remove-role", authMiddleware, roleMiddleware(["admin"]), handleRemoveRoleFromUser);
 
-router.put(
-  "/users/ban/",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  handleBanUser
-);
-router.put(
-  "/users/unban/",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  handleUnbanUser
-);
+router.get("/users/:userId", authMiddleware, roleMiddleware(["admin"]), handleGetUserById);
+
+router.put("/users/ban/", authMiddleware, roleMiddleware(["admin"]), handleBanUser );
+
+router.put("/users/unban/", authMiddleware, roleMiddleware(["admin"]), handleUnbanUser )
 
 module.exports = router;

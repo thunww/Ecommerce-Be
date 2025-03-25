@@ -1,4 +1,3 @@
-const { use } = require("../app");
 const { User, Role } = require("../models");
 
 const getAllUsers = async () => {
@@ -44,7 +43,12 @@ const assignRoleToUser = async (userId, roleId) => {
       return { success: false, message: "User or Role not found" };
 
     await user.addRole(role);
-    return { success: true, message: "Role assigned successfully" };
+    return {
+      success: true,
+      message: "Role assigned successfully",
+      userId: userId,
+      role: role.role_name,
+    };
   } catch (error) {
     console.error("Error assigning role:", error);
     throw new Error("Internal Server Error");
@@ -60,7 +64,12 @@ const removeRoleFromUser = async (userId, roleId) => {
       return { success: false, message: "User or Role not found" };
 
     await user.removeRole(role);
-    return { success: true, message: "Role removed successfully" };
+    return {
+      success: true,
+      message: "Role removed successfully",
+      user: userId,
+      role: role.role_name,
+    };
   } catch (error) {
     console.error("Error removing role:", error);
     throw new Error("Internal Server Error");
