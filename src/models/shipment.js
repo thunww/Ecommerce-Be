@@ -1,5 +1,5 @@
-const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { Model, DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
 
 class Shipment extends Model {}
 
@@ -13,10 +13,22 @@ Shipment.init(
     sub_order_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      references: {
+        model: "SubOrders",
+        key: "sub_order_id",
+      },
+      onUpdate: "CASCADE",
+      onDelete: "CASCADE",
     },
     shipper_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      references: {
+        model: "Shippers",
+        key: "shipper_id",
+      },
+      onUpdate: "CASCADE",
+      onDelete: "CASCADE",
     },
     tracking_number: {
       type: DataTypes.STRING(50),
@@ -24,8 +36,8 @@ Shipment.init(
       unique: true,
     },
     status: {
-      type: DataTypes.ENUM('waiting', 'in_transit', 'delivered', 'failed'),
-      defaultValue: 'waiting',
+      type: DataTypes.ENUM("waiting", "in_transit", "delivered", "failed"),
+      defaultValue: "waiting",
     },
     estimated_delivery_date: {
       type: DataTypes.DATE,
@@ -38,9 +50,10 @@ Shipment.init(
   },
   {
     sequelize,
-    modelName: 'Shipment',
-    tableName: 'Shipments',
+    modelName: "Shipment",
+    tableName: "Shipments",
     timestamps: true,
+    underscored: true,
   }
 );
 
