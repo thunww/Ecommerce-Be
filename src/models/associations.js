@@ -53,8 +53,15 @@ module.exports = (db) => {
   Address.belongsTo(User, { foreignKey: "user_id" });
 
   // Quan hệ Category - Product (1-N)
-  Category.hasMany(Product, { foreignKey: "category_id", as: "products" });
-  Product.belongsTo(Category, { foreignKey: "category_id" });
+  Category.hasMany(Product, {
+    foreignKey: "category_id",
+    as: "products",
+    onDelete: "SET NULL"
+  });
+  Product.belongsTo(Category, {
+    foreignKey: "category_id",
+    as: "Category"
+  });
 
   // Quan hệ Category - Category (Danh mục cha - con)
   Category.belongsTo(Category, {
@@ -95,6 +102,7 @@ module.exports = (db) => {
   });
   OrderItem.belongsTo(Product, {
     foreignKey: "product_id",
+    as: "product",
     onDelete: "CASCADE",
   });
 
@@ -110,20 +118,47 @@ module.exports = (db) => {
   });
 
   // Quan hệ Product - ProductImage (1-N)
-  Product.hasMany(ProductImage, { foreignKey: "product_id", as: "images" });
-  ProductImage.belongsTo(Product, { foreignKey: "product_id" });
+  Product.hasMany(ProductImage, {
+    foreignKey: "product_id",
+    as: "images",
+    onDelete: "CASCADE"
+  });
+  ProductImage.belongsTo(Product, {
+    foreignKey: "product_id",
+    onDelete: "CASCADE"
+  });
 
   // Quan hệ Product - ProductReview (1-N)
-  Product.hasMany(ProductReview, { foreignKey: "product_id", as: "reviews" });
-  ProductReview.belongsTo(Product, { foreignKey: "product_id" });
+  Product.hasMany(ProductReview, {
+    foreignKey: "product_id",
+    as: "reviews",
+    onDelete: "CASCADE"
+  });
+  ProductReview.belongsTo(Product, {
+    foreignKey: "product_id",
+    onDelete: "CASCADE"
+  });
 
   // Quan hệ User - ProductReview (1-N)
-  User.hasMany(ProductReview, { foreignKey: "user_id", as: "productReviews" });
-  ProductReview.belongsTo(User, { foreignKey: "user_id" });
+  User.hasMany(ProductReview, {
+    foreignKey: "user_id",
+    as: "productReviews"
+  });
+  ProductReview.belongsTo(User, {
+    foreignKey: "user_id",
+    as: "user"
+  });
 
   // Quan hệ Shop - Product (1-N)
-  Shop.hasMany(Product, { foreignKey: "shop_id", as: "products" });
-  Product.belongsTo(Shop, { foreignKey: "shop_id" });
+  Shop.hasMany(Product, {
+    foreignKey: "shop_id",
+    as: "products",
+    onDelete: "CASCADE"
+  });
+  Product.belongsTo(Shop, {
+    foreignKey: "shop_id",
+    as: "Shop"
+  });
 
   // Quan hệ Shop - ShopReview (1-N)
   Shop.hasMany(ShopReview, { foreignKey: "shop_id", as: "reviews" });
@@ -160,6 +195,7 @@ module.exports = (db) => {
   Product.hasMany(Wishlist, {
     foreignKey: "product_id",
     as: "wishlistedByUsers",
+    onDelete: "CASCADE"
   });
   Wishlist.belongsTo(Product, {
     foreignKey: "product_id",
