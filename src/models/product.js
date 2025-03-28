@@ -2,7 +2,7 @@ const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
 
-class Product extends Model {}
+class Product extends Model { }
 
 Product.init(
   {
@@ -71,6 +71,7 @@ Product.init(
     modelName: 'Product',
     tableName: 'Products',
     timestamps: true,
+    underscored: true
   }
 );
 

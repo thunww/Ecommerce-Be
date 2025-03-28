@@ -44,6 +44,16 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         defaultValue: true,
       },
+      average_rating: {
+        type: Sequelize.DECIMAL(3, 2),
+        defaultValue: 0.00,
+        allowNull: false,
+      },
+      review_count: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0,
+        allowNull: false,
+      },
       created_at: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),

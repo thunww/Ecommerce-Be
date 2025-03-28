@@ -1,4 +1,4 @@
-const { verifyToken } = require("../config/jwt");
+const jwt = require("../config/jwt");
 
 const authMiddleware = (req, res, next) => {
     try {
@@ -12,7 +12,7 @@ const authMiddleware = (req, res, next) => {
 
         let decoded;
         try {
-            decoded = verifyToken(token);
+            decoded = jwt.verifyToken(token);
         } catch (error) {
             return res.status(403).json({ message: "Invalid or expired token" });
         }
