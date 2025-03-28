@@ -20,6 +20,7 @@ module.exports = (db) => {
     Shipment,
     Wishlist,
     UserCoupon,
+    Shipper,
   } = db;
 
   // Quan hệ User - Role (N-N)
@@ -117,6 +118,14 @@ module.exports = (db) => {
     onDelete: "CASCADE",
   });
 
+  // Quan hệ User - Shipper (1-1)
+  User.hasOne(Shipper, { foreignKey: "user_id", as: "shipper" });
+  Shipper.belongsTo(User, { foreignKey: "user_id", as: "user" });
+
+  // Quan hệ Shipper - Shipment (1-N)
+  Shipper.hasMany(Shipment, { foreignKey: "shipper_id", as: "shipments" });
+  Shipment.belongsTo(Shipper, { foreignKey: "shipper_id", as: "shipper" });
+
   // Quan hệ Product - ProductImage (1-N)
   Product.hasMany(ProductImage, {
     foreignKey: "product_id",
@@ -183,10 +192,6 @@ module.exports = (db) => {
     onDelete: "CASCADE",
   });
 
-  // Quan hệ Shipment - User (Shipper)
-  User.hasMany(Shipment, { foreignKey: "shipper_id", as: "shipments" });
-  Shipment.belongsTo(User, { foreignKey: "shipper_id", onDelete: "CASCADE" });
-
   // Quan hệ Wishlist - User (N-1)
   User.hasMany(Wishlist, { foreignKey: "user_id", as: "wishlists" });
   Wishlist.belongsTo(User, { foreignKey: "user_id", onDelete: "CASCADE" });
@@ -200,5 +205,6 @@ module.exports = (db) => {
   Wishlist.belongsTo(Product, {
     foreignKey: "product_id",
     onDelete: "CASCADE",
+    as: "product"
   });
 };

@@ -11,7 +11,7 @@ const configCORS = require("./config/cors");
 const app = express();
 const bodyParser = require("body-parser");
 const adminRoutes = require("./routes/adminRoutes");
-const customerRoutes = require("./routes/customerRoutes");
+
 const cartRoutes = require("./routes/cartRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
 const reviewRoutes = require("./routes/reviewRoutes")
@@ -32,6 +32,8 @@ app.use("/api/v1/", userRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/uploads", express.static("uploads"));
 
+
+
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", wishlistRoutes);
@@ -39,6 +41,10 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/addresses", addressRoutes);
+
+const shopRoutes = require("./routes/shopRoutes");
+app.use("/api/shop", shopRoutes);
+
 
 // Xử lý lỗi 404 (Not Found)
 app.use((req, res, next) => {

@@ -6,61 +6,24 @@ const {
   handleGetAllUsers,
   handleAssignRoleToUser,
   handleRemoveRoleFromUser,
-  handleDeleteUser,
-  handleUpdateUser,
-  handleCreateUser,
   handleGetUserById,
+  handleBanUser,
+  handleUnbanUser,
 } = require("../controllers/adminController");
 
 const router = express.Router();
 
-router.get(
-  "/users",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  handleGetAllUsers
-);
 
-router.post(
-  "/users/assign-role",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  handleAssignRoleToUser
-);
+router.get("/users", authMiddleware, roleMiddleware(["admin"]), handleGetAllUsers);
 
-router.post(
-  "/users/remove-role",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  handleRemoveRoleFromUser
-);
+router.post("/users/assign-role", authMiddleware, roleMiddleware(["admin"]), handleAssignRoleToUser);
 
-router.delete(
-  "/users/:userId",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  handleDeleteUser
-);
+router.post("/users/remove-role", authMiddleware, roleMiddleware(["admin"]), handleRemoveRoleFromUser);
 
-router.put(
-  "/users/:userId",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  handleUpdateUser
-);
+router.get("/users/:userId", authMiddleware, roleMiddleware(["admin"]), handleGetUserById);
 
-router.post(
-  "/users",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  handleCreateUser
-);
+router.put("/users/ban/", authMiddleware, roleMiddleware(["admin"]), handleBanUser );
 
-router.get(
-  "/users/:userId",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  handleGetUserById
-);
+router.put("/users/unban/", authMiddleware, roleMiddleware(["admin"]), handleUnbanUser )
 
 module.exports = router;

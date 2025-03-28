@@ -8,9 +8,9 @@ const cartController = require('../controllers/cartController');
 router.use(authMiddleware);
 
 // Cart routes
-router.post('/cart', cartController.addToCart);
-router.get('/cart', cartController.getCart);
-router.put('/cart/:id', cartController.updateCartItem);
-router.delete('/cart/:id', cartController.removeFromCart);
+router.post('/', cartController.addToCart);
+router.get('/', cartController.getCart);
+router.put('/:id', cartController.updateCartItem);
+router.delete('/:id', cartController.removeFromCart);
 
 module.exports = router;
