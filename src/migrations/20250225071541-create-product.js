@@ -1,7 +1,6 @@
-// migrations/[timestamp]-create-products.js
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('Products', {
+    await queryInterface.createTable("Products", {
       product_id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
@@ -22,7 +21,7 @@ module.exports = {
       },
       discount: {
         type: Sequelize.DECIMAL(5, 2),
-        defaultValue: 0.00,
+        defaultValue: 0.0,
       },
       stock: {
         type: Sequelize.INTEGER,
@@ -40,13 +39,14 @@ module.exports = {
         type: Sequelize.STRING(50),
         allowNull: true,
       },
-      is_active: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: true,
+      status: {
+        type: Sequelize.ENUM("pending", "active", "inactive"),
+        allowNull: false,
+        defaultValue: "pending", // Khi seller gửi, mặc định là "pending"
       },
       average_rating: {
         type: Sequelize.DECIMAL(3, 2),
-        defaultValue: 0.00,
+        defaultValue: 0.0,
         allowNull: false,
       },
       review_count: {
@@ -56,34 +56,38 @@ module.exports = {
       },
       created_at: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        allowNull: false,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
       },
       updated_at: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        allowNull: false,
+        defaultValue: Sequelize.literal(
+          "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+        ),
       },
       shop_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Shops',
-          key: 'shop_id',
+          model: "Shops",
+          key: "shop_id",
         },
-        onDelete: 'CASCADE',
+        onDelete: "CASCADE",
       },
       category_id: {
         type: Sequelize.INTEGER,
         allowNull: true,
         references: {
-          model: 'Categories',
-          key: 'category_id',
+          model: "Categories",
+          key: "category_id",
         },
-        onDelete: 'SET NULL',
+        onDelete: "SET NULL",
       },
     });
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable('Products');
+    await queryInterface.dropTable("Products");
   },
 };

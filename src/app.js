@@ -14,15 +14,16 @@ const adminRoutes = require("./routes/adminRoutes");
 
 const cartRoutes = require("./routes/cartRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
-const reviewRoutes = require("./routes/reviewRoutes")
-const paymentRoutes = require("./routes/paymentRoutes")
-const notificationRoutes = require("./routes/notificationRoutes")
-const addressRoutes = require("./routes/addressRoutes")
+const reviewRoutes = require("./routes/reviewRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+const addressRoutes = require("./routes/addressRoutes");
+const shopRoutes = require("./routes/shopRoutes");
 // Middleware
 app.use(helmet());
 app.use(compression());
 configCORS(app);
-app.use(morgan('dev'));
+app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // Cho form-data
 
@@ -32,9 +33,8 @@ app.use("/api/v1/", userRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/uploads", express.static("uploads"));
 
+app.use("/api/v1/products", productRoutes);
 
-
-app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/reviews", reviewRoutes);
@@ -42,9 +42,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/addresses", addressRoutes);
 
-const shopRoutes = require("./routes/shopRoutes");
-app.use("/api/shop", shopRoutes);
-
+app.use("/api/v1/shops", shopRoutes);
 
 // Xử lý lỗi 404 (Not Found)
 app.use((req, res, next) => {
@@ -57,12 +55,13 @@ app.use((err, req, res, next) => {
 });
 
 // Database connection
-sequelize.authenticate()
+sequelize
+  .authenticate()
   .then(() => {
-    console.log('Kết nối database thành công.');
+    console.log("Kết nối database thành công.");
   })
-  .catch(err => {
-    console.error('Không thể kết nối database:', err);
+  .catch((err) => {
+    console.error("Không thể kết nối database:", err);
   });
 
-module.exports = app; 
+module.exports = app;
