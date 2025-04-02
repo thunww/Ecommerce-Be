@@ -1,7 +1,7 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-class SubOrder extends Model {}
+class SubOrder extends Model { }
 
 SubOrder.init(
   {
@@ -19,7 +19,7 @@ SubOrder.init(
       allowNull: false,
     },
     total_price: {
-      type: DataTypes.DECIMAL(10, 2),
+      type: DataTypes.DECIMAL(15, 2),
       allowNull: false,
     },
     shipping_fee: {
@@ -29,17 +29,20 @@ SubOrder.init(
     status: {
       type: DataTypes.STRING(20),
       allowNull: false,
-      defaultValue: 'pending',
+      defaultValue: 'cart',
       validate: {
-        isIn: [['pending', 'processing', 'shipped', 'delivered', 'cancelled']],
+        isIn: [['cart', 'pending', 'processing', 'shipped', 'delivered', 'cancelled']],
       },
     },
+
   },
+
   {
     sequelize,
     modelName: 'SubOrder',
     tableName: 'Sub_Orders',
     timestamps: true,
+    underscored: true
   }
 );
 

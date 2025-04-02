@@ -1,7 +1,7 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-class OrderItem extends Model {}
+class OrderItem extends Model { }
 
 OrderItem.init(
   {
@@ -23,7 +23,7 @@ OrderItem.init(
       allowNull: false,
     },
     price: {
-      type: DataTypes.DECIMAL(10, 2),
+      type: DataTypes.DECIMAL(15, 2),
       allowNull: false,
     },
     discount: {
@@ -31,16 +31,21 @@ OrderItem.init(
       defaultValue: 0.00,
     },
     total: {
-      type: DataTypes.DECIMAL(10, 2),
+      type: DataTypes.DECIMAL(15, 2),
       allowNull: false,
       defaultValue: 0.00,
     },
+
   },
+
+
+
   {
     sequelize,
     modelName: 'OrderItem',
     tableName: 'Order_Items',
     timestamps: true,
+    underscored: true
   }
 );
 

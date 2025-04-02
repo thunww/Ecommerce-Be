@@ -27,7 +27,7 @@ module.exports = {
         onDelete: 'CASCADE',
       },
       total_price: {
-        type: Sequelize.DECIMAL(10, 2),
+        type: Sequelize.DECIMAL(15, 2),
         allowNull: false,
       },
       shipping_fee: {
@@ -35,12 +35,8 @@ module.exports = {
         defaultValue: 0.00,
       },
       status: {
-        type: Sequelize.STRING(20),
-        allowNull: false,
-        defaultValue: 'pending',
-        validate: {
-          isIn: [['pending', 'processing', 'shipped', 'delivered', 'cancelled']],
-        },
+        type: Sequelize.ENUM('cart', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'),
+        defaultValue: 'cart',
       },
       created_at: {
         type: Sequelize.DATE,

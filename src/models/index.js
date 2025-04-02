@@ -29,6 +29,7 @@ const Shipment = require('./shipment');
 const Wishlist = require('./wishlist');
 const UserCoupon = require('./usercoupon');
 const UserRole = require("./userrole");
+const Shipper = require("./shipper");
 
 // 🛠 Gán models vào db
 Object.assign(db, {
@@ -51,6 +52,7 @@ Object.assign(db, {
   Shipment,
   Wishlist,
   UserCoupon,
+  Shipper,
 });
 
 // 🛠 Gán Sequelize và instance vào db

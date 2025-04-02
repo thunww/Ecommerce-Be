@@ -14,7 +14,7 @@ const { handleAIChat } = require("../controllers/vendorController");
 
 
 // Middleware cho vendor routes
-const vendorMiddleware = [authMiddleware, roleMiddleware(["vendor"])];
+const vendorMiddleware = [authMiddleware, roleMiddleware(["vendor"],true)];
 
 
 

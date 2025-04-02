@@ -1,4 +1,3 @@
-const { use } = require("../app");
 const { User, Role } = require("../models");
 
 const getAllUsers = async () => {
@@ -7,9 +6,9 @@ const getAllUsers = async () => {
       attributes: [
         "user_id",
         "profile_picture",
-        "first_name",
-        "last_name",
+        "username",
         "email",
+        "status",
         "is_verified",
       ],
       include: [
@@ -44,7 +43,12 @@ const assignRoleToUser = async (userId, roleId) => {
       return { success: false, message: "User or Role not found" };
 
     await user.addRole(role);
-    return { success: true, message: "Role assigned successfully" };
+    return {
+      success: true,
+      message: "Role assigned successfully",
+      userId: userId,
+      role: role.role_name,
+    };
   } catch (error) {
     console.error("Error assigning role:", error);
     throw new Error("Internal Server Error");
@@ -60,52 +64,14 @@ const removeRoleFromUser = async (userId, roleId) => {
       return { success: false, message: "User or Role not found" };
 
     await user.removeRole(role);
-    return { success: true, message: "Role removed successfully" };
-  } catch (error) {
-    console.error("Error removing role:", error);
-    throw new Error("Internal Server Error");
-  }
-};
-
-const deleteUser = async (userId) => {
-  try {
-    const user = await User.findByPk(userId);
-
-    if (!user) return { success: false, message: "User not found " };
-
-    await user.destroy();
-    return { success: true, message: "User deleted successfully" };
-  } catch (error) {
-    console.error("Error deleting user:", error);
-    throw new Error("Internal Server Error");
-  }
-};
-
-const updateUser = async (userId, updatedDate) => {
-  try {
-    const user = await User.findByPk(userId);
-
-    if (!user) return { success: false, message: "User not found " };
-
-    await user.update(updatedDate);
-    return { success: true, message: "User updated successfully", user };
-  } catch (error) {
-    console.error("Error updating user:", error);
-    throw new Error("Internal Server Error");
-  }
-};
-
-const createUser = async (userData) => {
-  try {
-    const newUser = await User.create(userData);
-
     return {
       success: true,
-      message: "User created successfully",
-      user: newUser,
+      message: "Role removed successfully",
+      user: userId,
+      role: role.role_name,
     };
   } catch (error) {
-    console.error("Error creating user:", error);
+    console.error("Error removing role:", error);
     throw new Error("Internal Server Error");
   }
 };
@@ -127,12 +93,55 @@ const getUserById = async (userId) => {
   }
 };
 
+const banUser = async (userId) => {
+  const user = await User.findByPk(userId);
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (user.status === "banned") {
+    return { success: false, message: "User is already banned" };
+  }
+
+  user.status = "banned";
+
+  await user.save();
+
+  return {
+    success: true,
+    message: "Banned user successfully!",
+    user: { id: user.id, status: user.status },
+  };
+};
+
+const unbanUser = async (userId) => {
+  const user = await User.findByPk(userId);
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (user.status !== "banned") {
+    return { success: false, message: "User is not banned" };
+  }
+
+  user.status = "active"; // Hoặc trạng thái ban đầu của user, tùy vào hệ thống của bạn
+
+  await user.save();
+
+  return {
+    success: true,
+    message: "User has been unbanned successfully!",
+    user: { id: user.id, status: user.status },
+  };
+};
+
 module.exports = {
   getAllUsers,
   assignRoleToUser,
   removeRoleFromUser,
-  deleteUser,
-  updateUser,
-  createUser,
   getUserById,
+  banUser,
+  unbanUser,
 };

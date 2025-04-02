@@ -18,7 +18,7 @@ module.exports = {
         onDelete: 'CASCADE',
       },
       total_price: {
-        type: Sequelize.DECIMAL(10, 2),
+        type: Sequelize.DECIMAL(15, 2),
         allowNull: false,
       },
       payment_status: {
@@ -33,8 +33,8 @@ module.exports = {
         type: Sequelize.STRING(255),
       },
       status: {
-        type: Sequelize.ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled'),
-        defaultValue: 'pending',
+        type: Sequelize.ENUM('cart', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'),
+        defaultValue: 'cart',
       },
       created_at: {
         type: Sequelize.DATE,
