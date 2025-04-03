@@ -72,6 +72,13 @@ router.get(
   vendorController.handleGetShopRating
 );
 
+// Lấy danh sách sản phẩm của shop
+router.get(
+  "/shop/products",
+  vendorMiddleware,
+  vendorController.handleGetShopProducts
+);
+
 // AI Chat
 router.post(
   "/ai-chat",

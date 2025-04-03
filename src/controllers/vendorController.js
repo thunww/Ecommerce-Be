@@ -4,6 +4,7 @@ const {
   getRevenue,
   getShopRevenue,
   getShopRating,
+  getShopProducts,
 } = require("../services/vendorService");
 
 // Lấy thông tin shop của vendor
@@ -204,6 +205,20 @@ const handleAIChat = async (req, res) => {
   }
 };
 
+// Lấy danh sách sản phẩm của shop
+const handleGetShopProducts = async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+    console.log("Getting shop products for user:", userId);
+
+    const products = await getShopProducts(userId);
+    res.json(products);
+  } catch (error) {
+    console.error("Error in handleGetShopProducts:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   handleGetMyShop,
   handleGetShopRevenue,
@@ -216,4 +231,5 @@ module.exports = {
   handleGetShopReviews,
   handleGetShopRating,
   handleAIChat,
+  handleGetShopProducts,
 };

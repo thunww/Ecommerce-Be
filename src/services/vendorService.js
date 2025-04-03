@@ -5,6 +5,8 @@ const {
   Product,
   ShopReview,
   OrderItem,
+  ProductImage,
+  Category,
 } = require("../models");
 const { sequelize } = require("../models");
 const { Op } = require("sequelize");
@@ -39,7 +41,7 @@ const getShopRevenue = async (userId) => {
       where: {
         shop_id: shop.shop_id,
         status: {
-          [Op.in]: ["delivered", "completed"],
+          [Op.in]: ["delivered"],
         },
       },
       attributes: [
@@ -133,11 +135,18 @@ const getRevenue = async (userId) => {
       throw new Error("Không tìm thấy shop");
     }
 
-    // Log tất cả các đơn hàng của shop
+    // Lấy tất cả đơn hàng của shop (cả đã giao và chưa giao)
+    const totalOrders = await SubOrder.count({
+      where: {
+        shop_id: shop.shop_id,
+      },
+    });
+
+    // Log tất cả các đơn hàng đã giao của shop
     const allOrders = await SubOrder.findAll({
       where: {
         shop_id: shop.shop_id,
-        status: "shipped", // Chỉ lấy đơn hàng đã giao
+        status: "delivered", // Chỉ lấy đơn hàng đã giao
       },
       attributes: [
         "sub_order_id",
@@ -166,9 +175,10 @@ const getRevenue = async (userId) => {
 
     const result = {
       totalRevenue: totalValue,
-      totalOrders: allOrders.length,
+      totalOrders: totalOrders, // Tổng số đơn hàng
+      deliveredOrders: allOrders.length, // Số đơn hàng đã giao
       views: shopViews,
-      deliveredOrders: allOrders,
+      deliveredOrdersList: allOrders,
     };
 
     console.log("Final Result:", result);
@@ -408,6 +418,40 @@ const getShopRating = async (userId) => {
   }
 };
 
+// Lấy danh sách sản phẩm của shop
+const getShopProducts = async (userId) => {
+  try {
+    const shop = await Shop.findOne({
+      where: { owner_id: userId },
+    });
+
+    if (!shop) {
+      throw new Error("Không tìm thấy shop");
+    }
+
+    const products = await Product.findAll({
+      where: { shop_id: shop.shop_id },
+      include: [
+        {
+          model: ProductImage,
+          as: "images",
+          attributes: ["image_url"],
+        },
+        {
+          model: Category,
+          as: "Category",
+        },
+      ],
+      order: [["created_at", "DESC"]],
+    });
+
+    return products;
+  } catch (error) {
+    console.error("Error in getShopProducts:", error);
+    throw new Error("Không thể lấy danh sách sản phẩm của shop");
+  }
+};
+
 module.exports = {
   getShopByUserId,
   getShopRevenue,
@@ -420,4 +464,5 @@ module.exports = {
   getShopReviews,
   getOrderDetails,
   getShopRating,
+  getShopProducts,
 };
