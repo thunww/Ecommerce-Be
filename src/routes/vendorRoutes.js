@@ -4,6 +4,7 @@ const vendorController = require("../controllers/vendorController");
 const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
 const { handleAIChat } = require("../controllers/vendorController");
+const categoryController = require("../controllers/categoryController");
 
 
 
@@ -20,6 +21,8 @@ const vendorMiddleware = [authMiddleware, roleMiddleware(["vendor"],true)];
 
 // Lấy thông tin shop của vendor
 router.get("/my-shop", vendorMiddleware, vendorController.handleGetMyShop);
+router.get("/shop/category", vendorMiddleware, categoryController.handleGetAllCategories);
+
 
 // Lấy doanh thu shop
 router.get(

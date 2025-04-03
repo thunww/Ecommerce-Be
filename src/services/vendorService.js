@@ -436,6 +436,7 @@ const getShopProducts = async (userId) => {
           model: ProductImage,
           as: "images",
           attributes: ["image_url"],
+          // required: true, // Chỉ lấy sản phẩm có hình ảnh
         },
         {
           model: Category,
@@ -445,7 +446,17 @@ const getShopProducts = async (userId) => {
       order: [["created_at", "DESC"]],
     });
 
-    return products;
+    // Chuyển đổi dữ liệu để lấy hình ảnh đầu tiên làm ảnh chính
+    const formattedProducts = products.map(product => {
+      const productData = product.get({ plain: true });
+      return {
+        ...productData,
+        main_image: productData.images[0]?.image_url || null,
+        images: productData.images.map(img => img.image_url)
+      };
+    });
+
+    return formattedProducts;
   } catch (error) {
     console.error("Error in getShopProducts:", error);
     throw new Error("Không thể lấy danh sách sản phẩm của shop");

@@ -39,6 +39,20 @@ module.exports = {
         uploaded_at: new Date(),
       },
       {
+        product_id: 12,
+        image_url:
+          "https://dyson-h.assetsadobe2.com/is/image/content/dam/dyson/leap-petite-global/products/floorcare/sticks/v15-detect/pdp/gallery/Dyson-V15-Direct-HeroWithNasties-Core-LB.jpg?$responsive$&cropPathE=desktop&fit=stretch,1&wid=1920",
+        is_primary: true,
+        uploaded_at: new Date(),
+      },
+      {
+        product_id: 13,
+        image_url:
+          "https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/s/o/soundlink_revolve_plus_lux_gray_ec_02.jpg",
+        is_primary: true,
+        uploaded_at: new Date(),
+      },
+      {
         product_id: 6,
         image_url:
           "https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-llm05p5nkerg1c.webp",
@@ -70,6 +84,13 @@ module.exports = {
         product_id: 10,
         image_url:
           "https://down-vn.img.susercontent.com/file/vn-11134207-7ras8-m3i807hmm9j09e.webp",
+        is_primary: false,
+        uploaded_at: new Date(),
+      },
+      {
+        product_id: 11,
+        image_url:
+          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRzBidAvBQJTlVBHM27XLTUKjIpm2tya8BYg2gxelHHg7gLBlRl87gezWk&s",
         is_primary: false,
         uploaded_at: new Date(),
       },
