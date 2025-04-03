@@ -21,6 +21,8 @@ module.exports = (db) => {
     Wishlist,
     UserCoupon,
     Shipper,
+    Cart,
+    CartItem,
   } = db;
 
   // Quan hệ User - Role (N-N)
@@ -206,5 +208,47 @@ module.exports = (db) => {
     foreignKey: "product_id",
     onDelete: "CASCADE",
     as: "product"
+  });
+
+  // Quan hệ User - Cart (1-1)
+  User.hasOne(Cart, {
+    foreignKey: 'user_id',
+    as: 'cart',
+    onDelete: 'CASCADE'
+  });
+
+  Cart.belongsTo(User, {
+    foreignKey: 'user_id',
+    as: 'user'
+  });
+
+  Cart.hasMany(CartItem, {
+    foreignKey: 'cart_id',
+    as: 'items',
+    onDelete: 'CASCADE'
+  });
+
+  Cart.belongsToMany(Shop, {
+    through: CartItem,
+    foreignKey: 'cart_id',
+    otherKey: 'shop_id',
+    as: 'shops'
+  });
+
+  // CartItem associations
+  CartItem.belongsTo(Cart, {
+    foreignKey: 'cart_id',
+    as: 'cart'
+  });
+
+  CartItem.belongsTo(Product, {
+    foreignKey: 'product_id',
+    as: 'product',
+    onDelete: 'CASCADE'
+  });
+
+  CartItem.belongsTo(Shop, {
+    foreignKey: 'shop_id',
+    as: 'shop'
   });
 };

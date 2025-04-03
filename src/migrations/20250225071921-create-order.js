@@ -33,8 +33,8 @@ module.exports = {
         type: Sequelize.STRING(255),
       },
       status: {
-        type: Sequelize.ENUM('cart', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'),
-        defaultValue: 'cart',
+        type: Sequelize.ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled'),
+        defaultValue: 'pending',
       },
       created_at: {
         type: Sequelize.DATE,

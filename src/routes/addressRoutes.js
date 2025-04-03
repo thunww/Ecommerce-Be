@@ -3,8 +3,6 @@ const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware');
 
 
-
-
 const addressController = require('../controllers/addressController');
 // Address routes
 router.use(authMiddleware);

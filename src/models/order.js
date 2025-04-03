@@ -30,8 +30,8 @@ Order.init({
     allowNull: true
   },
   status: {
-    type: DataTypes.ENUM('cart', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'),
-    defaultValue: 'cart'
+    type: DataTypes.ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled'),
+    defaultValue: 'pending'
   }
 }, {
   sequelize,
