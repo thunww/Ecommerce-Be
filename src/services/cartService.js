@@ -40,6 +40,7 @@ class CartService {
                 cartItem = await CartItem.create({
                     cart_id: cart.cart_id,
                     product_id,
+                    shop_id: product.shop_id,
                     quantity,
                     price: product.price,
                     total_price: product.price * quantity
@@ -110,19 +111,15 @@ class CartService {
             include: [{
                 model: CartItem,
                 as: 'items',
-                attributes: ['cart_item_id', 'cart_id', 'product_id', 'quantity', 'price', 'total_price'],
                 include: [{
                     model: Product,
                     as: 'product',
-                    attributes: ['product_id', 'name', 'price', 'image_url', 'shop_id'],
                     include: [{
                         model: Shop,
-                        as: 'Shop',
-                        attributes: ['shop_id', 'shop_name']
+                        as: 'Shop'
                     }]
                 }]
-            }],
-            attributes: ['cart_id', 'user_id', 'total_price', 'created_at', 'updated_at']
+            }]
         });
 
         if (!cart) {
@@ -143,10 +140,10 @@ class CartService {
         });
 
         const total_items = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-        const total_amount = cartItems.reduce((sum, item) => sum + parseFloat(item.total_price), 0);
+        const total_price = cartItems.reduce((sum, item) => sum + parseFloat(item.total_price), 0);
 
         await Cart.update(
-            { total_items, total_amount },
+            { total_price },
             { where: { cart_id } }
         );
     }

@@ -56,11 +56,11 @@ module.exports = {
                 }
             },
             price: {
-                type: Sequelize.DECIMAL(10, 2),
+                type: Sequelize.DECIMAL(15, 2),
                 allowNull: false
             },
             total_price: {
-                type: Sequelize.DECIMAL(10, 2),
+                type: Sequelize.DECIMAL(15, 2),
                 allowNull: false
             },
             created_at: {

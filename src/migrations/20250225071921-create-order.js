@@ -17,16 +17,30 @@ module.exports = {
         },
         onDelete: 'CASCADE',
       },
+      shipping_address_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'Addresses',
+          key: 'address_id',
+        },
+        onDelete: 'CASCADE',
+      },
       total_price: {
         type: Sequelize.DECIMAL(15, 2),
         allowNull: false,
+      },
+      payment_method: {
+        type: Sequelize.ENUM('cod', 'momo', 'vnpay', 'bank_transfer'),
+        allowNull: false,
+        defaultValue: 'cod',
       },
       payment_status: {
         type: Sequelize.ENUM('unpaid', 'paid', 'refunded'),
         defaultValue: 'unpaid',
       },
       shipping_fee: {
-        type: Sequelize.DECIMAL(10, 2),
+        type: Sequelize.DECIMAL(15, 2),
         defaultValue: 0.00,
       },
       note: {

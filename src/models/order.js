@@ -11,15 +11,52 @@ Order.init({
   },
   user_id: {
     type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'Users',
+      key: 'user_id'
+    },
+    onDelete: 'CASCADE'
+  },
+  shipping_address_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'Addresses',
+      key: 'address_id'
+    },
+    onDelete: 'CASCADE'
+  },
+  total_amount: {
+    type: DataTypes.DECIMAL(15, 2),
     allowNull: false
+  },
+  payment_method: {
+    type: DataTypes.ENUM('cod', 'momo', 'vnpay', 'bank_transfer'),
+    allowNull: false,
+    defaultValue: 'cod'
+  },
+  status: {
+    type: DataTypes.ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled'),
+    allowNull: false,
+    defaultValue: 'pending'
+  },
+  payment_status: {
+    type: DataTypes.ENUM('pending', 'paid', 'failed'),
+    allowNull: false,
+    defaultValue: 'pending'
+  },
+  created_at: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.literal('CURRENT_TIMESTAMP')
+  },
+  updated_at: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.literal('CURRENT_TIMESTAMP')
   },
   total_price: {
     type: DataTypes.DECIMAL(15, 2),
     allowNull: false
-  },
-  payment_status: {
-    type: DataTypes.ENUM('unpaid', 'paid', 'refunded'),
-    defaultValue: 'unpaid'
   },
   shipping_fee: {
     type: DataTypes.DECIMAL(10, 2),
@@ -28,10 +65,6 @@ Order.init({
   note: {
     type: DataTypes.STRING(255),
     allowNull: true
-  },
-  status: {
-    type: DataTypes.ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled'),
-    defaultValue: 'pending'
   }
 }, {
   sequelize,

@@ -109,15 +109,38 @@ module.exports = (db) => {
     onDelete: "CASCADE",
   });
 
-  // Quan hệ Payment - SubOrder (1-1)
-  SubOrder.hasOne(Payment, {
-    foreignKey: "sub_order_id",
-    as: "payment",
-    onDelete: "CASCADE",
+  // Quan hệ Order - Payment (1-N)
+  Order.hasMany(Payment, {
+    foreignKey: 'order_id',
+    as: 'payments',
+    onDelete: 'CASCADE',
+  });
+  Payment.belongsTo(Order, {
+    foreignKey: 'order_id',
+    onDelete: 'CASCADE',
+  });
+
+  // Quan hệ SubOrder - Payment (1-N)
+  SubOrder.hasMany(Payment, {
+    foreignKey: 'sub_order_id',
+    as: 'payments',
+    onDelete: 'CASCADE',
   });
   Payment.belongsTo(SubOrder, {
-    foreignKey: "sub_order_id",
-    onDelete: "CASCADE",
+    foreignKey: 'sub_order_id',
+    onDelete: 'CASCADE',
+  });
+
+  // Quan hệ Order - Address (N-1)
+  Order.belongsTo(Address, {
+    foreignKey: 'shipping_address_id',
+    as: 'shipping_address',
+    onDelete: 'CASCADE',
+  });
+  Address.hasMany(Order, {
+    foreignKey: 'shipping_address_id',
+    as: 'orders',
+    onDelete: 'CASCADE',
   });
 
   // Quan hệ User - Shipper (1-1)

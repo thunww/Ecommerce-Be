@@ -22,7 +22,7 @@ Cart.init({
         onDelete: 'CASCADE',
     },
     total_price: {
-        type: DataTypes.DECIMAL(10, 2),
+        type: DataTypes.DECIMAL(15, 2),
         allowNull: false,
         defaultValue: 0,
     },
