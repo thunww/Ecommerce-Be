@@ -5,12 +5,11 @@ const helmet = require("helmet");
 const compression = require("compression");
 const { sequelize } = require("./models");
 const authRoutes = require("./routes/authRoutes");
-const userRoutes = require("./routes/userRoutes");
 const productRoutes = require("./routes/productRoutes");
 const configCORS = require("./config/cors");
 const app = express();
 const bodyParser = require("body-parser");
-const adminRoutes = require("./routes/adminRoutes");
+const usersRoutes = require("./routes/usersRoutes");
 
 const cartRoutes = require("./routes/cartRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
@@ -29,8 +28,7 @@ app.use(express.urlencoded({ extended: true })); // Cho form-data
 
 // Routes
 app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/", userRoutes);
-app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/", usersRoutes);
 app.use("/uploads", express.static("uploads"));
 
 app.use("/api/v1/products", productRoutes);

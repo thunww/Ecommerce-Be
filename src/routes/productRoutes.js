@@ -15,7 +15,6 @@ router.post("/upload", upload.single("image"), handleUploadProductImage);
 router.get("/:product_id/images", handleGetProductImages);
 router.delete("/image/:image_id", handleDeleteProductImage);
 
-// Public routes (không cần xác thực)
 router.get(
   "/",
   authMiddleware,

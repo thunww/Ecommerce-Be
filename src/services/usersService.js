@@ -137,6 +137,36 @@ const unbanUser = async (userId) => {
   };
 };
 
+const updateUser = async (userId, updatedData) => {
+  try {
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+      return { success: false, message: "User not found", user: null };
+    }
+
+    if (updatedData.first_name) user.first_name = updatedData.first_name;
+    if (updatedData.last_name) user.last_name = updatedData.last_name;
+    if (updatedData.phone) user.phone = updatedData.phone;
+    if (updatedData.gender) user.gender = updatedData.gender;
+    if (updatedData.date_of_birth)
+      user.date_of_birth = updatedData.date_of_birth;
+    if (updatedData.profile_picture)
+      user.profile_picture = updatedData.profile_picture;
+
+    await user.save();
+
+    return {
+      success: true,
+      message: "User updated successfully",
+      data: user,
+    };
+  } catch (error) {
+    console.error("Error updating user:", error);
+    return { success: false, message: "Internal Server Error", user: null };
+  }
+};
+
 module.exports = {
   getAllUsers,
   assignRoleToUser,
@@ -144,4 +174,5 @@ module.exports = {
   getUserById,
   banUser,
   unbanUser,
+  updateUser,
 };
