@@ -167,6 +167,26 @@ const updateUser = async (userId, updatedData) => {
   }
 };
 
+const uploadAvatar = async (user_id, imageUrl) => {
+  try {
+    // Find the user by their ID
+    const user = await User.findByPk(user_id);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    user.profile_picture = imageUrl;
+
+    await user.save();
+
+    return user;
+  } catch (error) {
+    console.error("Error updating avatar:", error);
+    throw new Error("Error updating avatar");
+  }
+};
+
 module.exports = {
   getAllUsers,
   assignRoleToUser,
@@ -175,4 +195,5 @@ module.exports = {
   banUser,
   unbanUser,
   updateUser,
+  uploadAvatar,
 };

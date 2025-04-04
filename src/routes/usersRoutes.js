@@ -1,6 +1,7 @@
 const express = require("express");
 const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
+const upload = require("../middleware/uploadMiddleware");
 
 const {
   handleGetAllUsers,
@@ -10,6 +11,7 @@ const {
   handleBanUser,
   handleUnbanUser,
   handleUpdateUser,
+  handleUploadAvatar,
 } = require("../controllers/usersController");
 
 const router = express.Router();
@@ -62,5 +64,6 @@ router.put(
   roleMiddleware(["customer"]),
   handleUpdateUser
 );
+router.post("/users/upload-avatar", upload.single("image"), handleUploadAvatar);
 
 module.exports = router;

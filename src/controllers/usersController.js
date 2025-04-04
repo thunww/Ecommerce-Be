@@ -6,6 +6,7 @@ const {
   banUser,
   unbanUser,
   updateUser,
+  uploadAvatar,
 } = require("../services/usersService");
 
 const handleGetAllUsers = async (req, res) => {
@@ -111,6 +112,20 @@ const handleUpdateUser = async (req, res) => {
   }
 };
 
+const handleUploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "Please select an image" });
+    }
+
+    const newAvatar = await uploadAvatar(req.body.user_id, req.file.path);
+
+    res.json({ message: "Upload successful!", avatar: newAvatar });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   handleGetAllUsers,
   handleAssignRoleToUser,
@@ -119,4 +134,5 @@ module.exports = {
   handleBanUser,
   handleUnbanUser,
   handleUpdateUser,
+  handleUploadAvatar,
 };
