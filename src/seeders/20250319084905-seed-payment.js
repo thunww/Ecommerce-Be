@@ -3,6 +3,7 @@ module.exports = {
     await queryInterface.bulkInsert("Payments", [
       {
         payment_id: 1,
+        order_id: 1,
         sub_order_id: 1,
         payment_method: "cod",
         status: "pending",
@@ -14,6 +15,7 @@ module.exports = {
       },
       {
         payment_id: 2,
+        order_id: 2,
         sub_order_id: 2,
         payment_method: "credit_card",
         status: "paid",
@@ -25,6 +27,7 @@ module.exports = {
       },
       {
         payment_id: 3,
+        order_id: 3,
         sub_order_id: 3,
         payment_method: "momo",
         status: "failed",
@@ -36,6 +39,7 @@ module.exports = {
       },
       {
         payment_id: 4,
+        order_id: 4,
         sub_order_id: 4,
         payment_method: "bank_transfer",
         status: "refunded",
@@ -47,6 +51,7 @@ module.exports = {
       },
       {
         payment_id: 5,
+        order_id: 5,
         sub_order_id: 5,
         payment_method: "cod",
         status: "pending",
@@ -58,6 +63,7 @@ module.exports = {
       },
       {
         payment_id: 6,
+        order_id: 6,
         sub_order_id: 6,
         payment_method: "credit_card",
         status: "paid",
@@ -69,6 +75,7 @@ module.exports = {
       },
       {
         payment_id: 7,
+        order_id: 7,
         sub_order_id: 7,
         payment_method: "momo",
         status: "pending",
@@ -80,6 +87,7 @@ module.exports = {
       },
       {
         payment_id: 8,
+        order_id: 8,
         sub_order_id: 8,
         payment_method: "paypal",
         status: "paid",
@@ -91,6 +99,7 @@ module.exports = {
       },
       {
         payment_id: 9,
+        order_id: 9,
         sub_order_id: 9,
         payment_method: "bank_transfer",
         status: "failed",
@@ -102,6 +111,7 @@ module.exports = {
       },
       {
         payment_id: 10,
+        order_id: 10,
         sub_order_id: 10,
         payment_method: "cod",
         status: "pending",

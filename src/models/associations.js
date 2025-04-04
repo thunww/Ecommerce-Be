@@ -21,6 +21,8 @@ module.exports = (db) => {
     Wishlist,
     UserCoupon,
     Shipper,
+    Cart,
+    CartItem,
   } = db;
 
   // Quan hệ User - Role (N-N)
@@ -107,15 +109,38 @@ module.exports = (db) => {
     onDelete: "CASCADE",
   });
 
-  // Quan hệ Payment - SubOrder (1-1)
-  SubOrder.hasOne(Payment, {
-    foreignKey: "sub_order_id",
-    as: "payment",
-    onDelete: "CASCADE",
+  // Quan hệ Order - Payment (1-N)
+  Order.hasMany(Payment, {
+    foreignKey: 'order_id',
+    as: 'payments',
+    onDelete: 'CASCADE',
+  });
+  Payment.belongsTo(Order, {
+    foreignKey: 'order_id',
+    onDelete: 'CASCADE',
+  });
+
+  // Quan hệ SubOrder - Payment (1-N)
+  SubOrder.hasMany(Payment, {
+    foreignKey: 'sub_order_id',
+    as: 'payments',
+    onDelete: 'CASCADE',
   });
   Payment.belongsTo(SubOrder, {
-    foreignKey: "sub_order_id",
-    onDelete: "CASCADE",
+    foreignKey: 'sub_order_id',
+    onDelete: 'CASCADE',
+  });
+
+  // Quan hệ Order - Address (N-1)
+  Order.belongsTo(Address, {
+    foreignKey: 'shipping_address_id',
+    as: 'shipping_address',
+    onDelete: 'CASCADE',
+  });
+  Address.hasMany(Order, {
+    foreignKey: 'shipping_address_id',
+    as: 'orders',
+    onDelete: 'CASCADE',
   });
 
   // Quan hệ User - Shipper (1-1)
@@ -206,5 +231,47 @@ module.exports = (db) => {
     foreignKey: "product_id",
     onDelete: "CASCADE",
     as: "product"
+  });
+
+  // Quan hệ User - Cart (1-1)
+  User.hasOne(Cart, {
+    foreignKey: 'user_id',
+    as: 'cart',
+    onDelete: 'CASCADE'
+  });
+
+  Cart.belongsTo(User, {
+    foreignKey: 'user_id',
+    as: 'user'
+  });
+
+  Cart.hasMany(CartItem, {
+    foreignKey: 'cart_id',
+    as: 'items',
+    onDelete: 'CASCADE'
+  });
+
+  Cart.belongsToMany(Shop, {
+    through: CartItem,
+    foreignKey: 'cart_id',
+    otherKey: 'shop_id',
+    as: 'shops'
+  });
+
+  // CartItem associations
+  CartItem.belongsTo(Cart, {
+    foreignKey: 'cart_id',
+    as: 'cart'
+  });
+
+  CartItem.belongsTo(Product, {
+    foreignKey: 'product_id',
+    as: 'product',
+    onDelete: 'CASCADE'
+  });
+
+  CartItem.belongsTo(Shop, {
+    foreignKey: 'shop_id',
+    as: 'shop'
   });
 };

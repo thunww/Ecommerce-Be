@@ -29,14 +29,12 @@ SubOrder.init(
     status: {
       type: DataTypes.STRING(20),
       allowNull: false,
-      defaultValue: 'cart',
+      defaultValue: 'pending',
       validate: {
-        isIn: [['cart', 'pending', 'processing', 'shipped', 'delivered', 'cancelled']],
+        isIn: [['pending', 'processing', 'shipped', 'delivered', 'cancelled']],
       },
     },
-
   },
-
   {
     sequelize,
     modelName: 'SubOrder',
