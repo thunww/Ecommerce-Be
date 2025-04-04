@@ -27,7 +27,7 @@ Order.init({
     },
     onDelete: 'CASCADE'
   },
-  total_amount: {
+  total_price: {
     type: DataTypes.DECIMAL(15, 2),
     allowNull: false
   },
@@ -42,21 +42,15 @@ Order.init({
     defaultValue: 'pending'
   },
   payment_status: {
-    type: DataTypes.ENUM('pending', 'paid', 'failed'),
+    type: DataTypes.ENUM('pending', 'paid', 'failed', 'refunded', 'cancelled'),
     allowNull: false,
     defaultValue: 'pending'
   },
   created_at: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.literal('CURRENT_TIMESTAMP')
+    type: DataTypes.DATE
   },
   updated_at: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.literal('CURRENT_TIMESTAMP')
-  },
-  total_price: {
-    type: DataTypes.DECIMAL(15, 2),
-    allowNull: false
+    type: DataTypes.DATE
   },
   shipping_fee: {
     type: DataTypes.DECIMAL(10, 2),

@@ -51,6 +51,7 @@ Payment.init(
     modelName: 'Payment',
     tableName: 'Payments',
     timestamps: true,
+    underscored: true
   }
 );
 

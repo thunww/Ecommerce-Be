@@ -36,8 +36,9 @@ module.exports = {
         defaultValue: 'cod',
       },
       payment_status: {
-        type: Sequelize.ENUM('unpaid', 'paid', 'refunded'),
-        defaultValue: 'unpaid',
+        type: Sequelize.ENUM('pending', 'paid', 'failed', 'refunded', 'cancelled'),
+        allowNull: false,
+        defaultValue: 'pending'
       },
       shipping_fee: {
         type: Sequelize.DECIMAL(15, 2),

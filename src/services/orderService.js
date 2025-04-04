@@ -2,9 +2,11 @@ const { Order, SubOrder, OrderItem, Cart, CartItem, Product, Shop, Payment } = r
 
 class OrderService {
     async createOrder(user_id, shipping_address_id, payment_method) {
+        let order = null;
+        let cart = null;
         try {
             // Lấy giỏ hàng của người dùng
-            const cart = await Cart.findOne({
+            cart = await Cart.findOne({
                 where: { user_id },
                 include: [{
                     model: CartItem,
@@ -21,13 +23,15 @@ class OrderService {
             }
 
             // Tạo đơn hàng chính
-            const order = await Order.create({
+            order = await Order.create({
                 user_id,
                 shipping_address_id,
-                total_amount: cart.total_price,
+                total_price: cart.total_price,
                 payment_method,
                 status: 'pending',
-                payment_status: payment_method === 'cod' ? 'pending' : 'unpaid'
+                payment_status: 'pending',
+                created_at: new Date(),
+                updated_at: new Date()
             });
 
             // Nhóm sản phẩm theo shop
@@ -69,20 +73,20 @@ class OrderService {
                     order_id: order.order_id,
                     sub_order_id: subOrder.sub_order_id,
                     payment_method: payment_method,
-                    status: payment_method === 'cod' ? 'pending' : 'unpaid',
+                    status: 'pending',
                     amount: subOrderTotal
                 });
             }
 
-            // Xóa giỏ hàng sau khi tạo đơn hàng
-            await CartItem.destroy({ where: { cart_id: cart.cart_id } });
-            await Cart.update(
-                { total_price: 0 },
-                { where: { cart_id: cart.cart_id } }
-            );
-
             // Nếu là thanh toán online, trả về URL thanh toán
             if (payment_method !== 'cod') {
+                // Reset giỏ hàng chỉ khi tất cả đều thành công
+                await CartItem.destroy({ where: { cart_id: cart.cart_id } });
+                await Cart.update(
+                    { total_price: 0 },
+                    { where: { cart_id: cart.cart_id } }
+                );
+
                 return {
                     order_id: order.order_id,
                     payment_url: `/api/payment/process/${order.order_id}`,
@@ -90,8 +94,19 @@ class OrderService {
                 };
             }
 
+            // Reset giỏ hàng chỉ khi tất cả đều thành công
+            await CartItem.destroy({ where: { cart_id: cart.cart_id } });
+            await Cart.update(
+                { total_price: 0 },
+                { where: { cart_id: cart.cart_id } }
+            );
+
             return await this.getOrderDetails(order.order_id);
         } catch (error) {
+            // Nếu có lỗi và đã tạo order, xóa order
+            if (order) {
+                await Order.destroy({ where: { order_id: order.order_id } });
+            }
             throw error;
         }
     }
@@ -111,8 +126,7 @@ class OrderService {
                             as: 'product'
                         }]
                     }, {
-                        model: Shop,
-                        as: 'shop'
+                        model: Shop
                     }]
                 }]
             });

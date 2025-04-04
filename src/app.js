@@ -11,7 +11,7 @@ const configCORS = require("./config/cors");
 const app = express();
 const bodyParser = require("body-parser");
 const adminRoutes = require("./routes/adminRoutes");
-
+const orderRoutes = require("./routes/orderRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
 const reviewRoutes = require("./routes/reviewRoutes")
@@ -41,6 +41,7 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/addresses", addressRoutes);
+app.use("/api/orders", orderRoutes);
 
 const shopRoutes = require("./routes/shopRoutes");
 app.use("/api/shop", shopRoutes);
