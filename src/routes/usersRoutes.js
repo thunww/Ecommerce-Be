@@ -64,6 +64,11 @@ router.put(
   roleMiddleware(["customer"]),
   handleUpdateUser
 );
-router.post("/users/upload-avatar", upload.single("image"), handleUploadAvatar);
+router.post(
+  "/users/upload-avatar",
+  authMiddleware,
+  upload.single("image"),
+  handleUploadAvatar
+);
 
 module.exports = router;

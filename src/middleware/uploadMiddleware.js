@@ -2,11 +2,9 @@ const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("../config/cloudinary");
 
-// Custom function to dynamically set the folder name
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: (req, file) => {
-    // Determine the folder based on the route or request
     const folder = req.url.includes("avatar") ? "avatars" : "products"; // Example condition
     return {
       folder: folder, // Use avatars or products based on the condition

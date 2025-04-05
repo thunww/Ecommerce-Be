@@ -117,10 +117,15 @@ const handleUploadAvatar = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: "Please select an image" });
     }
+    const imageUrl = req.file.path;
 
-    const newAvatar = await uploadAvatar(req.body.user_id, req.file.path);
+    const result = await uploadAvatar(req.body.user_id, imageUrl);
 
-    res.json({ message: "Upload successful!", avatar: newAvatar });
+    if (result.success) {
+      return res.status(200).json(result);
+    } else {
+      return res.status(400).json(result);
+    }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
