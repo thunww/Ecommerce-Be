@@ -81,6 +81,17 @@ module.exports = (db) => {
   User.hasMany(UserCoupon, { foreignKey: "user_id", as: "coupons" });
   UserCoupon.belongsTo(User, { foreignKey: "user_id" });
 
+  // Quan hệ Coupon - Shop (1-N)
+  Coupon.belongsTo(Shop, {
+    foreignKey: 'shop_id',
+    as: 'shop',
+  });
+  Shop.hasMany(Coupon, {
+    foreignKey: 'shop_id',
+    as: 'coupons',
+  });
+
+
   // Quan hệ User - Notification (1-N)
   User.hasMany(Notification, { foreignKey: "user_id", as: "notifications" });
   Notification.belongsTo(User, { foreignKey: "user_id" });
