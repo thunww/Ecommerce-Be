@@ -36,12 +36,12 @@ router.delete('/admin/:coupon_id', authMiddleware, roleMiddleware(["admin"]), co
 
 // ===================== SHOP ROUTES =====================
 // Tạo mã giảm giá mới (shop)
-router.post('/shop', authMiddleware, roleMiddleware(["shop"]), couponController.createCoupon);
+router.post('/shop', authMiddleware, roleMiddleware(["vendor"]), couponController.createCoupon);
 
 // Cập nhật mã giảm giá (shop - chỉ coupon của shop đó)
-router.put('/shop/:coupon_id', authMiddleware, roleMiddleware(["shop"]), couponController.updateCoupon);
+router.put('/shop/:coupon_id', authMiddleware, roleMiddleware(["vendor"]), couponController.updateCoupon);
 
 // Xóa mã giảm giá (shop - chỉ coupon của shop đó)
-router.delete('/shop/:coupon_id', authMiddleware, roleMiddleware(["shop"]), couponController.deleteCoupon);
+router.delete('/shop/:coupon_id', authMiddleware, roleMiddleware(["vendor"]), couponController.deleteCoupon);
 
 module.exports = router; 
