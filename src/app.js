@@ -34,7 +34,7 @@ app.use("/api/v1/admin", adminRoutes);
 app.use("/uploads", express.static("uploads"));
 
 
-
+// Đăng ký các route
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", wishlistRoutes);
@@ -43,12 +43,13 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/addresses", addressRoutes);
 app.use("/api/orders", orderRoutes);
+app.use('/api/coupons', couponRoutes);
+
 
 const shopRoutes = require("./routes/shopRoutes");
 app.use("/api/shop", shopRoutes);
 
-// Đăng ký các route
-app.use('/api/coupons', couponRoutes);
+
 
 // Xử lý lỗi 404 (Not Found)
 app.use((req, res, next) => {

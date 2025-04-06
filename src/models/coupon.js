@@ -39,12 +39,28 @@ Coupon.init(
       type: DataTypes.DATE,
       allowNull: false,
     },
+    shop_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'Shops',
+        key: 'shop_id'
+      }
+    },
+    status: {
+      type: DataTypes.ENUM('active', 'inactive'),
+      allowNull: false,
+      defaultValue: 'active'
+    }
   },
   {
     sequelize,
     modelName: 'Coupon',
     tableName: 'Coupons',
     timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+    underscored: true,
   }
 );
 
