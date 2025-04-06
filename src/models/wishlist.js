@@ -1,7 +1,7 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-class Wishlist extends Model {}
+class Wishlist extends Model { }
 
 Wishlist.init(
   {
@@ -27,7 +27,7 @@ Wishlist.init(
     sequelize,
     modelName: 'Wishlist',
     tableName: 'Wishlists',
-    timestamps: true,
+    timestamps: false,
   }
 );
 

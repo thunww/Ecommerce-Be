@@ -18,6 +18,7 @@ const reviewRoutes = require("./routes/reviewRoutes")
 const paymentRoutes = require("./routes/paymentRoutes")
 const notificationRoutes = require("./routes/notificationRoutes")
 const addressRoutes = require("./routes/addressRoutes")
+const couponRoutes = require('./routes/couponRoutes');
 // Middleware
 app.use(helmet());
 app.use(compression());
@@ -46,6 +47,8 @@ app.use("/api/orders", orderRoutes);
 const shopRoutes = require("./routes/shopRoutes");
 app.use("/api/shop", shopRoutes);
 
+// Đăng ký các route
+app.use('/api/coupons', couponRoutes);
 
 // Xử lý lỗi 404 (Not Found)
 app.use((req, res, next) => {
