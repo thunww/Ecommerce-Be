@@ -9,7 +9,7 @@ const getWishlistByUserId = async (userId) => {
             include: [{
                 model: Product,
                 as: 'product',
-                attributes: ['id', 'name', 'price', 'description', 'image_url']
+                attributes: ['product_id', 'product_name', 'price', 'description']
             }]
         });
         return wishlist;
@@ -57,7 +57,7 @@ const addToWishlist = async (userId, productId) => {
             include: [{
                 model: Product,
                 as: 'product',
-                attributes: ['id', 'name', 'price', 'description', 'image_url']
+                attributes: ['product_id', 'product_name', 'price', 'description']
             }]
         });
 
