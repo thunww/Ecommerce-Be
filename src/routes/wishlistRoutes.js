@@ -1,15 +1,18 @@
-
-
 const express = require('express');
 const router = express.Router();
+const wishlistController = require('../controllers/wishlistController');
 const authMiddleware = require('../middleware/authMiddleware');
 
+// Lấy danh sách yêu thích
+router.get('/', authMiddleware, wishlistController.getWishlist);
 
-const wishlistController = require('../controllers/wishlistController');
-// Wishlist routes
-router.use(authMiddleware);
-router.post('/wishlist', wishlistController.addToWishlist);
-router.get('/wishlist', wishlistController.getWishlist);
-router.delete('/wishlist/:id', wishlistController.removeFromWishlist);
+// Thêm sản phẩm vào danh sách yêu thích
+router.post('/add', authMiddleware, wishlistController.addToWishlist);
+
+// Xóa sản phẩm khỏi danh sách yêu thích
+router.delete('/remove/:product_id', authMiddleware, wishlistController.removeFromWishlist);
+
+// Xóa toàn bộ danh sách yêu thích
+router.delete('/clear', authMiddleware, wishlistController.clearWishlist);
 
 module.exports = router;
