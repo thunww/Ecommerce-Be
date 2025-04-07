@@ -6,10 +6,17 @@ const {
   ProductReview,
 } = require("../models");
 const { Op } = require("sequelize");
+const { fn, col, literal } = require("sequelize");
 
 class ProductService {
   async getAllProducts() {
     return await Product.findAll({
+      attributes: {
+        include: [
+          [fn("AVG", col("reviews.rating")), "average_rating"],
+          [fn("COUNT", col("reviews.review_id")), "review_count"],
+        ],
+      },
       include: [
         {
           model: ProductImage,
@@ -19,26 +26,69 @@ class ProductService {
         {
           model: Category,
           as: "Category",
+          attributes: ["category_name"],
         },
       ],
+      group: ["Product.product_id", "images.image_id", "Category.category_id"],
       order: [["created_at", "DESC"]],
     });
   }
 
   async getProductById(product_id) {
-    return await Product.findByPk(product_id, {
-      include: [
-        {
-          model: ProductImage,
-          as: "images",
-          attributes: ["image_url"],
+    try {
+      const product = await Product.findOne({
+        where: { product_id },
+        attributes: {
+          include: [
+            [fn("AVG", col("reviews.rating")), "average_rating"],
+            [fn("COUNT", col("reviews.review_id")), "review_count"],
+          ],
         },
-        {
-          model: Category,
-          as: "Category",
-        },
-      ],
-    });
+        include: [
+          {
+            model: ProductImage,
+            as: "images",
+            attributes: ["image_url"],
+          },
+          {
+            model: Category,
+            as: "Category",
+            attributes: ["category_name"],
+          },
+          {
+            model: ProductReview,
+            as: "reviews",
+            attributes: [], // Không cần trả về toàn bộ review ở đây
+          },
+        ],
+        group: [
+          "Product.product_id",
+          "images.image_id",
+          "Category.category_id",
+        ],
+      });
+
+      if (!product) {
+        return {
+          success: false,
+          message: "Sản phẩm không tồn tại",
+          data: null,
+        };
+      }
+
+      return {
+        success: true,
+        message: "Lấy thông tin sản phẩm thành công",
+        data: product,
+      };
+    } catch (error) {
+      console.error("Lỗi khi lấy sản phẩm:", error);
+      return {
+        success: false,
+        message: "Đã xảy ra lỗi khi lấy thông tin sản phẩm",
+        data: null,
+      };
+    }
   }
 
   async searchProducts(q, category_id, min_price, max_price, sort) {

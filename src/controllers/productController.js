@@ -61,11 +61,11 @@ const getAllProducts = async (req, res) => {
 
 const getProductById = async (req, res) => {
   try {
-    const product = await productService.getProductById(req.params.product_id);
-    if (!product) {
-      return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
+    const result = await productService.getProductById(req.params.product_id);
+    if (!result) {
+      return res.status(404).json({ result });
     }
-    res.json(product);
+    res.json(result);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -44,7 +44,18 @@ Product.init(
     },
     status: {
       type: DataTypes.ENUM("pending", "active", "inactive"),
+      allowNull: false,
       defaultValue: "pending",
+    },
+    average_rating: {
+      type: DataTypes.DECIMAL(3, 2),
+      allowNull: false,
+      defaultValue: 0.0,
+    },
+    review_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
     },
     shop_id: {
       type: DataTypes.INTEGER,
@@ -71,6 +82,8 @@ Product.init(
     tableName: "Products",
     timestamps: true,
     underscored: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
   }
 );
 
