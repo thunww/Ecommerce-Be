@@ -28,6 +28,11 @@ class ProductService {
           as: "Category",
           attributes: ["category_name"],
         },
+        {
+          model: ProductReview,
+          as: "reviews",
+          attributes: [], // Không cần trả về toàn bộ review ở đây
+        },
       ],
       group: ["Product.product_id", "images.image_id", "Category.category_id"],
       order: [["created_at", "DESC"]],
