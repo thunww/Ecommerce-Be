@@ -130,4 +130,5 @@ const resetPassword = async (token, newPassword) => {
   return "Password has been successfully changed";
 };
 
+
 module.exports = { registerUser, loginUser, forgotPassword, resetPassword };

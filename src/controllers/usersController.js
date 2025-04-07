@@ -5,7 +5,9 @@ const {
   getUserById,
   banUser,
   unbanUser,
-} = require("../services/adminService");
+  updateUser,
+  uploadAvatar,
+} = require("../services/usersService");
 
 const handleGetAllUsers = async (req, res) => {
   try {
@@ -88,6 +90,47 @@ const handleUnbanUser = async (req, res) => {
   }
 };
 
+const handleUpdateUser = async (req, res) => {
+  const { userId } = req.params;
+  const updatedData = req.body;
+
+  try {
+    const result = await updateUser(userId, updatedData);
+
+    if (result.success) {
+      return res.status(200).json(result);
+    } else {
+      return res.status(400).json(result);
+    }
+  } catch (error) {
+    console.error("Error in updateUserController:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
+const handleUploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "Please select an image" });
+    }
+    const imageUrl = req.file.path;
+
+    const result = await uploadAvatar(req.body.user_id, imageUrl);
+
+    if (result.success) {
+      return res.status(200).json(result);
+    } else {
+      return res.status(400).json(result);
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   handleGetAllUsers,
   handleAssignRoleToUser,
@@ -95,4 +138,6 @@ module.exports = {
   handleGetUserById,
   handleBanUser,
   handleUnbanUser,
+  handleUpdateUser,
+  handleUploadAvatar,
 };
