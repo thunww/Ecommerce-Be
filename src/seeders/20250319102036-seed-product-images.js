@@ -6,7 +6,7 @@ module.exports = {
       {
         product_id: 1,
         image_url:
-          "https://dienmaythienphu.vn/wp-content/uploads/2021/10/gYF67a.jpg",
+          "https://i.pcmag.com/imagery/reviews/032Ghc5tCjiCya7cxiW3B5O-11.jpg",
         is_primary: true,
         uploaded_at: new Date(),
       },

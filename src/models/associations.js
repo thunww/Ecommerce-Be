@@ -20,6 +20,7 @@ module.exports = (db) => {
     Wishlist,
     UserCoupon,
     Shipper,
+    ProductVariant,
   } = db;
 
   // Quan hệ User - Role (N-N)
@@ -231,5 +232,41 @@ module.exports = (db) => {
     foreignKey: "product_id",
     onDelete: "CASCADE",
     as: "product",
+  });
+
+  Product.hasMany(ProductVariant, {
+    foreignKey: "product_id",
+    onDelete: "CASCADE",
+    as: "variants",
+  });
+
+  ProductVariant.belongsTo(Product, {
+    foreignKey: "product_id",
+    onDelete: "CASCADE",
+    as: "product", // Định nghĩa quan hệ "product"
+  });
+
+  // Quan hệ ProductVariant - OrderItem (1-N)
+  ProductVariant.hasMany(OrderItem, {
+    foreignKey: "variant_id", // Đảm bảo foreignKey đúng
+    onDelete: "CASCADE",
+    as: "orderItems",
+  });
+  OrderItem.belongsTo(ProductVariant, {
+    foreignKey: "variant_id",
+    onDelete: "CASCADE",
+    as: "variant", // Định nghĩa quan hệ "variant"
+  });
+
+  // Quan hệ ProductVariant - Wishlist (N-1)
+  ProductVariant.hasMany(Wishlist, {
+    foreignKey: "variant_id", // Đảm bảo foreignKey đúng
+    onDelete: "CASCADE",
+    as: "wishlistedByUsers",
+  });
+  Wishlist.belongsTo(ProductVariant, {
+    foreignKey: "variant_id",
+    onDelete: "CASCADE",
+    as: "variant", // Định nghĩa quan hệ "variant"
   });
 };

@@ -15,10 +15,6 @@ module.exports = {
         type: Sequelize.TEXT,
         allowNull: true,
       },
-      price: {
-        type: Sequelize.DECIMAL(10, 2),
-        allowNull: false,
-      },
       discount: {
         type: Sequelize.DECIMAL(5, 2),
         defaultValue: 0.0,
@@ -42,7 +38,7 @@ module.exports = {
       status: {
         type: Sequelize.ENUM("pending", "active", "inactive"),
         allowNull: false,
-        defaultValue: "pending", // Khi seller gửi, mặc định là "pending"
+        defaultValue: "pending",
       },
       average_rating: {
         type: Sequelize.DECIMAL(3, 2),

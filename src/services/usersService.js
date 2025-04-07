@@ -204,6 +204,7 @@ const uploadAvatar = async (user_id, imageUrl) => {
   }
 };
 
+
 module.exports = {
   getAllUsers,
   assignRoleToUser,

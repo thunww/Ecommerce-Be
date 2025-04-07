@@ -37,7 +37,9 @@ router.delete(
 );
 
 router.get("/search", productController.searchProducts);
+
 router.get("/:product_id", productController.getProductById);
+
 router.get("/featured", productController.getFeaturedProducts);
 router.get("/new-arrivals", productController.getNewArrivals);
 router.get("/best-deals", productController.getBestDeals);

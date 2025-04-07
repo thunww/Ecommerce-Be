@@ -18,10 +18,6 @@ Product.init(
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    price: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-    },
     discount: {
       type: DataTypes.DECIMAL(5, 2),
       defaultValue: 0.0,
