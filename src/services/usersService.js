@@ -36,7 +36,9 @@ const getAllUsers = async () => {
 
 const assignRoleToUser = async (userId, roleId) => {
   try {
-    const user = await User.findByPk(userId);
+    const user = await User.findByPk(userId, {
+      attributes: { exclude: ["password"] },
+    });
     const role = await Role.findByPk(roleId);
 
     if (!user || !role)
@@ -57,7 +59,9 @@ const assignRoleToUser = async (userId, roleId) => {
 
 const removeRoleFromUser = async (userId, roleId) => {
   try {
-    const user = await User.findByPk(userId);
+    const user = await User.findByPk(userId, {
+      attributes: { exclude: ["password"] },
+    });
     const role = await Role.findByPk(roleId);
 
     if (!user || !role)
@@ -94,7 +98,9 @@ const getUserById = async (userId) => {
 };
 
 const banUser = async (userId) => {
-  const user = await User.findByPk(userId);
+  const user = await User.findByPk(userId, {
+    attributes: { exclude: ["password"] },
+  });
 
   if (!user) {
     throw new Error("User not found");
@@ -116,8 +122,9 @@ const banUser = async (userId) => {
 };
 
 const unbanUser = async (userId) => {
-  const user = await User.findByPk(userId);
-
+  const user = await User.findByPk(userId, {
+    attributes: { exclude: ["password"] },
+  });
   if (!user) {
     throw new Error("User not found");
   }
@@ -137,6 +144,67 @@ const unbanUser = async (userId) => {
   };
 };
 
+const updateUser = async (userId, updatedData) => {
+  try {
+    const user = await User.findByPk(userId, {
+      attributes: { exclude: ["password"] },
+    });
+
+    if (!user) {
+      return { success: false, message: "User not found", user: null };
+    }
+
+    if (updatedData.first_name !== undefined)
+      user.first_name = updatedData.first_name;
+    if (updatedData.last_name !== undefined)
+      user.last_name = updatedData.last_name;
+    if (updatedData.phone !== undefined) user.phone = updatedData.phone;
+    if (updatedData.gender !== undefined) user.gender = updatedData.gender;
+    if (updatedData.date_of_birth !== undefined)
+      user.date_of_birth = updatedData.date_of_birth;
+
+    if (updatedData.profile_picture !== undefined) {
+      user.profile_picture = updatedData.profile_picture;
+    }
+
+    await user.save();
+
+    return {
+      success: true,
+      message: "User updated successfully",
+      data: user,
+    };
+  } catch (error) {
+    console.error("Error updating user:", error);
+    return { success: false, message: "Internal Server Error", user: null };
+  }
+};
+
+const uploadAvatar = async (user_id, imageUrl) => {
+  try {
+    const user = await User.findByPk(user_id, {
+      attributes: { exclude: ["password"] },
+    });
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    user.profile_picture = imageUrl;
+
+    await user.save();
+
+    return {
+      success: true,
+      message: "User updated avatar successfully",
+      data: user,
+    };
+  } catch (error) {
+    console.error("Error updating avatar:", error);
+    throw new Error("Error updating avatar");
+  }
+};
+
+
 module.exports = {
   getAllUsers,
   assignRoleToUser,
@@ -144,4 +212,6 @@ module.exports = {
   getUserById,
   banUser,
   unbanUser,
+  updateUser,
+  uploadAvatar,
 };

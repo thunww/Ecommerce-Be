@@ -1,7 +1,7 @@
-const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { Model, DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
 
-class Coupon extends Model { }
+class Coupon extends Model {}
 
 Coupon.init(
   {
@@ -43,23 +43,23 @@ Coupon.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: 'Shops',
-        key: 'shop_id'
-      }
+        model: "Shops",
+        key: "shop_id",
+      },
     },
     status: {
-      type: DataTypes.ENUM('active', 'inactive'),
+      type: DataTypes.ENUM("active", "inactive"),
       allowNull: false,
-      defaultValue: 'active'
-    }
+      defaultValue: "active",
+    },
   },
   {
     sequelize,
-    modelName: 'Coupon',
-    tableName: 'Coupons',
+    modelName: "Coupon",
+    tableName: "Coupons",
     timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
+    createdAt: "created_at",
+    updatedAt: "updated_at",
     underscored: true,
   }
 );

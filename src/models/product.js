@@ -1,8 +1,7 @@
-const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { Model, DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
 
-
-class Product extends Model { }
+class Product extends Model {}
 
 Product.init(
   {
@@ -19,13 +18,9 @@ Product.init(
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    price: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-    },
     discount: {
       type: DataTypes.DECIMAL(5, 2),
-      defaultValue: 0.00,
+      defaultValue: 0.0,
     },
     stock: {
       type: DataTypes.INTEGER,
@@ -43,9 +38,20 @@ Product.init(
       type: DataTypes.STRING(50),
       allowNull: true,
     },
-    is_active: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
+    status: {
+      type: DataTypes.ENUM("pending", "active", "inactive"),
+      allowNull: false,
+      defaultValue: "pending",
+    },
+    average_rating: {
+      type: DataTypes.DECIMAL(3, 2),
+      allowNull: false,
+      defaultValue: 0.0,
+    },
+    review_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
     },
     average_rating: {
       type: DataTypes.DECIMAL(3, 2),
@@ -61,29 +67,30 @@ Product.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Shops',
-        key: 'shop_id',
+        model: "Shops",
+        key: "shop_id",
       },
-      onDelete: 'CASCADE',
+      onDelete: "CASCADE",
     },
     category_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: 'Categories',
-        key: 'category_id',
+        model: "Categories",
+        key: "category_id",
       },
-      onDelete: 'SET NULL',
+      onDelete: "SET NULL",
     },
   },
   {
     sequelize,
-    modelName: 'Product',
-    tableName: 'Products',
+    modelName: "Product",
+    tableName: "Products",
     timestamps: true,
-    underscored: true
+    underscored: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
   }
 );
-
 
 module.exports = Product;

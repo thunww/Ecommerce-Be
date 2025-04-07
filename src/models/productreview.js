@@ -1,7 +1,7 @@
-const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { Model, DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
 
-class ProductReview extends Model { }
+class ProductReview extends Model {}
 
 ProductReview.init(
   {
@@ -14,19 +14,19 @@ ProductReview.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Products',
-        key: 'product_id',
+        model: "Products",
+        key: "product_id",
       },
-      onDelete: 'CASCADE',
+      onDelete: "CASCADE",
     },
     user_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Users',
-        key: 'user_id',
+        model: "Users",
+        key: "user_id",
       },
-      onDelete: 'CASCADE',
+      onDelete: "CASCADE",
     },
     rating: {
       type: DataTypes.INTEGER,
@@ -41,7 +41,7 @@ ProductReview.init(
       allowNull: true,
     },
     images: {
-      type: DataTypes.JSON,
+      type: DataTypes.STRING,
       allowNull: true,
     },
     is_verified: {
@@ -59,10 +59,10 @@ ProductReview.init(
   },
   {
     sequelize,
-    modelName: 'ProductReview',
-    tableName: 'Product_Reviews',
+    modelName: "ProductReview",
+    tableName: "Product_Reviews",
     timestamps: true,
-    underscored: true
+    underscored: true,
   }
 );
 
