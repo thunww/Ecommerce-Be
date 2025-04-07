@@ -2,8 +2,8 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    // Tạo bảng 'cart_items'
-    await queryInterface.createTable("cart_items", {
+    // Tạo bảng 'CartItems'
+    await queryInterface.createTable("CartItems", {
       cart_item_id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
@@ -13,7 +13,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: "carts", // Đảm bảo rằng bảng carts tồn tại
+          model: "Carts", // Đảm bảo rằng bảng Carts tồn tại
           key: "cart_id",
         },
         onUpdate: "CASCADE",
@@ -23,7 +23,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: "Products", // Đảm bảo rằng bảng products tồn tại
+          model: "Products", // Đảm bảo rằng bảng Products tồn tại
           key: "product_id",
         },
         onUpdate: "CASCADE",
@@ -33,7 +33,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: "Shops", // Đảm bảo rằng bảng shops tồn tại
+          model: "Shops", // Đảm bảo rằng bảng Shops tồn tại
           key: "shop_id",
         },
         onUpdate: "CASCADE",
@@ -66,13 +66,13 @@ module.exports = {
     });
 
     // Thêm các index để tối ưu truy vấn
-    await queryInterface.addIndex("cart_items", ["cart_id"]);
-    await queryInterface.addIndex("cart_items", ["product_id"]);
-    await queryInterface.addIndex("cart_items", ["shop_id"]);
+    await queryInterface.addIndex("CartItems", ["cart_id"]);
+    await queryInterface.addIndex("CartItems", ["product_id"]);
+    await queryInterface.addIndex("CartItems", ["shop_id"]);
   },
 
   down: async (queryInterface, Sequelize) => {
-    // Xóa bảng 'cart_items' khi rollback migration
-    await queryInterface.dropTable("cart_items");
+    // Xóa bảng 'CartItems' khi rollback migration
+    await queryInterface.dropTable("CartItems");
   },
 };

@@ -36,6 +36,7 @@ const ProductVariant = require("./productvariants");
 
 const Cart = require("./cart");
 const CartItem = require("./cartItem");
+const ChatMessage = require("./chatmessage");
 // 🛠 Gán models vào db
 Object.assign(db, {
   User,
@@ -61,6 +62,7 @@ Object.assign(db, {
   ProductVariant,
   Cart,
   CartItem,
+  ChatMessage,
 });
 
 // 🛠 Gán Sequelize và instance vào db
