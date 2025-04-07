@@ -10,7 +10,7 @@ const configCORS = require("./config/cors");
 const app = express();
 const bodyParser = require("body-parser");
 const usersRoutes = require("./routes/usersRoutes");
-
+const orderRoutes = require("./routes/orderRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
@@ -18,6 +18,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const addressRoutes = require("./routes/addressRoutes");
 const shopRoutes = require("./routes/shopRoutes");
+const couponRoutes = require("./routes/couponRoutes");
 // Middleware
 app.use(helmet());
 app.use(compression());
@@ -39,6 +40,8 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/addresses", addressRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/coupons", couponRoutes);
 
 app.use("/api/v1/shops", shopRoutes);
 

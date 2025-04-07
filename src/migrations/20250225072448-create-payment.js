@@ -8,11 +8,20 @@ module.exports = {
         primaryKey: true,
         allowNull: false,
       },
-      sub_order_id: {
+      order_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Sub_Orders', // Tên bảng Sub_Orders
+          model: 'Orders',
+          key: 'order_id',
+        },
+        onDelete: 'CASCADE',
+      },
+      sub_order_id: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        references: {
+          model: 'Sub_Orders',
           key: 'sub_order_id',
         },
         onDelete: 'CASCADE',
@@ -21,7 +30,7 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
         validate: {
-          isIn: [['cod', 'credit_card', 'momo', 'bank_transfer']],
+          isIn: [['cod', 'momo', 'vnpay', 'bank_transfer']],
         },
       },
       status: {
@@ -36,7 +45,7 @@ module.exports = {
         unique: true,
       },
       amount: {
-        type: Sequelize.DECIMAL(10, 2),
+        type: Sequelize.DECIMAL(15, 2),
         allowNull: false,
       },
       paid_at: {
@@ -57,3 +66,4 @@ module.exports = {
     await queryInterface.dropTable('Payments');
   },
 };
+

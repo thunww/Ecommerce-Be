@@ -1,32 +1,65 @@
 const paymentService = require('../services/paymentService');
 
-exports.createPayment = async (req, res) => {
-    try {
-        const { order_id, payment_method, amount } = req.body;
-        const payment = await paymentService.createPayment(order_id, payment_method, amount);
-        res.status(201).json(payment);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-exports.getPaymentHistory = async (req, res) => {
-    try {
-        const payments = await paymentService.getPaymentHistory(req.user.user_id);
-        res.json(payments);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-exports.getPaymentById = async (req, res) => {
-    try {
-        const payment = await paymentService.getPaymentById(req.params.id);
-        if (!payment) {
-            return res.status(404).json({ message: 'Không tìm thấy thông tin thanh toán' });
+class PaymentController {
+    async getPaymentById(req, res) {
+        try {
+            const { payment_id } = req.params;
+            const payment = await paymentService.getPaymentById(payment_id);
+            res.json(payment);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
         }
-        res.json(payment);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
     }
-}; 
+
+    async getPaymentsByOrderId(req, res) {
+        try {
+            const { order_id } = req.params;
+            const payments = await paymentService.getPaymentsByOrderId(order_id);
+            res.json(payments);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    }
+
+    async processMomoPayment(req, res) {
+        try {
+            const { order_id, sub_order_id } = req.params;
+            const result = await paymentService.processMomoPayment(order_id, sub_order_id);
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    }
+
+    async processVNPayPayment(req, res) {
+        try {
+            const { order_id, sub_order_id } = req.params;
+            const result = await paymentService.processVNPayPayment(order_id, sub_order_id);
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    }
+
+    async handleMomoCallback(req, res) {
+        try {
+            const data = req.body;
+            const result = await paymentService.handleMomoCallback(data);
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    }
+
+    async handleVNPayCallback(req, res) {
+        try {
+            const data = req.query;
+            const result = await paymentService.handleVNPayCallback(data);
+            res.json(result);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    }
+}
+
+module.exports = new PaymentController(); 
