@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 
 
 const SECRET_KEY = process.env.JWT_SECRET || "your_secret_key";
-const EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h"; 
+const EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h";
 
 
 const generateToken = (payload) => {
@@ -14,7 +14,7 @@ const verifyToken = (token) => {
     try {
         return jwt.verify(token, SECRET_KEY);
     } catch (error) {
-        return null; 
+        return null;
     }
 };
 

@@ -32,6 +32,7 @@ const UserRole = require("./userrole");
 const Shipper = require("./shipper");
 const Cart = require("./cart");
 const CartItem = require("./cartItem");
+const ChatMessage = require("./chatmessage");
 // 🛠 Gán models vào db
 Object.assign(db, {
   User,
@@ -56,6 +57,7 @@ Object.assign(db, {
   Shipper,
   Cart,
   CartItem,
+  ChatMessage,
 });
 
 // 🛠 Gán Sequelize và instance vào db

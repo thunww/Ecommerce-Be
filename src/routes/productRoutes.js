@@ -13,10 +13,11 @@ router.delete("/image/:image_id", handleDeleteProductImage);
 // Public routes (không cần xác thực)
 router.get('/', productController.getAllProducts);
 router.get('/search', productController.searchProducts);
-router.get('/:product_id', productController.getProductById);
+
 router.get('/featured', productController.getFeaturedProducts);
 router.get('/new-arrivals', productController.getNewArrivals);
 router.get('/best-deals', productController.getBestDeals);
 router.get('/:product_id/reviews', reviewController.getReviews);
+router.get('/:product_id', productController.getProductById);
 router.get('/search/advanced', productController.advancedSearch);
 module.exports = router;
