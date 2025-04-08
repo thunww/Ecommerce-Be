@@ -4,8 +4,10 @@ module.exports = {
   up: async (queryInterface) => {
     await queryInterface.bulkInsert("Products", [
       {
-        product_name: "iPhone 15 Pro Max",
-        description: "Apple's flagship phone with A17 Pro chip.",
+        product_name:
+          "Sony WH-1000XM3 Bluetooth Wireless Over Ear Headphones with Mic (Silver)",
+        description:
+          "Digital noise cancelling : Industry leading Active Noise Cancellation (ANC) lends a personalized, virtually soundproof experience at any situation\r\nHi-Res Audio : A built-in amplifier integrated in HD Noise Cancelling Processor QN1 realises the best-in-class signal-to-noise ratio and low distortion for portable devices.\r\nDriver Unit : Powerful 40-mm drivers with Liquid Crystal Polymer (LCP) diaphragms make the headphones perfect for handling heavy beats and can reproduce a full range of frequencies up to 40 kHz.\r\nVoice assistant : Alexa enabled (In-built) for voice access to music, information and more. Activate with a simple touch. Frequency response: 4 Hz-40,000 Hz",
         discount: 5.0,
         stock: 0,
         sold: 10,
@@ -20,8 +22,9 @@ module.exports = {
         updated_at: new Date(),
       },
       {
-        product_name: "MacBook Pro M3",
-        description: "Powerful MacBook Pro with Apple M3 chip.",
+        product_name: "Microsoft Xbox X/S Wireless Controller Robot White",
+        description:
+          "Experience the modernized design of the Xbox wireless controller in robot white, featuring sculpted surfaces and refined Geometry for enhanced comfort and effortless control during gameplay\r\nStay on target with textured grip on the triggers, bumpers, and back case and with a new hybrid D-pad for accurate, yet familiar input\r\nMake the controller your own by customizing button Mapping with the Xbox accessories app",
         discount: 10.0,
         stock: 0,
         sold: 5,

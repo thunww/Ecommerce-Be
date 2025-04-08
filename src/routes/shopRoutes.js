@@ -4,11 +4,19 @@ const roleMiddleware = require("../middleware/roleMiddleware");
 const {
   handleGetAllShops,
   handleAssignStatusToShop,
+  handleGetShopById,
 } = require("../controllers/shopController");
 
 const router = express.Router();
 
 router.get("/", authMiddleware, roleMiddleware(["admin"]), handleGetAllShops);
+
+router.get(
+  "/:shopId",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  handleGetShopById
+);
 
 router.post(
   "/assign-status",
