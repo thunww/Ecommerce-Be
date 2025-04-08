@@ -209,12 +209,10 @@ class CartService {
             // Nếu không có giỏ hàng hoặc giỏ hàng trống, trả về response mặc định
             if (!cart) {
                 return {
-                    status: 'success',
-                    data: {
-                        cart_id: null,
-                        total_price: 0,
-                        items_by_shop: []
-                    }
+                    items: [],
+                    shippingFee: 0,
+                    discount: 0,
+                    total_price: 0
                 };
             }
 
@@ -225,7 +223,7 @@ class CartService {
                     {
                         model: Product,
                         as: 'product',
-                        attributes: ['product_id', 'product_name', 'stock', 'shop_id'],
+                        attributes: ['product_id', 'product_name', 'description', 'price', 'stock', 'shop_id'],
                         include: [
                             {
                                 model: Shop,
@@ -235,7 +233,6 @@ class CartService {
                             {
                                 model: ProductImage,
                                 as: 'images',
-                                limit: 1,
                                 attributes: ['image_url']
                             }
                         ]
@@ -243,76 +240,71 @@ class CartService {
                     {
                         model: ProductVariant,
                         as: 'variant',
-                        attributes: ['variant_id', 'size', 'color', 'material', 'storage', 'ram', 'processor', 'stock']
+                        attributes: ['variant_id', 'size', 'color', 'material', 'storage', 'ram', 'processor', 'stock', 'price']
                     }
                 ]
             });
 
-            // Nếu không có items, trả về giỏ hàng trống
-            if (!cartItems || cartItems.length === 0) {
-                return {
-                    status: 'success',
-                    data: {
-                        cart_id: cart.cart_id,
-                        total_price: 0,
-                        items_by_shop: []
-                    }
-                };
-            }
-
-            // Nhóm items theo shop
-            const itemsByShop = {};
-            cartItems.forEach(item => {
-                const shop_id = item.product.shop_id;
-                if (!itemsByShop[shop_id]) {
-                    itemsByShop[shop_id] = {
-                        shop_id,
-                        shop_name: item.product.Shop ? item.product.Shop.shop_name : 'Shop không xác định',
-                        shop_logo: item.product.Shop ? item.product.Shop.logo : null,
-                        items: []
-                    };
-                }
-
-                // Format item data
-                const formattedItem = {
-                    cart_item_id: item.cart_item_id,
-                    product_id: item.product.product_id,
-                    product_name: item.product.product_name,
-                    product_image: item.product.images && item.product.images[0] ? item.product.images[0].image_url : null,
-                    price: item.price,
-                    quantity: item.quantity,
-                    total_price: item.total_price,
-                    stock: item.product.stock
-                };
-
-                // Add variant info if exists
+            // Biến đổi dữ liệu để phù hợp với cấu trúc frontend
+            const formattedItems = cartItems.map(item => {
+                // Chuẩn bị dữ liệu cho variant
+                let variantName = '';
                 if (item.variant) {
-                    formattedItem.variant = {
-                        variant_id: item.variant.variant_id,
-                        size: item.variant.size,
-                        color: item.variant.color,
-                        material: item.variant.material,
-                        storage: item.variant.storage,
-                        ram: item.variant.ram,
-                        processor: item.variant.processor,
-                        stock: item.variant.stock
-                    };
+                    const variantAttributes = [];
+                    if (item.variant.size) variantAttributes.push(`${item.variant.size}`);
+                    if (item.variant.color) variantAttributes.push(`${item.variant.color}`);
+                    if (item.variant.material) variantAttributes.push(`${item.variant.material}`);
+                    if (item.variant.storage) variantAttributes.push(`${item.variant.storage}`);
+                    if (item.variant.ram) variantAttributes.push(`${item.variant.ram}`);
+                    if (item.variant.processor) variantAttributes.push(`${item.variant.processor}`);
+                    variantName = variantAttributes.join(' / ');
                 }
 
-                itemsByShop[shop_id].items.push(formattedItem);
+                // Lấy URL hình ảnh đầu tiên
+                const productImage = item.product.images && item.product.images.length > 0
+                    ? item.product.images[0].image_url
+                    : 'https://placehold.co/600x400?text=No+Image';
+
+                // Lấy giá gốc nếu có variant hoặc lấy giá sản phẩm
+                const price = item.variant ? item.variant.price : item.product.price;
+
+                return {
+                    id: item.cart_item_id,  // Frontend sử dụng id
+                    cart_item_id: item.cart_item_id,
+                    product_id: item.product_id,
+                    name: item.product.product_name,
+                    product_name: item.product.product_name,
+                    image: productImage,
+                    product_image: productImage,
+                    variant_id: item.product_variant_id,
+                    variant_name: variantName || 'Mặc định',
+                    price: parseFloat(price),
+                    original_price: parseFloat(item.product.price) > parseFloat(price) ? parseFloat(item.product.price) : null,
+                    quantity: item.quantity,
+                    stock: item.variant ? item.variant.stock : item.product.stock,
+                    shop_id: item.shop_id,
+                    shop_name: item.product.Shop ? item.product.Shop.shop_name : '',
+                    description: item.product.description
+                };
             });
 
+            // Tổng hợp thông tin - sử dụng dữ liệu từ session hoặc tính toán tạm thời
+            // Lưu ý: Đây là giải pháp tạm thời cho đến khi model Cart được cập nhật
+            // với các trường discount và shipping_fee
+            const discount = 0;  // Sẽ tính sau khi apply coupon
+            const shippingFee = 0; // Sẽ tính sau khi chọn phương thức vận chuyển
+
             return {
-                status: 'success',
-                data: {
-                    cart_id: cart.cart_id,
-                    total_price: cart.total_price,
-                    items_by_shop: Object.values(itemsByShop)
-                }
+                items: formattedItems,
+                total_price: parseFloat(cart.total_price),
+                shippingFee: shippingFee,
+                discount: discount,
+                subtotal: parseFloat(cart.total_price),
+                total: parseFloat(cart.total_price) - discount + shippingFee
             };
         } catch (error) {
-            console.error('Lỗi khi lấy giỏ hàng:', error);
-            throw error;
+            console.error('Lỗi khi lấy giỏ hàng với các sản phẩm:', error);
+            throw new Error('Không thể lấy thông tin giỏ hàng. Vui lòng thử lại sau.');
         }
     }
 
@@ -339,23 +331,212 @@ class CartService {
 
     async clearCart(user_id) {
         try {
-            const cart = await this.getOrCreateCart(user_id);
+            const cart = await Cart.findOne({
+                where: { user_id }
+            });
 
-            // Xóa tất cả các sản phẩm trong giỏ hàng
+            if (!cart) {
+                return {
+                    items: [],
+                    shippingFee: 0,
+                    discount: 0
+                };
+            }
+
+            // Xóa tất cả các items trong giỏ hàng
             await CartItem.destroy({
                 where: { cart_id: cart.cart_id }
             });
 
-            // Cập nhật tổng tiền giỏ hàng
-            await Cart.update(
-                { total_price: 0 },
-                { where: { cart_id: cart.cart_id } }
-            );
+            // Cập nhật tổng tiền về 0
+            cart.total_price = 0;
+            await cart.save();
 
-            return await this.getCartWithItems(user_id);
+            // Trả về giỏ hàng rỗng
+            return {
+                items: [],
+                shippingFee: 0,
+                discount: 0
+            };
         } catch (error) {
             console.error('Lỗi khi xóa giỏ hàng:', error);
             throw new Error('Không thể xóa giỏ hàng. Vui lòng thử lại sau.');
+        }
+    }
+
+    async applyCoupon(user_id, couponCode) {
+        try {
+            // TODO: Cần implement thêm model Coupon và logic xác thực mã giảm giá
+            // Ví dụ: const coupon = await Coupon.findOne({ where: { code: couponCode, is_active: true } });
+
+            // Xác thực user có giỏ hàng và giỏ hàng có sản phẩm
+            const cart = await Cart.findOne({
+                where: { user_id }
+            });
+
+            if (!cart) {
+                throw new Error('Không tìm thấy giỏ hàng');
+            }
+
+            // Kiểm tra tổng giá trị giỏ hàng
+            if (cart.total_price < 100000) {
+                throw new Error('Giá trị đơn hàng tối thiểu để sử dụng mã giảm giá là 100.000đ');
+            }
+
+            // Tạm thời tính giảm giá mẫu
+            let discount = 0;
+            switch (couponCode.toUpperCase()) {
+                case 'WELCOME10':
+                    discount = Math.min(cart.total_price * 0.1, 50000); // Giảm 10%, tối đa 50k
+                    break;
+                case 'SAVE20':
+                    discount = Math.min(cart.total_price * 0.2, 100000); // Giảm 20%, tối đa 100k
+                    break;
+                case 'FREESHIP':
+                    discount = 30000; // Miễn phí vận chuyển 30k
+                    break;
+                default:
+                    throw new Error('Mã giảm giá không hợp lệ hoặc đã hết hạn');
+            }
+
+            // Lưu mã giảm giá và giá trị giảm vào session hoặc lưu vào bảng tạm thời
+            // Vì model Cart chưa có trường này, nên tạm thời chúng ta sẽ sử dụng cách gửi giá trị về frontend
+            // và frontend sẽ lưu lại trong state của mình
+
+            return {
+                code: couponCode,
+                discount: parseFloat(discount.toFixed(2))
+            };
+        } catch (error) {
+            console.error('Lỗi khi áp dụng mã giảm giá:', error);
+            throw new Error(error.message || 'Không thể áp dụng mã giảm giá. Vui lòng thử lại sau.');
+        }
+    }
+
+    async calculateShipping(user_id, address) {
+        try {
+            // Xác thực user có giỏ hàng
+            const cart = await Cart.findOne({
+                where: { user_id }
+            });
+
+            if (!cart) {
+                throw new Error('Không tìm thấy giỏ hàng');
+            }
+
+            // Lấy các item trong giỏ hàng
+            const cartItems = await CartItem.findAll({
+                where: { cart_id: cart.cart_id }
+            });
+
+            if (!cartItems || cartItems.length === 0) {
+                throw new Error('Giỏ hàng trống');
+            }
+
+            // Tính tổng khối lượng sản phẩm (tạm tính)
+            const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+            const totalWeight = totalQuantity * 0.5; // Giả sử mỗi sản phẩm 0.5kg
+
+            // Tính phí vận chuyển dựa vào địa chỉ và tổng khối lượng
+            let shippingFee = 0;
+            let estimatedTime = '';
+
+            // Logic tính phí vận chuyển đơn giản
+            if (totalWeight <= 1) {
+                shippingFee = 20000; // Dưới 1kg: 20k
+                estimatedTime = '1-2 ngày';
+            } else if (totalWeight <= 3) {
+                shippingFee = 30000; // 1-3kg: 30k
+                estimatedTime = '2-3 ngày';
+            } else if (totalWeight <= 5) {
+                shippingFee = 40000; // 3-5kg: 40k
+                estimatedTime = '3-4 ngày';
+            } else {
+                shippingFee = 50000; // Trên 5kg: 50k
+                estimatedTime = '3-5 ngày';
+            }
+
+            // Miễn phí vận chuyển nếu đơn hàng trên 500k
+            if (cart.total_price >= 500000) {
+                shippingFee = 0;
+                estimatedTime = '2-4 ngày';
+            }
+
+            // Lưu phí vận chuyển vào session hoặc lưu vào bảng tạm thời
+            // Vì model Cart chưa có trường này, nên tạm thời chúng ta sẽ sử dụng cách gửi giá trị về frontend
+
+            return {
+                fee: parseFloat(shippingFee.toFixed(2)),
+                estimatedTime: estimatedTime,
+                address: address
+            };
+        } catch (error) {
+            console.error('Lỗi khi tính phí vận chuyển:', error);
+            throw new Error(error.message || 'Không thể tính phí vận chuyển. Vui lòng thử lại sau.');
+        }
+    }
+
+    // Phương thức mới để lấy thông tin giảm giá và phí giao hàng
+    async getCartSummary(user_id, session = {}) {
+        try {
+            const cart = await Cart.findOne({
+                where: { user_id }
+            });
+
+            if (!cart) {
+                return {
+                    subtotal: 0,
+                    discount: 0,
+                    shipping_fee: 0,
+                    total: 0,
+                    coupon_code: null
+                };
+            }
+
+            // Lấy thông tin giảm giá và phí vận chuyển từ session hoặc tạm thời hardcoded
+            // Trong thực tế, chúng ta có thể lưu những thông tin này trong session hoặc tạo bảng tạm thời
+            const discount = session.discount || 0;
+            const shipping_fee = session.shipping_fee || 0;
+            const coupon_code = session.coupon_code || null;
+
+            const subtotal = parseFloat(cart.total_price);
+            const total = subtotal - discount + shipping_fee;
+
+            return {
+                subtotal,
+                discount,
+                shipping_fee,
+                total,
+                coupon_code
+            };
+        } catch (error) {
+            console.error('Lỗi khi lấy thông tin tổng hợp giỏ hàng:', error);
+            throw new Error('Không thể lấy thông tin tổng hợp giỏ hàng. Vui lòng thử lại sau.');
+        }
+    }
+
+    // Phương thức để xóa mã giảm giá khỏi giỏ hàng
+    async removeCoupon(user_id) {
+        try {
+            const cart = await Cart.findOne({
+                where: { user_id }
+            });
+
+            if (!cart) {
+                throw new Error('Không tìm thấy giỏ hàng');
+            }
+
+            // Trong trường hợp của chúng ta, ta chỉ cần trả về thông báo vì chúng ta không lưu coupon_code
+            // trong model Cart
+
+            return {
+                message: 'Đã xóa mã giảm giá khỏi giỏ hàng',
+                discount: 0,
+                coupon_code: null
+            };
+        } catch (error) {
+            console.error('Lỗi khi xóa mã giảm giá:', error);
+            throw new Error(error.message || 'Không thể xóa mã giảm giá. Vui lòng thử lại sau.');
         }
     }
 }
