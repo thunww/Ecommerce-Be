@@ -10,12 +10,7 @@ const roleMiddleware = require("../middleware/roleMiddleware");
 // router.get("/:product_id/images", handleGetProductImages);
 // router.delete("/image/:image_id", handleDeleteProductImage);
 
-router.get(
-  "/",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  productController.getAllProducts
-);
+router.get("/", productController.getAllProducts);
 
 router.put(
   "/assign-product",
