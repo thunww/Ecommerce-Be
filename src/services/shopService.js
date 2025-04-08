@@ -21,8 +21,6 @@ const getAllShops = async () => {
   }
 };
 
-module.exports = { getAllShops };
-
 const assingStatusToShop = async (shopId, status) => {
   try {
     const shop = await Shop.findByPk(shopId);

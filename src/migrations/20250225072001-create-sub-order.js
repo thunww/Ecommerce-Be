@@ -35,8 +35,8 @@ module.exports = {
         defaultValue: 0.00,
       },
       status: {
-        type: Sequelize.ENUM('cart', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'),
-        defaultValue: 'cart',
+        type: Sequelize.ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled'),
+        defaultValue: 'pending',
       },
       created_at: {
         type: Sequelize.DATE,

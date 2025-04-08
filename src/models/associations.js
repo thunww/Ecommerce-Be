@@ -1,4 +1,3 @@
-// Định nghĩa quan hệ giữa các bảng
 module.exports = (db) => {
   const {
     User,
@@ -13,7 +12,6 @@ module.exports = (db) => {
     OrderItem,
     Payment,
     Product,
-    ProductImage,
     ProductReview,
     Shop,
     ShopReview,
@@ -21,6 +19,9 @@ module.exports = (db) => {
     Wishlist,
     UserCoupon,
     Shipper,
+    ProductVariant,
+    Cart,
+    CartItem,
   } = db;
 
   // Quan hệ User - Role (N-N)
@@ -28,11 +29,13 @@ module.exports = (db) => {
     through: UserRole,
     foreignKey: "user_id",
     as: "roles",
+    onDelete: "CASCADE",
   });
   Role.belongsToMany(User, {
     through: UserRole,
     foreignKey: "role_id",
     as: "users",
+    onDelete: "CASCADE",
   });
 
   UserRole.belongsTo(User, { foreignKey: "user_id", onDelete: "CASCADE" });
@@ -50,23 +53,29 @@ module.exports = (db) => {
   });
 
   // Quan hệ User - Address (1-N)
-  User.hasMany(Address, { foreignKey: "user_id", as: "addresses" });
-  Address.belongsTo(User, { foreignKey: "user_id" });
+  User.hasMany(Address, {
+    foreignKey: "user_id",
+    onDelete: "CASCADE",
+    as: "addresses",
+  });
+  Address.belongsTo(User, { foreignKey: "user_id", onDelete: "CASCADE" });
 
   // Quan hệ Category - Product (1-N)
   Category.hasMany(Product, {
     foreignKey: "category_id",
+    onDelete: "CASCADE",
     as: "products",
-    onDelete: "SET NULL"
   });
   Product.belongsTo(Category, {
     foreignKey: "category_id",
-    as: "Category"
+    onDelete: "CASCADE",
+    as: "Category",
   });
 
   // Quan hệ Category - Category (Danh mục cha - con)
   Category.belongsTo(Category, {
     foreignKey: "parent_id",
+    onDelete: "CASCADE",
     as: "parentCategory",
   });
   Category.hasMany(Category, { foreignKey: "parent_id", as: "subCategories" });
@@ -79,38 +88,74 @@ module.exports = (db) => {
   User.hasMany(UserCoupon, { foreignKey: "user_id", as: "coupons" });
   UserCoupon.belongsTo(User, { foreignKey: "user_id" });
 
+  // Quan hệ Coupon - Shop (1-N)
+  Coupon.belongsTo(Shop, {
+    foreignKey: "shop_id",
+    as: "shop",
+  });
+  Shop.hasMany(Coupon, {
+    foreignKey: "shop_id",
+    as: "coupons",
+  });
+
   // Quan hệ User - Notification (1-N)
   User.hasMany(Notification, { foreignKey: "user_id", as: "notifications" });
   Notification.belongsTo(User, { foreignKey: "user_id" });
 
   // Quan hệ User - Order (1-N)
-  User.hasMany(Order, { foreignKey: "user_id", as: "orders" });
-  Order.belongsTo(User, { foreignKey: "user_id" });
+  User.hasMany(Order, {
+    foreignKey: "user_id",
+    onDelete: "CASCADE",
+    as: "orders",
+  });
+  Order.belongsTo(User, { foreignKey: "user_id", onDelete: "CASCADE" });
 
   // Quan hệ Order - SubOrder (1-N)
-  Order.hasMany(SubOrder, { foreignKey: "order_id", as: "subOrders" });
-  SubOrder.belongsTo(Order, { foreignKey: "order_id" });
+  Order.hasMany(SubOrder, {
+    foreignKey: "order_id",
+    onDelete: "CASCADE",
+    as: "subOrders",
+  });
+  SubOrder.belongsTo(Order, { foreignKey: "order_id", onDelete: "CASCADE" });
 
   // Quan hệ SubOrder - OrderItem (1-N)
-  SubOrder.hasMany(OrderItem, { foreignKey: "sub_order_id", as: "orderItems" });
-  OrderItem.belongsTo(SubOrder, { foreignKey: "sub_order_id" });
+  SubOrder.hasMany(OrderItem, {
+    foreignKey: "sub_order_id",
+    onDelete: "CASCADE",
+    as: "orderItems",
+  });
+  OrderItem.belongsTo(SubOrder, {
+    foreignKey: "sub_order_id",
+    onDelete: "CASCADE",
+  });
 
   // Quan hệ OrderItem - Product (N-1)
   Product.hasMany(OrderItem, {
     foreignKey: "product_id",
-    as: "orderItems",
     onDelete: "CASCADE",
+    as: "orderItems",
   });
   OrderItem.belongsTo(Product, {
     foreignKey: "product_id",
+    onDelete: "CASCADE",
     as: "product",
+  });
+
+  // Quan hệ Order - Payment (1-N)
+  Order.hasMany(Payment, {
+    foreignKey: "order_id",
+    as: "payments",
+    onDelete: "CASCADE",
+  });
+  Payment.belongsTo(Order, {
+    foreignKey: "order_id",
     onDelete: "CASCADE",
   });
 
-  // Quan hệ Payment - SubOrder (1-1)
-  SubOrder.hasOne(Payment, {
+  // Quan hệ SubOrder - Payment (1-N)
+  SubOrder.hasMany(Payment, {
     foreignKey: "sub_order_id",
-    as: "payment",
+    as: "payments",
     onDelete: "CASCADE",
   });
   Payment.belongsTo(SubOrder, {
@@ -118,74 +163,82 @@ module.exports = (db) => {
     onDelete: "CASCADE",
   });
 
-  // Quan hệ User - Shipper (1-1)
-  User.hasOne(Shipper, { foreignKey: "user_id", as: "shipper" });
-  Shipper.belongsTo(User, { foreignKey: "user_id", as: "user" });
-
-  // Quan hệ Shipper - Shipment (1-N)
-  Shipper.hasMany(Shipment, { foreignKey: "shipper_id", as: "shipments" });
-  Shipment.belongsTo(Shipper, { foreignKey: "shipper_id", as: "shipper" });
-
-  // Quan hệ Product - ProductImage (1-N)
-  Product.hasMany(ProductImage, {
-    foreignKey: "product_id",
-    as: "images",
-    onDelete: "CASCADE"
+  // Quan hệ Order - Address (N-1)
+  Order.belongsTo(Address, {
+    foreignKey: "shipping_address_id",
+    as: "shipping_address",
+    onDelete: "CASCADE",
   });
-  ProductImage.belongsTo(Product, {
-    foreignKey: "product_id",
-    onDelete: "CASCADE"
+  Address.hasMany(Order, {
+    foreignKey: "shipping_address_id",
+    as: "orders",
+    onDelete: "CASCADE",
   });
 
   // Quan hệ Product - ProductReview (1-N)
   Product.hasMany(ProductReview, {
     foreignKey: "product_id",
+    onDelete: "CASCADE",
     as: "reviews",
-    onDelete: "CASCADE"
   });
   ProductReview.belongsTo(Product, {
     foreignKey: "product_id",
-    onDelete: "CASCADE"
+    onDelete: "CASCADE",
   });
 
   // Quan hệ User - ProductReview (1-N)
   User.hasMany(ProductReview, {
     foreignKey: "user_id",
-    as: "productReviews"
+    onDelete: "CASCADE",
+    as: "productReviews",
   });
   ProductReview.belongsTo(User, {
     foreignKey: "user_id",
-    as: "user"
+    onDelete: "CASCADE",
+    as: "user",
   });
 
   // Quan hệ Shop - Product (1-N)
   Shop.hasMany(Product, {
     foreignKey: "shop_id",
+    onDelete: "CASCADE",
     as: "products",
-    onDelete: "CASCADE"
   });
   Product.belongsTo(Shop, {
     foreignKey: "shop_id",
-    as: "Shop"
+    onDelete: "CASCADE",
+    as: "Shop",
   });
 
   // Quan hệ Shop - ShopReview (1-N)
-  Shop.hasMany(ShopReview, { foreignKey: "shop_id", as: "reviews" });
-  ShopReview.belongsTo(Shop, { foreignKey: "shop_id" });
+  Shop.hasMany(ShopReview, {
+    foreignKey: "shop_id",
+    onDelete: "CASCADE",
+    as: "reviews",
+  });
+  ShopReview.belongsTo(Shop, { foreignKey: "shop_id", onDelete: "CASCADE" });
 
   // Quan hệ Shop - SubOrder (1-N)
-  Shop.hasMany(SubOrder, { foreignKey: "shop_id", as: "subOrders" });
-  SubOrder.belongsTo(Shop, { foreignKey: "shop_id" });
+  Shop.hasMany(SubOrder, {
+    foreignKey: "shop_id",
+    onDelete: "CASCADE",
+    as: "subOrders",
+  });
+  SubOrder.belongsTo(Shop, { foreignKey: "shop_id", onDelete: "CASCADE" });
 
   // Quan hệ User - Shop (1-N) (Người dùng là chủ shop)
-  User.hasMany(Shop, { foreignKey: "owner_id", as: "shops" });
-  Shop.belongsTo(User, { foreignKey: "owner_id" });
+  User.hasMany(Shop, {
+    foreignKey: "owner_id",
+    onDelete: "CASCADE",
+    as: "shops",
+  });
+  Shop.belongsTo(User, { foreignKey: "owner_id", onDelete: "CASCADE" });
 
   // Quan hệ Shipment - SubOrder (1-1)
   SubOrder.hasOne(Shipment, {
     foreignKey: "sub_order_id",
-    as: "shipment",
     onDelete: "CASCADE",
+    as: "shipment",
   });
   Shipment.belongsTo(SubOrder, {
     foreignKey: "sub_order_id",
@@ -193,18 +246,100 @@ module.exports = (db) => {
   });
 
   // Quan hệ Wishlist - User (N-1)
-  User.hasMany(Wishlist, { foreignKey: "user_id", as: "wishlists" });
+  User.hasMany(Wishlist, {
+    foreignKey: "user_id",
+    onDelete: "CASCADE",
+    as: "wishlists",
+  });
   Wishlist.belongsTo(User, { foreignKey: "user_id", onDelete: "CASCADE" });
 
   // Quan hệ Wishlist - Product (N-1)
   Product.hasMany(Wishlist, {
     foreignKey: "product_id",
+    onDelete: "CASCADE",
     as: "wishlistedByUsers",
-    onDelete: "CASCADE"
   });
   Wishlist.belongsTo(Product, {
     foreignKey: "product_id",
     onDelete: "CASCADE",
-    as: "product"
+    as: "product",
+  });
+
+  Product.hasMany(ProductVariant, {
+    foreignKey: "product_id",
+    onDelete: "CASCADE",
+    as: "variants",
+  });
+
+  ProductVariant.belongsTo(Product, {
+    foreignKey: "product_id",
+    onDelete: "CASCADE",
+    as: "product",
+  });
+
+  // Quan hệ ProductVariant - OrderItem (1-N)
+  ProductVariant.hasMany(OrderItem, {
+    foreignKey: "variant_id",
+    onDelete: "CASCADE",
+    as: "orderItems",
+  });
+  OrderItem.belongsTo(ProductVariant, {
+    foreignKey: "variant_id",
+    onDelete: "CASCADE",
+    as: "variant",
+  });
+
+  // Quan hệ ProductVariant - Wishlist (N-1)
+  ProductVariant.hasMany(Wishlist, {
+    foreignKey: "variant_id",
+    onDelete: "CASCADE",
+    as: "wishlistedByUsers",
+  });
+  Wishlist.belongsTo(ProductVariant, {
+    foreignKey: "variant_id",
+    onDelete: "CASCADE",
+    as: "variant",
+  });
+
+  // Quan hệ User - Cart (1-1)
+  User.hasOne(Cart, {
+    foreignKey: "user_id",
+    as: "cart",
+    onDelete: "CASCADE",
+  });
+
+  Cart.belongsTo(User, {
+    foreignKey: "user_id",
+    as: "user",
+  });
+
+  Cart.hasMany(CartItem, {
+    foreignKey: "cart_id",
+    as: "items",
+    onDelete: "CASCADE",
+  });
+
+  Cart.belongsToMany(Shop, {
+    through: CartItem,
+    foreignKey: "cart_id",
+    otherKey: "shop_id",
+    as: "shops",
+  });
+
+  // CartItem associations
+  CartItem.belongsTo(Cart, {
+    foreignKey: "cart_id",
+    as: "cart",
+  });
+
+  CartItem.belongsTo(Product, {
+    foreignKey: "product_id",
+    as: "product",
+    onDelete: "CASCADE",
+  });
+
+  CartItem.belongsTo(Shop, {
+    foreignKey: "shop_id",
+    as: "shop",
   });
 };

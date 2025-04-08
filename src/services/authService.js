@@ -133,32 +133,5 @@ const resetPassword = async (token, newPassword) => {
   return "Password has been successfully changed";
 };
 
-const logout = async (token) => {
-  try {
-    // Verify token trước khi blacklist
-    const decoded = verifyToken(token);
-    if (!decoded) {
-      throw new Error("Token không hợp lệ");
-    }
 
-    // Thêm token vào blacklist với thời gian hết hạn
-    await BlacklistedToken.create({
-      token: token,
-      expires_at: new Date(decoded.exp * 1000), // Chuyển đổi timestamp thành Date
-      user_id: decoded.user_id,
-    });
-    console.log("Token đã được thêm vào blacklist");
-
-    return { message: "Đăng xuất thành công" };
-  } catch (error) {
-    throw new Error("Lỗi khi đăng xuất: " + error.message);
-  }
-};
-
-module.exports = {
-  registerUser,
-  loginUser,
-  forgotPassword,
-  resetPassword,
-  logout,
-};
+module.exports = { registerUser, loginUser, forgotPassword, resetPassword };

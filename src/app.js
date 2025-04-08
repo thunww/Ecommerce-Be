@@ -5,20 +5,23 @@ const helmet = require("helmet");
 const compression = require("compression");
 const { sequelize } = require("./models");
 const authRoutes = require("./routes/authRoutes");
-const userRoutes = require("./routes/userRoutes");
 const productRoutes = require("./routes/productRoutes");
-const adminRoutes = require("./routes/adminRoutes");
+// const adminRoutes = require("./routes/adminRoutes");
 const vendorRoutes = require("./routes/vendorRoutes");
 const configCORS = require("./config/cors");
 const app = express();
 const bodyParser = require("body-parser");
-
+const usersRoutes = require("./routes/usersRoutes");
+const orderRoutes = require("./routes/orderRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const addressRoutes = require("./routes/addressRoutes");
+const shopRoutes = require("./routes/shopRoutes");
+const couponRoutes = require("./routes/couponRoutes");
+const chatRoutes = require('./routes/chatRoutes');
 // Middleware
 app.use(helmet());
 app.use(compression());
@@ -35,21 +38,25 @@ app.use((req, res, next) => {
 });
 // Routes
 app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/", userRoutes);
-app.use("/api/v1/admin", adminRoutes);
-app.use("/api/v1/vendor", vendorRoutes);
+app.use("/api/v1/", usersRoutes);
 app.use("/uploads", express.static("uploads"));
 
-app.use("/api/products", productRoutes);
+app.use("/api/v1/products", productRoutes);
+
 app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/addresses", addressRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/coupons", couponRoutes);
 
-const shopRoutes = require("./routes/shopRoutes");
-app.use("/api/shop", shopRoutes);
+app.use('/api/chat', chatRoutes);
+
+app.use("/api/v1/shops", shopRoutes);
+app.use("/api/v1/vendors", vendorRoutes);
+// app.use("/api/v1/admin", adminRoutes);
 
 // Xử lý lỗi 404 (Not Found)
 app.use((req, res, next) => {
