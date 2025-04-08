@@ -25,6 +25,7 @@ router.delete(
   roleMiddleware(["admin", "vendor"]),
   productController.handleDeleteProduct
 );
+router.get("/related/:related_id", productController.getProductsByCategoryId);
 
 router.get("/search", productController.searchProducts);
 
