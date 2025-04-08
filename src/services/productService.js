@@ -183,6 +183,94 @@ class ProductService {
       };
     }
   }
+  async getProductsByCategoryId(category_id) {
+    try {
+      // Truy vấn đầu tiên: lấy danh sách sản phẩm theo category kèm rating trung bình
+      const products = await Product.findAll({
+        where: { category_id },
+        attributes: {
+          include: [
+            [fn("AVG", col("reviews.rating")), "average_rating"],
+            [fn("COUNT", col("reviews.review_id")), "review_count"],
+          ],
+        },
+        include: [
+          {
+            model: Category,
+            as: "Category",
+            attributes: ["category_name"],
+          },
+          {
+            model: ProductReview,
+            as: "reviews",
+            attributes: [],
+          },
+        ],
+        group: ["Product.product_id", "Category.category_id"],
+      });
+
+      if (!products || products.length === 0) {
+        return {
+          success: false,
+          message: "Không tìm thấy sản phẩm nào trong danh mục này",
+          data: [],
+        };
+      }
+
+      // Lặp qua từng sản phẩm để lấy thêm thông tin variants và tổng stock
+      const detailedProducts = await Promise.all(
+        products.map(async (product) => {
+          const productWithVariants = await Product.findByPk(
+            product.product_id,
+            {
+              include: [
+                {
+                  model: ProductVariant,
+                  as: "variants",
+                  attributes: [
+                    "variant_id",
+                    "size",
+                    "color",
+                    "material",
+                    "storage",
+                    "ram",
+                    "processor",
+                    "weight",
+                    "price",
+                    "stock",
+                    "image_url",
+                  ],
+                },
+              ],
+            }
+          );
+
+          const totalStock = productWithVariants.variants.reduce(
+            (sum, variant) => sum + variant.stock,
+            0
+          );
+
+          const result = product.toJSON();
+          result.variants = productWithVariants.variants;
+          result.stock = totalStock;
+          return result;
+        })
+      );
+
+      return {
+        success: true,
+        message: "Lấy danh sách sản phẩm theo danh mục thành công",
+        data: detailedProducts,
+      };
+    } catch (error) {
+      console.error("Lỗi khi lấy sản phẩm theo danh mục:", error);
+      return {
+        success: false,
+        message: "Đã xảy ra lỗi khi lấy thông tin sản phẩm theo danh mục",
+        data: [],
+      };
+    }
+  }
 
   async searchProducts(q, category_id, min_price, max_price, sort) {
     const where = { status: "active" };
