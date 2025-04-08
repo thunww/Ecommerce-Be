@@ -1,6 +1,5 @@
 const {
   Product,
-  ProductImage,
   Category,
   Shop,
   ProductReview,
@@ -12,7 +11,6 @@ const { fn, col, literal } = require("sequelize");
 class ProductService {
   async getAllProducts() {
     try {
-      // Truy vấn đầu tiên để lấy thông tin cơ bản của tất cả sản phẩm và tính trung bình rating
       const products = await Product.findAll({
         attributes: {
           include: [
@@ -31,26 +29,6 @@ class ProductService {
             as: "reviews",
             attributes: [],
           },
-        ],
-        group: ["Product.product_id", "Category.category_id"],
-      });
-
-      if (!products || products.length === 0) {
-        return {
-          success: false,
-          message: "Không có sản phẩm nào tồn tại",
-          data: null,
-        };
-      }
-
-      // Truy vấn thứ hai để lấy variants và images cho tất cả sản phẩm
-      const productsWithDetails = await Product.findAll({
-        include: [
-          {
-            model: ProductImage,
-            as: "images",
-            attributes: ["image_id", "image_url"],
-          },
           {
             model: ProductVariant,
             as: "variants",
@@ -65,27 +43,45 @@ class ProductService {
               "weight",
               "price",
               "stock",
+              "image_url",
             ],
           },
         ],
+        group: [
+          "Product.product_id",
+          "Category.category_id",
+          "variants.variant_id", // Add variant_id to the GROUP BY clause
+          "variants.size", // Add size to GROUP BY clause
+          "variants.color", // Add color to GROUP BY clause
+          "variants.material", // Add material to GROUP BY clause
+          "variants.storage", // Add storage to GROUP BY clause
+          "variants.ram", // Add ram to GROUP BY clause
+          "variants.processor", // Add processor to GROUP BY clause
+          "variants.weight", // Add weight to GROUP BY clause
+          "variants.price", // Add price to GROUP BY clause
+          "variants.stock", // Add stock to GROUP BY clause
+          "variants.image_url", // Add image_url to GROUP BY clause
+        ],
       });
 
-      // Gộp kết quả và tính tổng stock cho từng sản phẩm
-      const result = products.map((product) => {
-        const productDetails = productsWithDetails.find(
-          (p) => p.product_id === product.product_id
-        );
+      if (!products || products.length === 0) {
+        return {
+          success: false,
+          message: "Không có sản phẩm nào tồn tại",
+          data: null,
+        };
+      }
 
-        // Tính tổng stock từ các variants
-        const totalStock = productDetails.variants.reduce(
+      const result = products.map((product) => {
+        const productJson = product.toJSON();
+
+        // Calculate total stock
+        const totalStock = productJson.variants.reduce(
           (sum, variant) => sum + variant.stock,
           0
         );
 
-        const productJson = product.toJSON();
-        productJson.images = productDetails.images;
-        productJson.variants = productDetails.variants;
-        productJson.stock = totalStock;
+        productJson.stock = totalStock; // Add total stock to the product data
 
         return productJson;
       });
@@ -104,6 +100,7 @@ class ProductService {
       };
     }
   }
+
   async getProductById(product_id) {
     try {
       // Truy vấn đầu tiên để lấy thông tin cơ bản của sản phẩm và tính trung bình rating
@@ -138,14 +135,9 @@ class ProductService {
         };
       }
 
-      // Truy vấn thứ hai để lấy variants và images
+      // Truy vấn thứ hai để lấy variants, images và tính tổng stock
       const productWithDetails = await Product.findByPk(product_id, {
         include: [
-          {
-            model: ProductImage,
-            as: "images",
-            attributes: ["image_id", "image_url"],
-          },
           {
             model: ProductVariant,
             as: "variants",
@@ -160,6 +152,7 @@ class ProductService {
               "weight",
               "price",
               "stock",
+              "image_url", // Lấy image_url từ ProductVariant
             ],
           },
         ],
@@ -170,9 +163,9 @@ class ProductService {
         (sum, variant) => sum + variant.stock,
         0
       );
+
       // Gộp kết quả
       const result = product.toJSON();
-      result.images = productWithDetails.images;
       result.variants = productWithDetails.variants;
       result.stock = totalStock;
 

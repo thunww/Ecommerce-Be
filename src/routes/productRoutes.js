@@ -1,19 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const upload = require("../middleware/uploadMiddleware");
-const {
-  handleUploadProductImage,
-  handleGetProductImages,
-  handleDeleteProductImage,
-} = require("../controllers/productController");
 const productController = require("../controllers/productController");
 const reviewController = require("../controllers/reviewController");
 const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
 
-router.post("/upload", upload.single("image"), handleUploadProductImage);
-router.get("/:product_id/images", handleGetProductImages);
-router.delete("/image/:image_id", handleDeleteProductImage);
+// router.post("/upload", upload.single("image"), handleUploadProductImage);
+// router.get("/:product_id/images", handleGetProductImages);
+// router.delete("/image/:image_id", handleDeleteProductImage);
 
 router.get(
   "/",
