@@ -59,6 +59,10 @@ ProductVariant.init(
       allowNull: false,
       defaultValue: 0,
     },
+    image_url: {
+      type: DataTypes.STRING(255),
+      allowNull: true, // Đường dẫn hình ảnh cho phiên bản sản phẩm
+    },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -76,7 +80,9 @@ ProductVariant.init(
     sequelize,
     modelName: "ProductVariant",
     tableName: "Product_Variants",
-    timestamps: false,
+    timestamps: true, // Bật tính năng timestamps để tự động sử dụng createdAt và updatedAt
+    createdAt: "created_at", // Đổi tên trường timestamp thành created_at
+    updatedAt: "updated_at", // Đổi tên trường timestamp thành updated_at
   }
 );
 

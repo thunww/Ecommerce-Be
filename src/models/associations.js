@@ -12,7 +12,6 @@ module.exports = (db) => {
     OrderItem,
     Payment,
     Product,
-    ProductImage,
     ProductReview,
     Shop,
     ShopReview,
@@ -173,17 +172,6 @@ module.exports = (db) => {
   Address.hasMany(Order, {
     foreignKey: "shipping_address_id",
     as: "orders",
-    onDelete: "CASCADE",
-  });
-
-  // Quan hệ Product - ProductImage (1-N)
-  Product.hasMany(ProductImage, {
-    foreignKey: "product_id",
-    onDelete: "CASCADE",
-    as: "images",
-  });
-  ProductImage.belongsTo(Product, {
-    foreignKey: "product_id",
     onDelete: "CASCADE",
   });
 

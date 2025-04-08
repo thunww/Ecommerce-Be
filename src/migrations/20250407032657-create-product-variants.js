@@ -53,6 +53,10 @@ module.exports = {
         allowNull: false,
         defaultValue: 0, // Số lượng tồn kho cho phiên bản này
       },
+      image_url: {
+        type: Sequelize.STRING(255),
+        allowNull: true,
+      },
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,

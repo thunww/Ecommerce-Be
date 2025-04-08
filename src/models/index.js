@@ -23,7 +23,6 @@ const SubOrder = require("./suborder");
 const OrderItem = require("./orderitem");
 const Payment = require("./payment");
 const Product = require("./product");
-const ProductImage = require("./productimage");
 const ProductReview = require("./productreview");
 const Shop = require("./shop");
 const ShopReview = require("./shopreview");
@@ -50,7 +49,6 @@ Object.assign(db, {
   OrderItem,
   Payment,
   Product,
-  ProductImage,
   ProductReview,
   Shop,
   ShopReview,
