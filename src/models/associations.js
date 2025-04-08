@@ -236,7 +236,11 @@ module.exports = (db) => {
     onDelete: "CASCADE",
     as: "subOrders",
   });
-  SubOrder.belongsTo(Shop, { foreignKey: "shop_id", onDelete: "CASCADE" });
+  SubOrder.belongsTo(Shop, {
+    foreignKey: "shop_id",
+    onDelete: "CASCADE",
+    as: "shop"
+  });
 
   // Quan hệ User - Shop (1-N) (Người dùng là chủ shop)
   User.hasMany(Shop, {
@@ -292,13 +296,14 @@ module.exports = (db) => {
   // Quan hệ ProductVariant - OrderItem (1-N)
   ProductVariant.hasMany(OrderItem, {
     foreignKey: "variant_id",
-    onDelete: "CASCADE",
     as: "orderItems",
   });
+
+  // Quan hệ OrderItem - ProductVariant (N-1)
   OrderItem.belongsTo(ProductVariant, {
     foreignKey: "variant_id",
-    onDelete: "CASCADE",
-    as: "variant",
+    as: "productVariant",
+    onDelete: "SET NULL",
   });
 
   // Quan hệ ProductVariant - Wishlist (N-1)
@@ -307,6 +312,7 @@ module.exports = (db) => {
     onDelete: "CASCADE",
     as: "wishlistedByUsers",
   });
+
   Wishlist.belongsTo(ProductVariant, {
     foreignKey: "variant_id",
     onDelete: "CASCADE",
@@ -316,42 +322,60 @@ module.exports = (db) => {
   // Quan hệ User - Cart (1-1)
   User.hasOne(Cart, {
     foreignKey: "user_id",
-    as: "cart",
     onDelete: "CASCADE",
+    as: "cart"
   });
-
   Cart.belongsTo(User, {
     foreignKey: "user_id",
-    as: "user",
+    onDelete: "CASCADE",
+    as: "user"
   });
 
+  // Quan hệ Cart - CartItem (1-N)
   Cart.hasMany(CartItem, {
     foreignKey: "cart_id",
-    as: "items",
     onDelete: "CASCADE",
+    as: "items"
   });
-
-  Cart.belongsToMany(Shop, {
-    through: CartItem,
-    foreignKey: "cart_id",
-    otherKey: "shop_id",
-    as: "shops",
-  });
-
-  // CartItem associations
   CartItem.belongsTo(Cart, {
     foreignKey: "cart_id",
-    as: "cart",
+    onDelete: "CASCADE",
+    as: "cart"
   });
 
+  // Quan hệ Product - CartItem (1-N)
+  Product.hasMany(CartItem, {
+    foreignKey: "product_id",
+    onDelete: "CASCADE",
+    as: "cartItems"
+  });
   CartItem.belongsTo(Product, {
     foreignKey: "product_id",
-    as: "product",
     onDelete: "CASCADE",
+    as: "product"
   });
 
+  // Quan hệ Shop - CartItem (1-N)
+  Shop.hasMany(CartItem, {
+    foreignKey: "shop_id",
+    onDelete: "CASCADE",
+    as: "cartItems"
+  });
   CartItem.belongsTo(Shop, {
     foreignKey: "shop_id",
-    as: "shop",
+    onDelete: "CASCADE",
+    as: "shop"
+  });
+
+  // Quan hệ ProductVariant - CartItem (1-N)
+  ProductVariant.hasMany(CartItem, {
+    foreignKey: "product_variant_id",
+    onDelete: "CASCADE",
+    as: "cartItems"
+  });
+  CartItem.belongsTo(ProductVariant, {
+    foreignKey: "product_variant_id",
+    onDelete: "CASCADE",
+    as: "variant"
   });
 };

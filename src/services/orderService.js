@@ -1,9 +1,13 @@
-const { Order, SubOrder, OrderItem, Cart, CartItem, Product, Shop, Payment } = require('../models');
+const { Order, SubOrder, OrderItem, Cart, CartItem, Product, Shop, Payment, ProductVariant, Coupon } = require('../models');
+const couponService = require('./couponService');
 
 class OrderService {
-    async createOrder(user_id, shipping_address_id, payment_method) {
+    async createOrder(user_id, shipping_address_id, payment_method, coupon_code = null) {
         let order = null;
         let cart = null;
+        let couponDiscount = 0;
+        let validatedCoupon = null;
+
         try {
             // Lấy giỏ hàng của người dùng
             cart = await Cart.findOne({
@@ -11,10 +15,16 @@ class OrderService {
                 include: [{
                     model: CartItem,
                     as: 'items',
-                    include: [{
-                        model: Product,
-                        as: 'product'
-                    }]
+                    include: [
+                        {
+                            model: Product,
+                            as: 'product'
+                        },
+                        {
+                            model: ProductVariant,
+                            as: 'variant'
+                        }
+                    ]
                 }]
             });
 
@@ -22,11 +32,27 @@ class OrderService {
                 throw new Error('Giỏ hàng trống');
             }
 
+            // Kiểm tra và áp dụng mã giảm giá nếu có
+            if (coupon_code) {
+                try {
+                    validatedCoupon = await couponService.validateCoupon(coupon_code, user_id, cart.total_price);
+                    couponDiscount = validatedCoupon.discount_amount;
+                } catch (couponError) {
+                    throw new Error(`Mã giảm giá không hợp lệ: ${couponError.message}`);
+                }
+            }
+
+            // Tính tổng tiền sau khi áp dụng mã giảm giá
+            const finalPrice = cart.total_price - couponDiscount;
+
             // Tạo đơn hàng chính
             order = await Order.create({
                 user_id,
                 shipping_address_id,
                 total_price: cart.total_price,
+                discount_amount: couponDiscount,
+                final_amount: finalPrice,
+                coupon_id: validatedCoupon ? validatedCoupon.coupon_id : null,
                 payment_method,
                 status: 'pending',
                 payment_status: 'pending',
@@ -57,15 +83,44 @@ class OrderService {
                     status: 'pending'
                 });
 
-                // Tạo order items
+                // Tạo order items và cập nhật số lượng tồn kho
                 for (const item of shopItems) {
                     await OrderItem.create({
                         sub_order_id: subOrder.sub_order_id,
                         product_id: item.product_id,
+                        variant_id: item.product_variant_id || null,
                         quantity: item.quantity,
                         price: item.price,
-                        total_price: item.total_price
+                        total_price: item.total_price,
+                        variant_info: item.variant_info
                     });
+
+                    // Cập nhật số lượng tồn kho cho sản phẩm hoặc biến thể
+                    if (item.product_variant_id && item.variant) {
+                        // Nếu là sản phẩm có biến thể, cập nhật stock của biến thể
+                        await ProductVariant.decrement('stock', {
+                            by: item.quantity,
+                            where: { variant_id: item.product_variant_id }
+                        });
+
+                        // Cập nhật thêm giá trị sold cho biến thể nếu cần
+                        await ProductVariant.increment('sold', {
+                            by: item.quantity,
+                            where: { variant_id: item.product_variant_id }
+                        });
+                    } else {
+                        // Nếu là sản phẩm không có biến thể, cập nhật stock của sản phẩm
+                        await Product.decrement('stock', {
+                            by: item.quantity,
+                            where: { product_id: item.product_id }
+                        });
+
+                        // Cập nhật thêm giá trị sold cho sản phẩm
+                        await Product.increment('sold', {
+                            by: item.quantity,
+                            where: { product_id: item.product_id }
+                        });
+                    }
                 }
 
                 // Tạo payment cho sub-order
@@ -76,6 +131,14 @@ class OrderService {
                     status: 'pending',
                     amount: subOrderTotal
                 });
+            }
+
+            // Đánh dấu mã giảm giá đã được sử dụng nếu có
+            if (validatedCoupon) {
+                const coupon = await Coupon.findByPk(validatedCoupon.coupon_id);
+                if (coupon) {
+                    await couponService.applyCouponToOrder(order.order_id, coupon.code, user_id);
+                }
             }
 
             // Nếu là thanh toán online, trả về URL thanh toán
@@ -121,12 +184,26 @@ class OrderService {
                     include: [{
                         model: OrderItem,
                         as: 'orderItems',
-                        include: [{
-                            model: Product,
-                            as: 'product'
-                        }]
-                    }, {
-                        model: Shop
+                        include: [
+                            {
+                                model: Product,
+                                as: 'product',
+                                include: [
+                                    {
+                                        model: Shop,
+                                        as: 'Shop'
+                                    }
+                                ]
+                            },
+                            {
+                                model: ProductVariant,
+                                as: 'productVariant'
+                            }
+                        ]
+                    },
+                    {
+                        model: Shop,
+                        as: 'shop'
                     }]
                 }]
             });
@@ -151,11 +228,24 @@ class OrderService {
                     include: [{
                         model: OrderItem,
                         as: 'orderItems',
-                        include: [{
-                            model: Product,
-                            as: 'product'
-                        }]
-                    }, {
+                        include: [
+                            {
+                                model: Product,
+                                as: 'product',
+                                include: [
+                                    {
+                                        model: Shop,
+                                        as: 'Shop'
+                                    }
+                                ]
+                            },
+                            {
+                                model: ProductVariant,
+                                as: 'productVariant'
+                            }
+                        ]
+                    },
+                    {
                         model: Shop,
                         as: 'shop'
                     }]
