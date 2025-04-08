@@ -55,7 +55,7 @@ app.use("/api/coupons", couponRoutes);
 app.use('/api/chat', chatRoutes);
 
 app.use("/api/v1/shops", shopRoutes);
-app.use("/api/v1/vendors", vendorRoutes);
+app.use("/api/v1/vendor", vendorRoutes);
 // app.use("/api/v1/admin", adminRoutes);
 
 // Xử lý lỗi 404 (Not Found)

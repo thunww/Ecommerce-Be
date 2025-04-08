@@ -5,7 +5,7 @@ const {
   Product,
   ShopReview,
   OrderItem,
-  ProductImage,
+  ProductVariant,
   Category,
 } = require("../models");
 const { sequelize } = require("../models");
@@ -421,45 +421,92 @@ const getShopRating = async (userId) => {
 // Lấy danh sách sản phẩm của shop
 const getShopProducts = async (userId) => {
   try {
+    console.log("=== Getting Shop Products ===");
+    console.log("User ID:", userId);
+
+    // Tìm shop của vendor
     const shop = await Shop.findOne({
       where: { owner_id: userId },
+      attributes: ["shop_id", "shop_name"],
+      raw: true,
     });
 
     if (!shop) {
       throw new Error("Không tìm thấy shop");
     }
 
+    console.log("Found Shop:", shop);
+
+    // Lấy danh sách sản phẩm của shop kèm theo giá từ variants
     const products = await Product.findAll({
       where: { shop_id: shop.shop_id },
       include: [
         {
-          model: ProductImage,
-          as: "images",
-          attributes: ["image_url"],
-          // required: true, // Chỉ lấy sản phẩm có hình ảnh
+          model: ProductVariant,
+          as: "variants",
+          attributes: ["image_url", "variant_id", "price"],
         },
         {
           model: Category,
           as: "Category",
+          attributes: ["category_id", "category_name"],
         },
       ],
       order: [["created_at", "DESC"]],
+      raw: true,
+      nest: true,
     });
 
-    // Chuyển đổi dữ liệu để lấy hình ảnh đầu tiên làm ảnh chính
-    const formattedProducts = products.map(product => {
-      const productData = product.get({ plain: true });
-      return {
-        ...productData,
-        main_image: productData.images[0]?.image_url || null,
-        images: productData.images.map(img => img.image_url)
-      };
+    console.log(`Found ${products.length} products`);
+
+    // Xử lý dữ liệu trùng lặp và format dữ liệu sản phẩm
+    const uniqueProducts = {};
+
+    products.forEach((product) => {
+      const productId = product.product_id;
+
+      if (!uniqueProducts[productId]) {
+        // Nếu sản phẩm chưa tồn tại, tạo mới
+        const variants = Array.isArray(product.variants)
+          ? product.variants
+          : [product.variants].filter(Boolean);
+
+        // Lấy giá từ variant đầu tiên (hoặc giá thấp nhất nếu có nhiều variants)
+        const price = variants.length > 0 ? variants[0].price : 0;
+
+        uniqueProducts[productId] = {
+          ...product,
+          price: price,
+          main_image: variants.length > 0 ? variants[0].image_url : null,
+          images: variants.map((img) => ({
+            url: img.image_url,
+            variant_id: img.variant_id,
+            price: img.price,
+          })),
+          category: product.Category
+            ? {
+                id: product.Category.category_id,
+                name: product.Category.category_name,
+              }
+            : null,
+        };
+      } else {
+        // Nếu sản phẩm đã tồn tại, thêm variant mới vào mảng images
+        const newVariant = product.variants;
+        if (newVariant && newVariant.image_url) {
+          uniqueProducts[productId].images.push({
+            url: newVariant.image_url,
+            variant_id: newVariant.variant_id,
+            price: newVariant.price,
+          });
+        }
+      }
     });
 
-    return formattedProducts;
+    return Object.values(uniqueProducts);
   } catch (error) {
     console.error("Error in getShopProducts:", error);
-    throw new Error("Không thể lấy danh sách sản phẩm của shop");
+    throw error;
   }
 };
 
