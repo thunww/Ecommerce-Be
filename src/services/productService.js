@@ -475,6 +475,42 @@ class ProductService {
       throw error;
     }
   }
+  async getReviewsByProductId(product_id) {
+    try {
+      const reviews = await ProductReview.findAll({
+        where: { product_id },
+        include: [
+          {
+            model: User,
+            as: "user",
+            attributes: ["user_id", "username", "profile_picture"],
+          },
+        ],
+        order: [["created_at", "DESC"]],
+      });
+
+      if (!reviews || reviews.length === 0) {
+        return {
+          success: false,
+          message: "Không có đánh giá nào cho sản phẩm này",
+          data: [],
+        };
+      }
+
+      return {
+        success: true,
+        message: "Lấy danh sách đánh giá thành công",
+        data: reviews,
+      };
+    } catch (error) {
+      console.error("Lỗi khi lấy đánh giá sản phẩm:", error);
+      return {
+        success: false,
+        message: "Đã xảy ra lỗi khi lấy đánh giá sản phẩm",
+        data: null,
+      };
+    }
+  }
 }
 
 module.exports = new ProductService();

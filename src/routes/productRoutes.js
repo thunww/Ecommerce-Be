@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const upload = require("../middleware/uploadMiddleware");
 const productController = require("../controllers/productController");
-const reviewController = require("../controllers/reviewController");
 const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
 
@@ -34,6 +33,5 @@ router.get("/:product_id", productController.getProductById);
 router.get("/featured", productController.getFeaturedProducts);
 router.get("/new-arrivals", productController.getNewArrivals);
 router.get("/best-deals", productController.getBestDeals);
-router.get("/:product_id/reviews", reviewController.getReviews);
 router.get("/search/advanced", productController.advancedSearch);
 module.exports = router;
