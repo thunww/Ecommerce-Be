@@ -20,6 +20,29 @@ const getAllShops = async () => {
     return { success: false, message: "Internal Server Error" };
   }
 };
+const getShopById = async (shopId) => {
+  try {
+    const shop = await Shop.findByPk(shopId, {
+      include: {
+        model: User,
+        attributes: ["username"],
+      },
+    });
+
+    if (!shop) {
+      return { success: false, message: "Shop not found" };
+    }
+
+    return {
+      success: true,
+      message: "Get shop by ID successfully",
+      data: shop,
+    };
+  } catch (error) {
+    console.error("Error getting shop by ID:", error);
+    return { success: false, message: "Internal Server Error" };
+  }
+};
 
 const assingStatusToShop = async (shopId, status) => {
   try {
@@ -44,4 +67,5 @@ const assingStatusToShop = async (shopId, status) => {
 module.exports = {
   getAllShops,
   assingStatusToShop,
+  getShopById,
 };

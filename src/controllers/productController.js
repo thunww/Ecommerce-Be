@@ -125,6 +125,26 @@ const handleDeleteProduct = async (req, res) => {
   }
 };
 
+const getProductsByCategoryId = async (req, res) => {
+  try {
+    const { related_id } = req.params;
+    const result = await productService.getProductsByCategoryId(related_id);
+
+    if (!result.success) {
+      return res.status(404).json(result);
+    }
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching products by category:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllProducts,
   getProductById,
@@ -135,4 +155,5 @@ module.exports = {
   advancedSearch,
   handleAssignProduct,
   handleDeleteProduct,
+  getProductsByCategoryId,
 };

@@ -5,7 +5,7 @@ module.exports = {
         owner_id: 6, // Vendor
         shop_name: "Electronics Store",
         description: "Specializing in high-end technology products",
-        logo: "https://example.com/images/shop1-logo.jpg",
+        logo: "https://haycafe.vn/wp-content/uploads/2023/04/Hinh-anh-avatar-cute-TikTok.jpg",
         banner: "https://example.com/images/shop1-banner.jpg",
         rating: 4.5,
         followers: 1200,
@@ -20,7 +20,7 @@ module.exports = {
         owner_id: 9, // Vendor
         shop_name: "High-End Fashion",
         description: "Specializing in clothing, shoes, and accessories",
-        logo: "https://example.com/images/shop2-logo.jpg",
+        logo: "https://s3-symbol-logo.tradingview.com/avt-natural-products--600.png",
         banner: "https://example.com/images/shop2-banner.jpg",
         rating: 4.8,
         followers: 2500,
@@ -35,7 +35,7 @@ module.exports = {
         owner_id: 13, // Vendor
         shop_name: "ABC Bookstore",
         description: "Specializing in books, stationery, and gifts",
-        logo: "https://example.com/images/shop3-logo.jpg",
+        logo: "https://th.bing.com/th/id/OIP.4V-SOe0yjOivytzOhuqw5gHaHa?rs=1&pid=ImgDetMain",
         banner: "https://example.com/images/shop3-banner.jpg",
         rating: 4.6,
         followers: 900,
@@ -50,7 +50,7 @@ module.exports = {
         owner_id: 17, // Vendor
         shop_name: "Furniture Store",
         description: "Providing high-quality furniture",
-        logo: "https://example.com/images/shop4-logo.jpg",
+        logo: "https://th.bing.com/th/id/OIP.IlTS2EpbppkgqhbJgchZ0wHaHa?w=1280&h=1280&rs=1&pid=ImgDetMain",
         banner: "https://example.com/images/shop4-banner.jpg",
         rating: 4.7,
         followers: 1800,
@@ -80,7 +80,7 @@ module.exports = {
         owner_id: 7, // Vendor
         shop_name: "Pet World",
         description: "Everything your pet needs: food, toys, and accessories",
-        logo: "https://example.com/images/shop6-logo.jpg",
+        logo: "https://th.bing.com/th/id/OIP.r2L147Tk-C4ECjSGuuRPLgHaHa?rs=1&pid=ImgDetMain",
         banner: "https://example.com/images/shop6-banner.jpg",
         rating: 4.5,
         followers: 1100,
@@ -95,7 +95,7 @@ module.exports = {
         owner_id: 7,
         shop_name: "Sports & Fitness Gear",
         description: "Premium quality sports and fitness equipment",
-        logo: "https://example.com/images/shop7-logo.jpg",
+        logo: "https://th.bing.com/th?id=OIF.0UYA%2baJfSzPNP%2bIe7O3FKA&rs=1&pid=ImgDetMain",
         banner: "https://example.com/images/shop7-banner.jpg",
         rating: 4.6,
         followers: 1600,
@@ -110,7 +110,7 @@ module.exports = {
         owner_id: 5,
         shop_name: "Luxury Jewelry",
         description: "Fine jewelry and watches from top brands",
-        logo: "https://example.com/images/shop8-logo.jpg",
+        logo: "https://m.media-amazon.com/images/I/51q9f8GJkWL.jpg",
         banner: "https://example.com/images/shop8-banner.jpg",
         rating: 4.9,
         followers: 4300,
