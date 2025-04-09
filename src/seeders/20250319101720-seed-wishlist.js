@@ -40,7 +40,7 @@ module.exports = {
       },
       {
         user_id: 3,
-        product_id: 4,
+        product_id: 3,
         added_at: new Date(),
         created_at: new Date(),
         updated_at: new Date(),
