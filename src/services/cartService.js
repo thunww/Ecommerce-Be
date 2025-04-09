@@ -201,90 +201,64 @@ class CartService {
 
     async getCartWithItems(user_id) {
         try {
-            // Kiểm tra giỏ hàng tồn tại
             const cart = await Cart.findOne({
-                where: { user_id }
-            });
-
-            // Nếu không có giỏ hàng hoặc giỏ hàng trống, trả về response mặc định
-            if (!cart) {
-                return {
-                    items: [],
-                    shippingFee: 0,
-                    discount: 0,
-                    total_price: 0
-                };
-            }
-
-            // Lấy các items trong giỏ hàng
-            const cartItems = await CartItem.findAll({
-                where: { cart_id: cart.cart_id },
+                where: { user_id },
                 include: [
                     {
-                        model: Product,
-                        as: 'product',
-                        attributes: ['product_id', 'product_name', 'description', 'price', 'stock', 'shop_id'],
+                        model: CartItem,
+                        as: 'items',
                         include: [
                             {
-                                model: Shop,
-                                as: 'Shop',
-                                attributes: ['shop_id', 'shop_name', 'logo']
+                                model: Product,
+                                as: 'product'
                             },
                             {
-                                model: ProductImage,
-                                as: 'images',
-                                attributes: ['image_url']
+                                model: ProductVariant,
+                                as: 'variant'
+                            },
+                            {
+                                model: Shop,
+                                as: 'shop'
                             }
                         ]
-                    },
-                    {
-                        model: ProductVariant,
-                        as: 'variant',
-                        attributes: ['variant_id', 'size', 'color', 'material', 'storage', 'ram', 'processor', 'stock', 'price']
                     }
                 ]
             });
 
-            // Biến đổi dữ liệu để phù hợp với cấu trúc frontend
-            const formattedItems = cartItems.map(item => {
-                // Chuẩn bị dữ liệu cho variant
-                let variantName = '';
-                if (item.variant) {
-                    const variantAttributes = [];
-                    if (item.variant.size) variantAttributes.push(`${item.variant.size}`);
-                    if (item.variant.color) variantAttributes.push(`${item.variant.color}`);
-                    if (item.variant.material) variantAttributes.push(`${item.variant.material}`);
-                    if (item.variant.storage) variantAttributes.push(`${item.variant.storage}`);
-                    if (item.variant.ram) variantAttributes.push(`${item.variant.ram}`);
-                    if (item.variant.processor) variantAttributes.push(`${item.variant.processor}`);
-                    variantName = variantAttributes.join(' / ');
+            if (!cart) {
+                return {
+                    items: [],
+                    total_price: 0,
+                    shippingFee: 0,
+                    discount: 0,
+                    subtotal: 0,
+                    total: 0
+                };
+            }
+
+            // Format các item trong giỏ hàng
+            const formattedItems = cart.items.map(item => {
+                let variantInfo = null;
+                if (item.variant_info) {
+                    try {
+                        variantInfo = JSON.parse(item.variant_info);
+                    } catch (e) {
+                        console.error('Lỗi khi parse variant_info:', e);
+                    }
                 }
 
-                // Lấy URL hình ảnh đầu tiên
-                const productImage = item.product.images && item.product.images.length > 0
-                    ? item.product.images[0].image_url
-                    : 'https://placehold.co/600x400?text=No+Image';
-
-                // Lấy giá gốc nếu có variant hoặc lấy giá sản phẩm
-                const price = item.variant ? item.variant.price : item.product.price;
-
                 return {
-                    id: item.cart_item_id,  // Frontend sử dụng id
                     cart_item_id: item.cart_item_id,
                     product_id: item.product_id,
-                    name: item.product.product_name,
-                    product_name: item.product.product_name,
-                    image: productImage,
-                    product_image: productImage,
                     variant_id: item.product_variant_id,
-                    variant_name: variantName || 'Mặc định',
-                    price: parseFloat(price),
-                    original_price: parseFloat(item.product.price) > parseFloat(price) ? parseFloat(item.product.price) : null,
-                    quantity: item.quantity,
-                    stock: item.variant ? item.variant.stock : item.product.stock,
                     shop_id: item.shop_id,
-                    shop_name: item.product.Shop ? item.product.Shop.shop_name : '',
-                    description: item.product.description
+                    shop_name: item.shop ? item.shop.name : 'Cửa hàng',
+                    product_name: item.product ? item.product.name : 'Sản phẩm',
+                    product_image: item.product ? item.product.thumbnail : null,
+                    variant_info: variantInfo,
+                    quantity: item.quantity,
+                    price: parseFloat(item.price),
+                    total_price: parseFloat(item.total_price)
                 };
             });
 
