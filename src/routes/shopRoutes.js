@@ -5,6 +5,7 @@ const {
   handleGetAllShops,
   handleAssignStatusToShop,
   handleGetShopById,
+  handleGetShopProducts,
 } = require("../controllers/shopController");
 
 const router = express.Router();
@@ -16,6 +17,13 @@ router.get(
   authMiddleware,
   roleMiddleware(["admin"]),
   handleGetShopById
+);
+
+router.get(
+  "/:shopId/products",
+  authMiddleware,
+  roleMiddleware(["admin", "vendor"]),
+  handleGetShopProducts
 );
 
 router.post(
