@@ -21,8 +21,13 @@ const authMiddleware = (req, res, next) => {
             return res.status(403).json({ message: "Forbidden - Invalid token" });
         }
 
+        // Đảm bảo có ID người dùng
+        if (!decoded.id && decoded.user_id) {
+            decoded.id = decoded.user_id;
+        }
+
         req.user = decoded;
-        //console.log("User authenticated:", req.user);
+        console.log("User authenticated:", req.user);
 
         next();
     } catch (error) {

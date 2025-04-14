@@ -5,15 +5,14 @@ module.exports = {
     await queryInterface.bulkInsert("Products", [
       {
         product_name:
-          "Sony WH-1000XM3 Bluetooth Wireless Over Ear Headphones with Mic (Silver)",
-        description:
-          "Digital noise cancelling : Industry leading Active Noise Cancellation (ANC) lends a personalized, virtually soundproof experience at any situation\r\nHi-Res Audio : A built-in amplifier integrated in HD Noise Cancelling Processor QN1 realises the best-in-class signal-to-noise ratio and low distortion for portable devices.\r\nDriver Unit : Powerful 40-mm drivers with Liquid Crystal Polymer (LCP) diaphragms make the headphones perfect for handling heavy beats and can reproduce a full range of frequencies up to 40 kHz.\r\nVoice assistant : Alexa enabled (In-built) for voice access to music, information and more. Activate with a simple touch. Frequency response: 4 Hz-40,000 Hz",
+          "Áo Thun Trơn Cotton 250gsm GODMOTHER Premium Full Color Cổ Tròn Nam Nữ",
+        description: "Cơ bản, Hàn Quốc, Đường phố, Công sở",
         discount: 5.0,
         stock: 0,
-        sold: 10,
+        sold: 1000,
         weight: 0.3,
         dimensions: "160.8 x 78.1 x 7.7 mm",
-        status: "pending",
+        status: "active",
         average_rating: 0.0,
         review_count: 0,
         shop_id: 1,
@@ -22,12 +21,12 @@ module.exports = {
         updated_at: new Date(),
       },
       {
-        product_name: "Microsoft Xbox X/S Wireless Controller Robot White",
-        description:
-          "Experience the modernized design of the Xbox wireless controller in robot white, featuring sculpted surfaces and refined Geometry for enhanced comfort and effortless control during gameplay\r\nStay on target with textured grip on the triggers, bumpers, and back case and with a new hybrid D-pad for accurate, yet familiar input\r\nMake the controller your own by customizing button Mapping with the Xbox accessories app",
+        product_name:
+          "Quần Nỉ 2 Da Suông Ống Rộng GODMOTHER Nam Nữ Hách Dáng - Chất Nỉ Pants Cao Cấp Đứng Form Menswear",
+        description: "Thể thao, Cơ bản, Hàn Quốc, Đường phố",
         discount: 10.0,
         stock: 0,
-        sold: 5,
+        sold: 2000,
         weight: 1.5,
         dimensions: "355 x 240 x 16 mm",
         status: "active",
@@ -39,11 +38,12 @@ module.exports = {
         updated_at: new Date(),
       },
       {
-        product_name: "Nike Air Force 1 Shoes",
-        description: "Classic Nike sneakers suitable for all styles.",
+        product_name:
+          "Quần Wide Leg Short Jeans GODMOTHER Nam Ống Rộng, Quần Jeans Short Lửng Phong Cách Cá Tính",
+        description: "Cơ bản, Hàn Quốc, Đường phố",
         discount: 15.0,
         stock: 0,
-        sold: 25,
+        sold: 250,
         weight: 0.8,
         dimensions: "35 x 25 x 10 cm",
         status: "active",
@@ -71,7 +71,8 @@ module.exports = {
         updated_at: new Date(),
       },
       {
-        product_name: "Sony WH-1000XM5 Headphones",
+        product_name:
+          "Tai nghe chụp tai có dây cute SIDOTECH ONIKUMA X15 tai mèo hồng gaming âm thanh vòm 3D super bass micro chống ồn",
         description: "Industry-leading noise cancellation wireless headphones.",
         discount: 5.0,
         stock: 0,
