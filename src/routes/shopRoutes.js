@@ -1,6 +1,7 @@
 const express = require("express");
 const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
+const { getOrderedProducts } = require("../controllers/shopController");
 const {
   handleGetAllShops,
   handleAssignStatusToShop,
@@ -11,6 +12,12 @@ const {
 const router = express.Router();
 
 router.get("/", authMiddleware, roleMiddleware(["admin"]), handleGetAllShops);
+router.get(
+  "/:shopId/ordered-products",
+  authMiddleware,
+  roleMiddleware(["admin", "vendor"]),
+  getOrderedProducts
+);
 
 router.get(
   "/:shopId",

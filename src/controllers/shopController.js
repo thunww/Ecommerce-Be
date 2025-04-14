@@ -5,6 +5,8 @@ const {
   getShopProducts,
 } = require("../services/shopService");
 
+const orderService = require("../services/orderService");
+
 const handleGetAllShops = async (req, res) => {
   try {
     const shops = await getAllShops();
@@ -64,9 +66,37 @@ const handleGetShopProducts = async (req, res) => {
   }
 };
 
+const getOrderedProducts = async (req, res) => {
+  try {
+    const { shopId } = req.params;
+
+    // Nếu là vendor, chỉ cho phép xem shop của mình
+    if (req.user.role === "vendor" && req.user.shop_id !== parseInt(shopId)) {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền truy cập thông tin của shop này",
+      });
+    }
+
+    const products = await orderService.getShopOrderedProducts(shopId);
+
+    res.json({
+      success: true,
+      data: products,
+    });
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách sản phẩm đã bán:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   handleGetAllShops,
   handleAssignStatusToShop,
   handleGetShopById,
   handleGetShopProducts,
+  getOrderedProducts,
 };
