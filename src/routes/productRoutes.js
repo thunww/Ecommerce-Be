@@ -11,6 +11,40 @@ const roleMiddleware = require("../middleware/roleMiddleware");
 
 router.get("/", productController.getAllProducts);
 
+// Route tạo sản phẩm mới
+router.post(
+  "/",
+  authMiddleware,
+  roleMiddleware(["admin", "vendor"]),
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "images", maxCount: 8 },
+    { name: "variations", maxCount: 10 },
+  ]),
+  productController.createProduct
+);
+
+// Route cập nhật sản phẩm
+router.put(
+  "/:product_id",
+  authMiddleware,
+  roleMiddleware(["admin", "vendor"]),
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "images", maxCount: 8 },
+    { name: "variations", maxCount: 10 },
+  ]),
+  productController.updateProduct
+);
+
+// Route xóa hình ảnh sản phẩm
+router.delete(
+  "/image/:image_id",
+  authMiddleware,
+  roleMiddleware(["admin", "vendor"]),
+  productController.deleteProductImage
+);
+
 router.put(
   "/assign-product",
   authMiddleware,

@@ -4,11 +4,366 @@ const {
   Shop,
   ProductReview,
   ProductVariant,
+  ProductImage,
 } = require("../models");
 const { Op } = require("sequelize");
 const { fn, col, literal } = require("sequelize");
 
 class ProductService {
+  async createProduct(productData, userId) {
+    try {
+      // Lấy thông tin shop của user
+      const shop = await Shop.findOne({ where: { owner_id: userId } });
+      if (!shop) {
+        return {
+          success: false,
+          message: "Không tìm thấy thông tin shop của bạn",
+          data: null,
+        };
+      }
+
+      console.log("Found shop:", shop.shop_id);
+
+      // Tạo sản phẩm mới
+      const newProduct = await Product.create({
+        product_name: productData.product_name,
+        description: productData.description,
+        category_id: productData.category_id || null,
+        shop_id: shop.shop_id,
+        stock: productData.stock || 0,
+        discount: productData.discount || 0,
+        status: "pending",
+        weight: productData.weight || null,
+        dimensions: productData.dimensions || null,
+        image_url: productData.image_url || null, // Lưu đường dẫn ảnh chính
+      });
+
+      console.log("Created product:", newProduct.product_id);
+
+      // Lưu các ảnh phụ nếu có
+      if (
+        productData.additional_images &&
+        Array.isArray(productData.additional_images)
+      ) {
+        await Promise.all(
+          productData.additional_images.map(async (imagePath) => {
+            await ProductImage.create({
+              product_id: newProduct.product_id,
+              image_url: imagePath,
+              is_primary: false,
+            });
+          })
+        );
+        console.log("Added additional images");
+      }
+
+      // Xử lý biến thể sản phẩm nếu có
+      if (productData.variations && Array.isArray(productData.variations)) {
+        console.log("Processing variations:", productData.variations.length);
+
+        await Promise.all(
+          productData.variations.map(async (variant, index) => {
+            // Nếu có ảnh cho biến thể này
+            let imageUrl = null;
+            if (
+              productData.variation_images &&
+              productData.variation_images[index]
+            ) {
+              imageUrl = productData.variation_images[index];
+            } else if (variant.image_url) {
+              imageUrl = variant.image_url;
+            }
+
+            const newVariant = await ProductVariant.create({
+              product_id: newProduct.product_id,
+              size: variant.size || null,
+              color: variant.color || null,
+              material: variant.material || null,
+              storage: variant.storage || null,
+              ram: variant.ram || null,
+              processor: variant.processor || null,
+              price: variant.price || 0,
+              stock: variant.stock || 0,
+              weight: variant.weight || null,
+              image_url: imageUrl,
+            });
+            console.log("Created variant:", newVariant.variant_id);
+            return newVariant;
+          })
+        );
+      }
+
+      return {
+        success: true,
+        message: "Sản phẩm đã được tạo thành công",
+        data: newProduct,
+      };
+    } catch (error) {
+      console.error("Error in createProduct service:", error);
+      return {
+        success: false,
+        message: "Đã xảy ra lỗi khi tạo sản phẩm",
+        error: error.message,
+      };
+    }
+  }
+
+  async updateProduct(product_id, productData, userId) {
+    try {
+      // Kiểm tra sản phẩm tồn tại hay không
+      const existingProduct = await Product.findByPk(product_id);
+      if (!existingProduct) {
+        return {
+          success: false,
+          message: "Sản phẩm không tồn tại",
+          data: null,
+        };
+      }
+
+      // Kiểm tra quyền truy cập
+      const shop = await Shop.findOne({ where: { owner_id: userId } });
+      if (!shop || existingProduct.shop_id !== shop.shop_id) {
+        return {
+          success: false,
+          message: "Bạn không có quyền cập nhật sản phẩm này",
+          data: null,
+        };
+      }
+
+      // Cập nhật thông tin cơ bản của sản phẩm
+      await existingProduct.update({
+        product_name: productData.product_name || existingProduct.product_name,
+        description: productData.description || existingProduct.description,
+        category_id: productData.category_id || existingProduct.category_id,
+        stock: productData.stock || existingProduct.stock,
+        discount: productData.discount || existingProduct.discount,
+        weight: productData.weight || existingProduct.weight,
+        dimensions: productData.dimensions || existingProduct.dimensions,
+        image_url: productData.image_url || existingProduct.image_url,
+      });
+
+      console.log("Updated product:", product_id);
+
+      // Xử lý ảnh phụ
+      if (
+        productData.additional_images &&
+        Array.isArray(productData.additional_images)
+      ) {
+        // Xóa tất cả ảnh phụ cũ
+        await ProductImage.destroy({
+          where: { product_id, is_primary: false },
+        });
+
+        // Thêm ảnh phụ mới
+        await Promise.all(
+          productData.additional_images.map(async (imagePath) => {
+            await ProductImage.create({
+              product_id,
+              image_url: imagePath,
+              is_primary: false,
+            });
+          })
+        );
+        console.log("Updated additional images");
+      }
+
+      // Xử lý biến thể sản phẩm
+      if (productData.variations && Array.isArray(productData.variations)) {
+        console.log(
+          "Processing updated variations:",
+          productData.variations.length
+        );
+
+        // Lấy danh sách variant_id hiện tại
+        const existingVariants = await ProductVariant.findAll({
+          where: { product_id },
+        });
+        const existingVariantIds = existingVariants.map((v) => v.variant_id);
+
+        // Mảng chứa các ID biến thể cần giữ lại
+        const variantIdsToKeep = [];
+
+        // Xử lý từng biến thể
+        await Promise.all(
+          productData.variations.map(async (variant, index) => {
+            let imageUrl = null;
+            if (
+              productData.variation_images &&
+              productData.variation_images[index]
+            ) {
+              imageUrl = productData.variation_images[index];
+            } else if (variant.image_url) {
+              imageUrl = variant.image_url;
+            }
+
+            // Nếu biến thể có ID, cập nhật biến thể
+            if (variant.variant_id) {
+              const existingVariant = await ProductVariant.findByPk(
+                variant.variant_id
+              );
+
+              if (
+                existingVariant &&
+                existingVariant.product_id.toString() === product_id.toString()
+              ) {
+                await existingVariant.update({
+                  size:
+                    variant.size !== undefined
+                      ? variant.size
+                      : existingVariant.size,
+                  color:
+                    variant.color !== undefined
+                      ? variant.color
+                      : existingVariant.color,
+                  material:
+                    variant.material !== undefined
+                      ? variant.material
+                      : existingVariant.material,
+                  storage:
+                    variant.storage !== undefined
+                      ? variant.storage
+                      : existingVariant.storage,
+                  ram:
+                    variant.ram !== undefined
+                      ? variant.ram
+                      : existingVariant.ram,
+                  processor:
+                    variant.processor !== undefined
+                      ? variant.processor
+                      : existingVariant.processor,
+                  price:
+                    variant.price !== undefined
+                      ? variant.price
+                      : existingVariant.price,
+                  stock:
+                    variant.stock !== undefined
+                      ? variant.stock
+                      : existingVariant.stock,
+                  weight:
+                    variant.weight !== undefined
+                      ? variant.weight
+                      : existingVariant.weight,
+                  image_url: imageUrl || existingVariant.image_url,
+                });
+
+                variantIdsToKeep.push(variant.variant_id);
+                console.log("Updated variant:", variant.variant_id);
+              }
+            } else {
+              // Nếu không có ID, tạo biến thể mới
+              const newVariant = await ProductVariant.create({
+                product_id,
+                size: variant.size || null,
+                color: variant.color || null,
+                material: variant.material || null,
+                storage: variant.storage || null,
+                ram: variant.ram || null,
+                processor: variant.processor || null,
+                price: variant.price || 0,
+                stock: variant.stock || 0,
+                weight: variant.weight || null,
+                image_url: imageUrl,
+              });
+
+              variantIdsToKeep.push(newVariant.variant_id);
+              console.log("Created new variant:", newVariant.variant_id);
+            }
+          })
+        );
+
+        // Xóa các biến thể không còn được sử dụng
+        const variantIdsToDelete = existingVariantIds.filter(
+          (id) => !variantIdsToKeep.includes(id)
+        );
+
+        if (variantIdsToDelete.length > 0) {
+          await ProductVariant.destroy({
+            where: {
+              variant_id: {
+                [Op.in]: variantIdsToDelete,
+              },
+            },
+          });
+          console.log("Deleted unused variants:", variantIdsToDelete);
+        }
+      }
+
+      // Lấy thông tin sản phẩm đã cập nhật
+      const updatedProduct = await Product.findByPk(product_id);
+
+      return {
+        success: true,
+        message: "Sản phẩm đã được cập nhật thành công",
+        data: updatedProduct,
+      };
+    } catch (error) {
+      console.error("Error in updateProduct service:", error);
+      return {
+        success: false,
+        message: "Đã xảy ra lỗi khi cập nhật sản phẩm",
+        error: error.message,
+      };
+    }
+  }
+
+  async deleteProductImage(image_id, userId) {
+    try {
+      // Tìm hình ảnh theo ID
+      const productImage = await ProductImage.findByPk(image_id);
+
+      if (!productImage) {
+        return {
+          success: false,
+          message: "Không tìm thấy hình ảnh sản phẩm",
+          data: null,
+        };
+      }
+
+      // Tìm sản phẩm liên quan đến hình ảnh
+      const product = await Product.findByPk(productImage.product_id);
+
+      if (!product) {
+        return {
+          success: false,
+          message: "Không tìm thấy sản phẩm liên quan đến hình ảnh này",
+          data: null,
+        };
+      }
+
+      // Kiểm tra quyền truy cập
+      const shop = await Shop.findOne({ where: { owner_id: userId } });
+      if (!shop || product.shop_id !== shop.shop_id) {
+        return {
+          success: false,
+          message: "Bạn không có quyền xóa hình ảnh của sản phẩm này",
+          data: null,
+        };
+      }
+
+      // Lưu lại URL hình ảnh để có thể xóa khỏi Cloudinary sau này
+      const imageUrl = productImage.image_url;
+
+      // Xóa hình ảnh khỏi cơ sở dữ liệu
+      await productImage.destroy();
+
+      // Nếu cần, thêm mã để xóa hình ảnh khỏi Cloudinary ở đây
+      // Yêu cầu thêm công cụ từ Cloudinary API
+
+      return {
+        success: true,
+        message: "Hình ảnh sản phẩm đã được xóa thành công",
+        data: null,
+      };
+    } catch (error) {
+      console.error("Error in deleteProductImage service:", error);
+      return {
+        success: false,
+        message: "Đã xảy ra lỗi khi xóa hình ảnh sản phẩm",
+        error: error.message,
+      };
+    }
+  }
+
   async getAllProducts() {
     try {
       const products = await Product.findAll({
