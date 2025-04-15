@@ -1,148 +1,133 @@
-const { ProductReview, Product, User, sequelize } = require('../models');
+const { ProductReview, Product, User } = require("../models");
+const { Op } = require("sequelize");
 
 class ReviewService {
-    async createReview(user_id, product_id, rating, title, content) {
-        // Kiểm tra sản phẩm có tồn tại không
-        const product = await Product.findByPk(product_id);
-        if (!product) {
-            throw new Error('Sản phẩm không tồn tại');
-        }
-
-        // Kiểm tra người dùng đã mua sản phẩm chưa
-        // TODO: Implement check if user has purchased the product
-
-        // Tạo đánh giá mới - chỉ định các cột có trong DB
-        const review = await ProductReview.create({
-            user_id,
-            product_id,
-            rating,
-
-            comment: content || '',
-
-        });
-
-        // Cập nhật điểm đánh giá trung bình của sản phẩm
-        await this.updateProductAverageRating(product_id);
-
-        // Lấy thông tin chi tiết của đánh giá - chỉ định cụ thể các cột
-        return await ProductReview.findByPk(review.id, {
-            attributes: ['review_id', 'user_id', 'product_id', 'rating', 'comment', 'created_at', 'updated_at'],
-            include: [
-                {
-                    model: User,
-                    as: 'user',
-                    attributes: ['name', 'avatar']
-                }
-            ]
-        });
+  async createReview(user_id, product_id, rating, comment, images) {
+    // Kiểm tra sản phẩm có tồn tại không
+    const product = await Product.findByPk(product_id);
+    if (!product) {
+      throw new Error("Sản phẩm không tồn tại");
     }
 
-    // Hàm này sẽ tạm thời được bỏ qua
-    async addReviewImages(review_id, imageUrls) {
-        // Tạm thời không xử lý images
-        console.log('Chức năng thêm ảnh đang bị tắt tạm thời');
-        return;
-    }
+    // Kiểm tra người dùng đã mua sản phẩm chưa
+    // TODO: Implement check if user has purchased the product
 
-    async getReviews(product_id, page = 1, limit = 10) {
-        const offset = (page - 1) * limit;
+    // Tạo đánh giá mới
+    const review = await ProductReview.create({
+      user_id,
+      product_id,
+      rating,
+      comment,
+      images: images || [],
+    });
 
-        const { count, rows } = await ProductReview.findAndCountAll({
-            attributes: ['review_id', 'user_id', 'product_id', 'rating', 'comment', 'created_at', 'updated_at'],
-            where: {
-                product_id
-            },
-            include: [
-                {
-                    model: User,
-                    as: 'user',
-                    attributes: ['user_id', 'username', 'profile_picture']
-                }
-            ],
-            order: [['created_at', 'DESC']],
-            limit,
-            offset
-        });
+    // Cập nhật điểm đánh giá trung bình của sản phẩm
+    await this.updateProductAverageRating(product_id);
 
+    // Lấy thông tin chi tiết của đánh giá
+    return await ProductReview.findByPk(review.id, {
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["name", "avatar"],
+        },
+      ],
+    });
+  }
+
+  async getReviewsByProductId(product_id) {
+    try {
+      const reviews = await ProductReview.findAll({
+        where: { product_id },
+        include: [
+          {
+            model: User,
+            as: "user",
+            attributes: ["user_id", "username", "profile_picture"],
+          },
+        ],
+        order: [["created_at", "DESC"]],
+      });
+
+      if (!reviews || reviews.length === 0) {
         return {
-            data: rows,
-            pagination: {
-                total_items: count,
-                total_pages: Math.ceil(count / limit),
-                current_page: page,
-                limit
-            }
+          success: false,
+          message: "Không có đánh giá nào cho sản phẩm này",
+          data: [],
         };
+      }
+
+      return {
+        success: true,
+        message: "Lấy danh sách đánh giá thành công",
+        data: reviews,
+      };
+    } catch (error) {
+      console.error("Lỗi khi lấy đánh giá sản phẩm:", error);
+      return {
+        success: false,
+        message: "Đã xảy ra lỗi khi lấy đánh giá sản phẩm",
+        data: null,
+      };
+    }
+  }
+
+  async updateReview(review_id, rating, comment, images) {
+    const review = await ProductReview.findByPk(review_id);
+    if (!review) {
+      throw new Error("Không tìm thấy đánh giá");
     }
 
-    async updateReview(review_id, rating, title, content) {
-        const review = await ProductReview.findByPk(review_id, {
-            attributes: ['review_id', 'user_id', 'product_id', 'rating', 'comment', 'title', 'is_verified', 'created_at', 'updated_at']
-        });
+    review.rating = rating;
+    review.comment = comment;
+    if (images) {
+      review.images = images;
+    }
+    await review.save();
 
-        if (!review) {
-            throw new Error('Không tìm thấy đánh giá');
-        }
+    // Cập nhật điểm đánh giá trung bình của sản phẩm
+    await this.updateProductAverageRating(review.product_id);
 
-        review.rating = rating;
-        review.title = title || '';
-        review.comment = content || '';
-        await review.save();
+    return await ProductReview.findByPk(review_id, {
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["name", "avatar"],
+        },
+      ],
+    });
+  }
 
-        // Cập nhật điểm đánh giá trung bình của sản phẩm
-        await this.updateProductAverageRating(review.product_id);
-
-        return await ProductReview.findByPk(review_id, {
-            attributes: ['review_id', 'user_id', 'product_id', 'rating', 'comment', 'title', 'is_verified', 'created_at', 'updated_at'],
-            include: [
-                {
-                    model: User,
-                    as: 'user',
-                    attributes: ['id', 'name', 'avatar']
-                }
-            ]
-        });
+  async deleteReview(review_id) {
+    const review = await ProductReview.findByPk(review_id);
+    if (!review) {
+      throw new Error("Không tìm thấy đánh giá");
     }
 
-    async deleteReview(review_id) {
-        const review = await ProductReview.findByPk(review_id, {
-            attributes: ['review_id', 'user_id', 'product_id']
-        });
+    const product_id = review.product_id;
+    await review.destroy();
 
-        if (!review) {
-            throw new Error('Không tìm thấy đánh giá');
-        }
+    // Cập nhật điểm đánh giá trung bình của sản phẩm
+    await this.updateProductAverageRating(product_id);
+  }
 
-        const product_id = review.product_id;
-        await review.destroy();
+  async updateProductAverageRating(product_id) {
+    const reviews = await ProductReview.findAll({
+      where: { product_id },
+      attributes: [
+        [sequelize.fn("AVG", sequelize.col("rating")), "average_rating"],
+      ],
+    });
 
-        // Cập nhật điểm đánh giá trung bình của sản phẩm
-        await this.updateProductAverageRating(product_id);
-    }
+    const averageRating = reviews[0].getDataValue("average_rating") || 0;
 
-    async updateProductAverageRating(product_id) {
-        const result = await ProductReview.findAll({
-            where: {
-                product_id
-            },
-            attributes: [
-                [sequelize.fn('AVG', sequelize.col('rating')), 'average_rating'],
-                [sequelize.fn('COUNT', sequelize.col('review_id')), 'reviews_count']
-            ],
-            raw: true
-        });
-
-        const averageRating = result[0].average_rating || 0;
-        const reviewsCount = result[0].reviews_count || 0;
-
-        await Product.update(
-            {
-                average_rating: averageRating,
-                reviews_count: reviewsCount
-            },
-            { where: { product_id } }
-        );
-    }
+    await Product.update(
+      { average_rating: averageRating },
+      { where: { id: product_id } }
+    );
+  }
 }
 
-module.exports = new ReviewService(); 
+module.exports = new ReviewService();

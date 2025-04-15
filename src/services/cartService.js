@@ -541,4 +541,4 @@ class CartService {
     }
 }
 
-module.exports = new CartService(); 
+module.exports = new CartService();
