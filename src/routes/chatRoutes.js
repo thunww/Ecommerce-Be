@@ -18,11 +18,8 @@ const checkAuth = (req, res, next) => {
     const token = authHeader.split(" ")[1];
     const jwt = require('../config/jwt');
 
-    console.log('Token received:', token);
-
     // Thử xác thực như người dùng
     const userDecoded = jwt.verifyToken(token);
-    console.log('User decoded:', userDecoded);
 
     if (userDecoded) {
         // Đảm bảo có ID người dùng
@@ -31,13 +28,11 @@ const checkAuth = (req, res, next) => {
         }
 
         req.user = userDecoded;
-        console.log('Set user in request:', req.user);
         return next();
     }
 
     // Thử xác thực như shop
     const shopDecoded = jwt.verifyShopToken(token);
-    console.log('Shop decoded:', shopDecoded);
 
     if (shopDecoded) {
         // Đảm bảo có ID shop
@@ -46,7 +41,6 @@ const checkAuth = (req, res, next) => {
         }
 
         req.shop = shopDecoded;
-        console.log('Set shop in request:', req.shop);
         return next();
     }
 
@@ -59,15 +53,16 @@ const checkAuth = (req, res, next) => {
 
 // Routes cho người dùng
 router.get('/user/chats', authMiddleware, chatController.getUserChats);
+router.get('/user/chats/:chat_id', authMiddleware, chatController.getChatMessages);
+router.post('/user/chats/:chat_id/read', authMiddleware, chatController.markMessagesAsRead);
 router.get('/user/unread', authMiddleware, chatController.countUnreadMessages);
+router.post('/user/send', authMiddleware, chatController.sendMessage);
 
 // Routes cho shop
 router.get('/shop/chats', shopAuthMiddleware, chatController.getShopChats);
+router.get('/shop/chats/:chat_id', shopAuthMiddleware, chatController.getChatMessages);
+router.post('/shop/chats/:chat_id/read', shopAuthMiddleware, chatController.markMessagesAsRead);
 router.get('/shop/unread', shopAuthMiddleware, chatController.countUnreadMessages);
-
-// Routes chung cho cả người dùng và shop
-router.get('/messages/:chat_id', checkAuth, chatController.getChatMessages);
-router.put('/messages/:chat_id/read', checkAuth, chatController.markMessagesAsRead);
-router.post('/messages', checkAuth, chatController.sendMessage);
+router.post('/shop/send', shopAuthMiddleware, chatController.sendMessage);
 
 module.exports = router; 

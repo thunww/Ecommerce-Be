@@ -5,7 +5,7 @@ module.exports = {
     return queryInterface.bulkInsert("Product_Variants", [
       {
         product_id: 1,
-        size: "S, M, L",
+        size: "S",
         color: "White",
         material: "Cotton",
         storage: null,
@@ -21,7 +21,7 @@ module.exports = {
       },
       {
         product_id: 1,
-        size: "S, M, L",
+        size: "M",
         color: "Brown",
         material: "Cotton",
         storage: null,
@@ -38,7 +38,7 @@ module.exports = {
 
       {
         product_id: 1,
-        size: "S, M, L",
+        size: "L",
         color: "Bee",
         material: null,
         storage: null,

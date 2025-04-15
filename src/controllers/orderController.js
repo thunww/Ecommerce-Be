@@ -6,7 +6,7 @@ const { validationResult } = require('express-validator');
 class OrderController {
     async createOrder(req, res) {
         try {
-            const { shipping_address_id, payment_method } = req.body;
+            const { shipping_address_id, payment_method, coupon_code } = req.body;
             const user_id = req.user.user_id;
 
             // Validate payment method
@@ -14,7 +14,7 @@ class OrderController {
                 return res.status(400).json({ message: 'Phương thức thanh toán không hợp lệ' });
             }
 
-            const result = await orderService.createOrder(user_id, shipping_address_id, payment_method);
+            const result = await orderService.createOrder(user_id, shipping_address_id, payment_method, coupon_code);
 
             // Nếu là thanh toán online, trả về URL thanh toán
             if (payment_method !== 'cod' && result.payment_url) {
