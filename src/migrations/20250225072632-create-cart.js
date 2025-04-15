@@ -2,15 +2,10 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    // Kiểm tra xem bảng users đã tồn tại chưa
-    const tables = await queryInterface.showAllTables();
-    if (!tables.includes("Users")) {
-      throw new Error(
-        "Bảng users chưa được tạo. Vui lòng chạy migration tạo bảng users trước."
-      );
-    }
 
-    await queryInterface.createTable("carts", {
+
+
+    await queryInterface.createTable("Carts", {
       cart_id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
@@ -42,10 +37,10 @@ module.exports = {
     });
 
     // Thêm index cho user_id để tối ưu truy vấn
-    await queryInterface.addIndex("carts", ["user_id"]);
+    await queryInterface.addIndex("Carts", ["user_id"]);
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable("carts");
+    await queryInterface.dropTable("Carts");
   },
 };

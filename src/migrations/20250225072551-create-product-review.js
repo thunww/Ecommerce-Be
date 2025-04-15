@@ -35,7 +35,7 @@ module.exports = {
         allowNull: true,
       },
       images: {
-        type: Sequelize.STRING, 
+        type: Sequelize.STRING,
         allowNull: true,
       },
       is_verified: {
