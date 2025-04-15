@@ -20,6 +20,7 @@ const getAllShops = async () => {
     return { success: false, message: "Internal Server Error" };
   }
 };
+
 const getShopById = async (shopId) => {
   try {
     const shop = await Shop.findByPk(shopId, {

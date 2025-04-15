@@ -93,6 +93,7 @@ const loginUser = async (email, password) => {
       user_id: user.user_id,
       email: user.email,
       roles: roleNames, // Trả về danh sách role thay vì 1 role
+      status: user.status,
     },
   };
 };
@@ -129,6 +130,5 @@ const resetPassword = async (token, newPassword) => {
 
   return "Password has been successfully changed";
 };
-
 
 module.exports = { registerUser, loginUser, forgotPassword, resetPassword };

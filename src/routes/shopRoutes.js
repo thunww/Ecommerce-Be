@@ -11,12 +11,7 @@ const router = express.Router();
 
 router.get("/", authMiddleware, roleMiddleware(["admin"]), handleGetAllShops);
 
-router.get(
-  "/:shopId",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  handleGetShopById
-);
+router.get("/:shopId", handleGetShopById);
 
 router.post(
   "/assign-status",
