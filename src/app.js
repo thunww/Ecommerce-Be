@@ -6,6 +6,8 @@ const compression = require("compression");
 const { sequelize } = require("./models");
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
+// const adminRoutes = require("./routes/adminRoutes");
+const vendorRoutes = require("./routes/vendorRoutes");
 const configCORS = require("./config/cors");
 const app = express();
 const bodyParser = require("body-parser");
@@ -19,7 +21,8 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const addressRoutes = require("./routes/addressRoutes");
 const shopRoutes = require("./routes/shopRoutes");
 const couponRoutes = require("./routes/couponRoutes");
-const chatRoutes = require('./routes/chatRoutes');
+const chatRoutes = require("./routes/chatRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
 // Middleware
 app.use(helmet());
 app.use(compression());
@@ -28,6 +31,12 @@ app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // Cho form-data
 
+// Log middleware để debug
+app.use((req, res, next) => {
+  console.log("Request Body:", req.body);
+  console.log("Request Headers:", req.headers);
+  next();
+});
 // Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/", usersRoutes);
@@ -35,18 +44,20 @@ app.use("/uploads", express.static("uploads"));
 
 app.use("/api/v1/products", productRoutes);
 
-app.use("/api/cart", cartRoutes);
-app.use("/api/wishlist", wishlistRoutes);
-app.use("/api/reviews", reviewRoutes);
+app.use("/api/v1/cart", cartRoutes);
+app.use("/api/v1/wishlist", wishlistRoutes);
+app.use("/api/v1/reviews", reviewRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/addresses", addressRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/coupons", couponRoutes);
-
-app.use('/api/chat', chatRoutes);
+app.use("/api/v1/categories", categoryRoutes);
+app.use("/api/chat", chatRoutes);
 
 app.use("/api/v1/shops", shopRoutes);
+app.use("/api/v1/vendor", vendorRoutes);
+// app.use("/api/v1/admin", adminRoutes);
 
 // Xử lý lỗi 404 (Not Found)
 app.use((req, res, next) => {

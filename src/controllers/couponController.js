@@ -1,5 +1,7 @@
 const couponService = require('../services/couponService');
 const cartService = require('../services/cartService');
+const { UserCoupon } = require('../models');
+const { Op } = require('sequelize');
 
 const getAllCoupons = async (req, res) => {
     try {
@@ -29,6 +31,30 @@ const getCouponById = async (req, res) => {
     try {
         const { coupon_id } = req.params;
         const coupon = await couponService.getCouponById(coupon_id);
+        return res.status(200).json({
+            status: 'success',
+            message: 'Lấy thông tin mã giảm giá thành công',
+            data: coupon
+        });
+    } catch (error) {
+        console.error('Lỗi khi lấy thông tin mã giảm giá:', error);
+        if (error.message === 'Mã giảm giá không tồn tại') {
+            return res.status(404).json({
+                status: 'error',
+                message: error.message
+            });
+        }
+        return res.status(500).json({
+            status: 'error',
+            message: 'Đã xảy ra lỗi khi lấy thông tin mã giảm giá'
+        });
+    }
+};
+
+const getCouponByCode = async (req, res) => {
+    try {
+        const { code } = req.params;
+        const coupon = await couponService.getCouponByCode(code);
         return res.status(200).json({
             status: 'success',
             message: 'Lấy thông tin mã giảm giá thành công',
@@ -300,14 +326,101 @@ const applyCoupon = async (req, res) => {
     }
 };
 
+// Lấy danh sách mã giảm giá hợp lệ cho giỏ hàng hiện tại
+const getValidCouponsForCart = async (req, res) => {
+    try {
+        const user_id = req.user.id || req.user.user_id;
+
+        // Lấy giỏ hàng hiện tại
+        const cartService = require('../services/cartService');
+        const cart = await cartService.getCart(user_id);
+
+        if (!cart || !cart.total_price || cart.total_price <= 0) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Giỏ hàng trống hoặc không có giá trị'
+            });
+        }
+
+        // Lấy danh sách tất cả mã giảm giá
+        const coupons = await couponService.getAllCoupons({ status: 'active' });
+
+        // Lọc các mã giảm giá hợp lệ cho giỏ hàng hiện tại
+        const validCoupons = [];
+        const now = new Date();
+
+        for (const coupon of coupons) {
+            // Kiểm tra thời hạn
+            if (now < new Date(coupon.start_date) || now > new Date(coupon.end_date)) {
+                continue;
+            }
+
+            // Kiểm tra giá trị đơn hàng tối thiểu
+            if (coupon.min_order_value && cart.total_price < coupon.min_order_value) {
+                continue;
+            }
+
+            // Kiểm tra người dùng đã sử dụng mã này chưa
+            const userCoupon = await UserCoupon.findOne({
+                where: {
+                    user_id,
+                    coupon_id: coupon.coupon_id,
+                    used_at: {
+                        [Op.not]: null
+                    }
+                }
+            });
+
+            if (userCoupon) {
+                continue;
+            }
+
+            // Tính số tiền giảm
+            let discount_amount = (cart.total_price * coupon.discount_percent) / 100;
+
+            // Kiểm tra giới hạn giảm giá tối đa
+            if (coupon.max_discount_amount && discount_amount > coupon.max_discount_amount) {
+                discount_amount = coupon.max_discount_amount;
+            }
+
+            validCoupons.push({
+                coupon_id: coupon.coupon_id,
+                code: coupon.code,
+                discount_percent: coupon.discount_percent,
+                max_discount_amount: coupon.max_discount_amount,
+                min_order_value: coupon.min_order_value,
+                discount_amount: discount_amount,
+                final_price: cart.total_price - discount_amount
+            });
+        }
+
+        return res.status(200).json({
+            status: 'success',
+            message: `Tìm thấy ${validCoupons.length} mã giảm giá hợp lệ`,
+            data: {
+                cart_total: cart.total_price,
+                valid_coupons: validCoupons
+            }
+        });
+    } catch (error) {
+        console.error('Lỗi khi lấy danh sách mã giảm giá hợp lệ:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: error.message || 'Lỗi khi lấy danh sách mã giảm giá'
+        });
+    }
+};
+
 module.exports = {
     getAllCoupons,
     getCouponById,
+    getCouponByCode,
     createCoupon,
     updateCoupon,
     deleteCoupon,
     validateCoupon,
     getUserCoupons,
     saveCoupon,
-    applyCoupon
+    applyCoupon,
+    getValidCouponsForCart
 };

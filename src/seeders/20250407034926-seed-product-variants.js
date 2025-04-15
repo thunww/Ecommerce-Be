@@ -5,7 +5,7 @@ module.exports = {
     return queryInterface.bulkInsert("Product_Variants", [
       {
         product_id: 1,
-        size: "S, M, L",
+        size: "S",
         color: "White",
         material: "Cotton",
         storage: null,
@@ -21,7 +21,7 @@ module.exports = {
       },
       {
         product_id: 1,
-        size: "S, M, L",
+        size: "M",
         color: "Brown",
         material: "Cotton",
         storage: null,
@@ -38,7 +38,7 @@ module.exports = {
 
       {
         product_id: 1,
-        size: "S, M, L",
+        size: "L",
         color: "Bee",
         material: null,
         storage: null,
@@ -528,7 +528,7 @@ module.exports = {
         price: 18990000,
         stock: 30,
         image_url:
-          "hhttps://down-vn.img.susercontent.com/file/vn-11134207-7qukw-lk7wxsa8g984fe.webp",
+          "https://soyacincau.com/wp-content/uploads/2023/01/230119-oneplus-11-01-1024x816.jpg",
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -582,6 +582,22 @@ module.exports = {
         stock: 40,
         image_url:
           "https://www.epic.com.mt/wp-content/uploads/2023/03/AirPods_Pro_2nd-Gen-1.png",
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+      {
+        product_id: 31,
+        size: null,
+        color: "Black",
+        material: "Plastic",
+        storage: null,
+        ram: null,
+        processor: null,
+        weight: 0.05,
+        price: 65900,
+        stock: 40,
+        image_url:
+          "https://down-vn.img.susercontent.com/file/sg-11134301-7rce9-lr2q6o14jgq00c@resize_w900_nl.webp",
         created_at: new Date(),
         updated_at: new Date(),
       },

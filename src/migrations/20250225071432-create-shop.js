@@ -21,8 +21,12 @@ module.exports = {
       views: { type: Sequelize.INTEGER, defaultValue: 0 },
       address: { type: Sequelize.STRING(255), allowNull: true },
       status: {
-        type: Sequelize.ENUM("active", "inactive", "suspended"),
+        type: Sequelize.STRING(20),
+        allowNull: false,
         defaultValue: "active",
+        validate: {
+          isIn: [["active", "inactive", "suspended"]],
+        },
       },
       created_at: { type: Sequelize.DATE, defaultValue: Sequelize.fn("NOW") },
       updated_at: { type: Sequelize.DATE, defaultValue: Sequelize.fn("NOW") },
@@ -37,8 +41,5 @@ module.exports = {
   },
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable("Shops");
-    await queryInterface.sequelize.query(
-      'DROP TYPE IF EXISTS "enum_Shops_status";'
-    );
   },
 };

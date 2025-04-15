@@ -56,12 +56,12 @@ Product.init(
     average_rating: {
       type: DataTypes.DECIMAL(3, 2),
       allowNull: false,
-      defaultValue: 0
+      defaultValue: 0,
     },
     review_count: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      defaultValue: 0
+      defaultValue: 0,
     },
     shop_id: {
       type: DataTypes.INTEGER,

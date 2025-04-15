@@ -273,55 +273,121 @@ class ProductService {
   }
 
   async searchProducts(q, category_id, min_price, max_price, sort) {
-    const where = { status: "active" };
-    if (q) {
-      where.product_name = { [Op.like]: `%${q}%` };
-    }
-    if (category_id) {
-      where.category_id = category_id;
-    }
-    if (min_price) {
-      where.price = { [Op.gte]: min_price };
-    }
-    if (max_price) {
-      where.price = { ...where.price, [Op.lte]: max_price };
-    }
+    try {
+      const where = { status: "active" };
 
-    const order = [];
-    if (sort) {
-      switch (sort) {
-        case "price_asc":
-          order.push(["price", "ASC"]);
-          break;
-        case "price_desc":
-          order.push(["price", "DESC"]);
-          break;
-        case "newest":
-          order.push(["created_at", "DESC"]);
-          break;
-        case "rating":
-          order.push(["average_rating", "DESC"]);
-          break;
+      // Search by product name
+      if (q) {
+        where.product_name = { [Op.like]: `%${q.trim()}%` };
       }
-    }
 
-    return await Product.findAll({
-      where,
-      order,
-      include: [
-        {
-          model: ProductImage,
-          as: "images",
-          attributes: ["image_url"],
-        },
-        {
-          model: Category,
-          as: "Category",
-        },
-      ],
-    });
+      // Filter by category
+      if (category_id) {
+        where.category_id = Number(category_id);
+      }
+
+      // Price conditions for variants
+      const priceConditions = {};
+      if (min_price) priceConditions[Op.gte] = Number(min_price);
+      if (max_price) priceConditions[Op.lte] = Number(max_price);
+      if (Object.keys(priceConditions).length > 0) {
+        where["$variants.price$"] = priceConditions;
+      }
+
+      // Sorting conditions
+      const order = [];
+      if (sort === "price_asc") {
+        order.push([Sequelize.col("variants.price"), "ASC"]);
+      } else if (sort === "price_desc") {
+        order.push([Sequelize.col("variants.price"), "DESC"]);
+      } else {
+        order.push(["created_at", "DESC"]);
+      }
+
+      // Query products with includes
+      const products = await Product.findAll({
+        where,
+        order,
+        include: [
+          {
+            model: Category,
+            as: "Category",
+            attributes: ["category_id", "category_name"],
+          },
+          {
+            model: ProductVariant,
+            as: "variants",
+            attributes: ["variant_id", "image_url", "stock", "price"],
+          },
+        ],
+      });
+
+      // Calculate total stock for each product
+      const updatedProducts = products.map((product) => {
+        const totalStock = product.variants.reduce(
+          (sum, variant) => sum + (variant.stock || 0),
+          0
+        );
+        return {
+          ...product.toJSON(),
+          stock: totalStock,
+        };
+      });
+
+      return {
+        success: true,
+        message:
+          updatedProducts.length > 0
+            ? "Products retrieved successfully"
+            : "No products found",
+        data: updatedProducts,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: "Failed to retrieve products",
+        data: [],
+      };
+    }
   }
 
+  async searchSuggest(q, limit = 5) {
+    try {
+      if (!q.trim()) {
+        return {
+          success: true,
+          message: "No keyword provided",
+          data: [],
+        };
+      }
+
+      const products = await Product.findAll({
+        where: {
+          product_name: {
+            [Op.like]: `%${q.trim()}%`,
+          },
+          status: "active",
+        },
+        attributes: ["product_id", "product_name"],
+        limit: parseInt(limit),
+      });
+
+      return {
+        success: true,
+        message:
+          products.length > 0
+            ? "Suggestions retrieved successfully"
+            : "No matching products found",
+        data: products,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: "Failed to retrieve suggestions",
+        data: [],
+      };
+    }
+  }
   async getFeaturedProducts() {
     return await Product.findAll({
       where: { status: "active" },

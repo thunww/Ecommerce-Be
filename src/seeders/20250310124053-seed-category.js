@@ -6,18 +6,21 @@ module.exports = {
       "Categories",
       [
         {
-          category_name: "Electronics",
+          category_name: "Fashion",
           parent_id: null,
-          description: "All electronic devices and accessories.",
-          image: "https://example.com/electronics.jpg",
+          description: "Clothing, accessories, and shoes.",
+          image:
+            "https://down-vn.img.susercontent.com/file/687f3967b7c2fe6a134a2c11894eea4b@resize_w640_nl.webp",
           created_at: new Date(),
           updated_at: new Date(),
         },
+
         {
           category_name: "Mobile Phones",
           parent_id: 1, // Assuming 'Electronics' has category_id 1
           description: "Smartphones, feature phones, and accessories.",
-          image: "https://example.com/mobile_phones.jpg",
+          image:
+            "https://down-vn.img.susercontent.com/file/31234a27876fb89cd522d7e3db1ba5ca@resize_w640_nl.webp",
           created_at: new Date(),
           updated_at: new Date(),
         },
@@ -25,7 +28,8 @@ module.exports = {
           category_name: "Computers",
           parent_id: 1,
           description: "Laptops, desktops, and accessories.",
-          image: "https://example.com/computers.jpg",
+          image:
+            "https://down-vn.img.susercontent.com/file/c3f3edfaa9f6dafc4825b77d8449999d@resize_w640_nl.webp",
           created_at: new Date(),
           updated_at: new Date(),
         },
@@ -33,7 +37,8 @@ module.exports = {
           category_name: "Laptops",
           parent_id: 3, // Assuming 'Computers' has category_id 3
           description: "Portable computers for work and play.",
-          image: "https://example.com/laptops.jpg",
+          image:
+            "https://down-vn.img.susercontent.com/file/c3f3edfaa9f6dafc4825b77d8449999d@resize_w640_nl.webp",
           created_at: new Date(),
           updated_at: new Date(),
         },
@@ -41,15 +46,17 @@ module.exports = {
           category_name: "Tablets",
           parent_id: 3, // Assuming 'Computers' has category_id 3
           description: "Portable tablets for all needs.",
-          image: "https://example.com/tablets.jpg",
+          image:
+            "https://th.bing.com/th/id/OIP.kdTyWTQaNTiR8rixXtE-vAHaHa?w=1600&h=1600&rs=1&pid=ImgDetMain",
           created_at: new Date(),
           updated_at: new Date(),
         },
         {
-          category_name: "Fashion",
+          category_name: "Electronics",
           parent_id: null,
-          description: "Clothing, accessories, and shoes.",
-          image: "https://example.com/fashion.jpg",
+          description: "All electronic devices and accessories.",
+          image:
+            "https://down-vn.img.susercontent.com/file/978b9e4cb61c611aaaf58664fae133c5@resize_w640_nl.webp",
           created_at: new Date(),
           updated_at: new Date(),
         },
@@ -57,7 +64,8 @@ module.exports = {
           category_name: "Women's Clothing",
           parent_id: 6, // Assuming 'Fashion' has category_id 6
           description: "Clothing for women including dresses, tops, and more.",
-          image: "https://example.com/womens_clothing.jpg",
+          image:
+            "https://down-vn.img.susercontent.com/file/75ea42f9eca124e9cb3cde744c060e4d@resize_w640_nl.webp",
           created_at: new Date(),
           updated_at: new Date(),
         },
@@ -65,7 +73,8 @@ module.exports = {
           category_name: "Men's Clothing",
           parent_id: 6,
           description: "Clothing for men including shirts, trousers, and more.",
-          image: "https://example.com/mens_clothing.jpg",
+          image:
+            "https://down-vn.img.susercontent.com/file/687f3967b7c2fe6a134a2c11894eea4b@resize_w640_nl.webp",
           created_at: new Date(),
           updated_at: new Date(),
         },
@@ -73,7 +82,8 @@ module.exports = {
           category_name: "Accessories",
           parent_id: 6,
           description: "Watches, bags, jewelry, and more.",
-          image: "https://example.com/accessories.jpg",
+          image:
+            "https://down-vn.img.susercontent.com/file/8e71245b9659ea72c1b4e737be5cf42e@resize_w640_nl.webp",
           created_at: new Date(),
           updated_at: new Date(),
         },
@@ -81,7 +91,8 @@ module.exports = {
           category_name: "Home & Living",
           parent_id: null,
           description: "Furniture, decor, and home essentials.",
-          image: "https://example.com/home_living.jpg",
+          image:
+            "https://down-vn.img.susercontent.com/file/7abfbfee3c4844652b4a8245e473d857@resize_w640_nl.webp",
           created_at: new Date(),
           updated_at: new Date(),
         },
@@ -89,7 +100,8 @@ module.exports = {
           category_name: "Furniture",
           parent_id: 9, // Assuming 'Home & Living' has category_id 9
           description: "Furniture for living rooms, bedrooms, offices, etc.",
-          image: "https://example.com/furniture.jpg",
+          image:
+            "https://down-vn.img.susercontent.com/file/e4fbccba5e1189d1141b9d6188af79c0@resize_w640_nl.webp",
           created_at: new Date(),
           updated_at: new Date(),
         },
@@ -97,7 +109,8 @@ module.exports = {
           category_name: "Decor",
           parent_id: 9,
           description: "Home decor items like paintings, vases, and lamps.",
-          image: "https://example.com/decor.jpg",
+          image:
+            "https://down-vn.img.susercontent.com/file/e4fbccba5e1189d1141b9d6188af79c0@resize_w640_nl.webp",
           created_at: new Date(),
           updated_at: new Date(),
         },
