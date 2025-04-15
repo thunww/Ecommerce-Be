@@ -8,6 +8,9 @@ const {
   sendResetPasswordEmail,
 } = require("../utils/sendEmail");
 
+// Thêm BlacklistedToken model để lưu các token đã vô hiệu hóa
+const BlacklistedToken = require("../models/blacklistedToken");
+
 const registerUser = async (username, email, password) => {
   if (!username || !email || !password) {
     throw new Error("Missing information");
@@ -93,6 +96,7 @@ const loginUser = async (email, password) => {
       user_id: user.user_id,
       email: user.email,
       roles: roleNames, // Trả về danh sách role thay vì 1 role
+      status: user.status,
     },
   };
 };
@@ -129,6 +133,5 @@ const resetPassword = async (token, newPassword) => {
 
   return "Password has been successfully changed";
 };
-
 
 module.exports = { registerUser, loginUser, forgotPassword, resetPassword };

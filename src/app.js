@@ -6,6 +6,8 @@ const compression = require("compression");
 const { sequelize } = require("./models");
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
+// const adminRoutes = require("./routes/adminRoutes");
+const vendorRoutes = require("./routes/vendorRoutes");
 const configCORS = require("./config/cors");
 const app = express();
 const bodyParser = require("body-parser");
@@ -28,6 +30,12 @@ app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // Cho form-data
 
+// Log middleware để debug
+app.use((req, res, next) => {
+  console.log("Request Body:", req.body);
+  console.log("Request Headers:", req.headers);
+  next();
+});
 // Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/", usersRoutes);
@@ -47,6 +55,8 @@ app.use("/api/v1/coupons", couponRoutes);
 app.use('/api/v1/chat', chatRoutes);
 
 app.use("/api/v1/shops", shopRoutes);
+app.use("/api/v1/vendor", vendorRoutes);
+// app.use("/api/v1/admin", adminRoutes);
 
 // Xử lý lỗi 404 (Not Found)
 app.use((req, res, next) => {

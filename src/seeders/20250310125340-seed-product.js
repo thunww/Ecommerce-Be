@@ -33,7 +33,7 @@ module.exports = {
         average_rating: 0.0,
         review_count: 0,
         shop_id: 2,
-        category_id: 2,
+        category_id: 1,
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -50,7 +50,7 @@ module.exports = {
         average_rating: 0.0,
         review_count: 0,
         shop_id: 3,
-        category_id: 3,
+        category_id: 1,
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -149,7 +149,7 @@ module.exports = {
         average_rating: 0.0,
         review_count: 0,
         shop_id: 2,
-        category_id: 7,
+        category_id: 2,
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -165,7 +165,7 @@ module.exports = {
         average_rating: 0.0,
         review_count: 0,
         shop_id: 2,
-        category_id: 8,
+        category_id: 2,
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -215,7 +215,7 @@ module.exports = {
         average_rating: 0.0,
         review_count: 0,
         shop_id: 3,
-        category_id: 4,
+        category_id: 2,
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -343,7 +343,7 @@ module.exports = {
         average_rating: 0.0,
         review_count: 0,
         shop_id: 1,
-        category_id: 9, // Clothing
+        category_id: 1, // Clothing
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -359,7 +359,7 @@ module.exports = {
         average_rating: 0.0,
         review_count: 0,
         shop_id: 2,
-        category_id: 9, // Clothing
+        category_id: 1, // Clothing
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -375,7 +375,7 @@ module.exports = {
         average_rating: 0.0,
         review_count: 0,
         shop_id: 3,
-        category_id: 9, // Clothing
+        category_id: 1, // Clothing
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -392,7 +392,7 @@ module.exports = {
         average_rating: 0.0,
         review_count: 0,
         shop_id: 1,
-        category_id: 9, // Clothing
+        category_id: 1, // Clothing
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -408,7 +408,7 @@ module.exports = {
         average_rating: 0.0,
         review_count: 0,
         shop_id: 2,
-        category_id: 9, // Clothing
+        category_id: 1, // Clothing
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -441,7 +441,7 @@ module.exports = {
         average_rating: 0.0,
         review_count: 0,
         shop_id: 1,
-        category_id: 9, // Clothing
+        category_id: 1, // Clothing
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -541,7 +541,7 @@ module.exports = {
         average_rating: 0.0,
         review_count: 0,
         shop_id: 1,
-        category_id: 9, // Clothing
+        category_id: 1, // Clothing
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -557,7 +557,7 @@ module.exports = {
         average_rating: 0.0,
         review_count: 0,
         shop_id: 2,
-        category_id: 9, // Clothing
+        category_id: 1, // Clothing
         created_at: new Date(),
         updated_at: new Date(),
       },
