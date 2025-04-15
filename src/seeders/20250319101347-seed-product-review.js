@@ -51,7 +51,7 @@ module.exports = {
       },
       {
         review_id: 5,
-        product_id: 4,
+        product_id: 2,
         user_id: 1,
         rating: 2,
         comment: "Not what I expected. Quality could be improved.",
@@ -75,7 +75,7 @@ module.exports = {
       },
       {
         review_id: 7,
-        product_id: 5,
+        product_id: 3,
         user_id: 6,
         rating: 5,
         comment: "Absolutely love it! Will purchase again soon.",
@@ -111,7 +111,7 @@ module.exports = {
       },
       {
         review_id: 10,
-        product_id: 5,
+        product_id: 1,
         user_id: 10,
         rating: 5,
         comment: "Fantastic product! Worth every penny.",
