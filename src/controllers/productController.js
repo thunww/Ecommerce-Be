@@ -18,6 +18,20 @@ const getAllProducts = async (req, res) => {
     });
   }
 };
+const suggestProducts = async (req, res) => {
+  try {
+    const { q = "", limit = 5 } = req.query;
+
+    const result = await productService.searchSuggest(q, limit);
+    return res.status(result.success ? 200 : 500).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      data: [],
+    });
+  }
+};
 
 const getProductById = async (req, res) => {
   try {
@@ -191,4 +205,5 @@ module.exports = {
   handleAssignProduct,
   handleDeleteProduct,
   getProductsByCategoryId,
+  suggestProducts,
 };

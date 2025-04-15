@@ -347,12 +347,47 @@ class ProductService {
         success: false,
         message: "Failed to retrieve products",
         data: [],
-        error:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
       };
     }
   }
 
+  async searchSuggest(q, limit = 5) {
+    try {
+      if (!q.trim()) {
+        return {
+          success: true,
+          message: "No keyword provided",
+          data: [],
+        };
+      }
+
+      const products = await Product.findAll({
+        where: {
+          product_name: {
+            [Op.like]: `%${q.trim()}%`,
+          },
+          status: "active",
+        },
+        attributes: ["product_id", "product_name"],
+        limit: parseInt(limit),
+      });
+
+      return {
+        success: true,
+        message:
+          products.length > 0
+            ? "Suggestions retrieved successfully"
+            : "No matching products found",
+        data: products,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: "Failed to retrieve suggestions",
+        data: [],
+      };
+    }
+  }
   async getFeaturedProducts() {
     return await Product.findAll({
       where: { status: "active" },
