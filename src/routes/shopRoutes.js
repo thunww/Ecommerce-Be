@@ -19,12 +19,7 @@ router.get(
   getOrderedProducts
 );
 
-router.get(
-  "/:shopId",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  handleGetShopById
-);
+router.get("/:shopId", handleGetShopById);
 
 router.get(
   "/:shopId/products",

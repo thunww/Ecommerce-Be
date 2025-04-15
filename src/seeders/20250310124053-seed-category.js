@@ -6,13 +6,14 @@ module.exports = {
       "Categories",
       [
         {
-          category_name: "Electronics",
+          category_name: "Fashion",
           parent_id: null,
-          description: "All electronic devices and accessories.",
-          image: "https://example.com/electronics.jpg",
+          description: "Clothing, accessories, and shoes.",
+          image: "https://example.com/fashion.jpg",
           created_at: new Date(),
           updated_at: new Date(),
         },
+
         {
           category_name: "Mobile Phones",
           parent_id: 1, // Assuming 'Electronics' has category_id 1
@@ -46,10 +47,10 @@ module.exports = {
           updated_at: new Date(),
         },
         {
-          category_name: "Fashion",
+          category_name: "Electronics",
           parent_id: null,
-          description: "Clothing, accessories, and shoes.",
-          image: "https://example.com/fashion.jpg",
+          description: "All electronic devices and accessories.",
+          image: "https://example.com/electronics.jpg",
           created_at: new Date(),
           updated_at: new Date(),
         },
