@@ -3,6 +3,7 @@ const categoryController = require("../controllers/categoryController");
 const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
 const router = express.Router();
+
 // Lấy tất cả danh mục
 router.get("/", categoryController.getAllCategories);
 

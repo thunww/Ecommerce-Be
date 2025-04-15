@@ -1,6 +1,5 @@
 const categoryService = require("../services/categoryService");
 
-<<<<<<< HEAD
 // Lấy tất cả danh mục
 const getAllCategories = async (req, res) => {
   try {
@@ -87,27 +86,13 @@ const deleteCategory = async (req, res) => {
       message: "Internal server error",
       data: null,
     });
-=======
-const handleGetAllCategories = async (req, res) => {
-  try {
-    console.log("Getting all categories");
-    const categories = await categoryService.getAllCategories();
-    res.json(categories);
-  } catch (error) {
-    console.error("Error in handleGetAllCategories:", error);
-    res.status(500).json({ message: error.message });
->>>>>>> main
   }
 };
 
 module.exports = {
-<<<<<<< HEAD
   getAllCategories,
   getCategoryById,
   createCategory,
   updateCategory,
   deleteCategory,
-=======
-  handleGetAllCategories,
->>>>>>> main
 };
