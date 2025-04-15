@@ -510,6 +510,67 @@ const getShopProducts = async (userId) => {
   }
 };
 
+// Cập nhật trạng thái đơn hàng
+const updateOrderStatus = async (userId, orderId, newStatus) => {
+  try {
+    console.log(`=== Updating Order Status ===`);
+    console.log(
+      `User ID: ${userId}, Order ID: ${orderId}, New Status: ${newStatus}`
+    );
+
+    // Tìm shop của vendor
+    const shop = await Shop.findOne({
+      where: { owner_id: userId },
+    });
+
+    if (!shop) {
+      throw new Error("Không tìm thấy shop");
+    }
+
+    // Tìm đơn hàng cần cập nhật
+    const order = await SubOrder.findOne({
+      where: {
+        sub_order_id: orderId,
+        shop_id: shop.shop_id,
+      },
+    });
+
+    if (!order) {
+      throw new Error(
+        "Không tìm thấy đơn hàng hoặc đơn hàng không thuộc về shop của bạn"
+      );
+    }
+
+    // Validate trạng thái mới
+    const validStatuses = [
+      "pending",
+      "processing",
+      "shipped",
+      "delivered",
+      "cancelled",
+    ];
+    if (!validStatuses.includes(newStatus)) {
+      throw new Error("Trạng thái không hợp lệ");
+    }
+
+    // Cập nhật trạng thái
+    order.status = newStatus;
+    await order.save();
+
+    console.log("Order status updated successfully");
+    console.log(`=== End Updating Order Status ===\n`);
+
+    return {
+      sub_order_id: order.sub_order_id,
+      status: order.status,
+      updated_at: order.updated_at,
+    };
+  } catch (error) {
+    console.error("Error in updateOrderStatus:", error);
+    throw new Error(`Không thể cập nhật trạng thái đơn hàng: ${error.message}`);
+  }
+};
+
 module.exports = {
   getShopByUserId,
   getShopRevenue,
@@ -523,4 +584,5 @@ module.exports = {
   getOrderDetails,
   getShopRating,
   getShopProducts,
+  updateOrderStatus,
 };

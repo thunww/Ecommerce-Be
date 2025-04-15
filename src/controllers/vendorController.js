@@ -219,6 +219,54 @@ const handleGetShopProducts = async (req, res) => {
   }
 };
 
+// Cập nhật trạng thái đơn hàng
+const handleUpdateOrderStatus = async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+    const { order_id } = req.params;
+    const { status } = req.body;
+
+    console.log(
+      `Updating order ${order_id} status to ${status} by user ${userId}`
+    );
+
+    // Validate status
+    const validStatuses = [
+      "pending",
+      "processing",
+      "shipped",
+      "delivered",
+      "cancelled",
+    ];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid status. Status must be one of: pending, processing, shipped, delivered, cancelled",
+      });
+    }
+
+    // Call service to update order status
+    const updatedOrder = await vendorService.updateOrderStatus(
+      userId,
+      order_id,
+      status
+    );
+
+    res.json({
+      success: true,
+      message: "Order status updated successfully",
+      data: updatedOrder,
+    });
+  } catch (error) {
+    console.error("Error in handleUpdateOrderStatus:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update order status",
+    });
+  }
+};
+
 module.exports = {
   handleGetMyShop,
   handleGetShopRevenue,
@@ -232,4 +280,5 @@ module.exports = {
   handleGetShopRating,
   handleAIChat,
   handleGetShopProducts,
+  handleUpdateOrderStatus,
 };

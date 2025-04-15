@@ -88,7 +88,8 @@ module.exports = {
         gender: "male",
         status: "active",
         date_of_birth: "1993-11-05",
-        profile_picture: null,
+        profile_picture:
+          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcnDUKLBwsLnZhMMS5VErqdGppVyaFH1k6Eg&s",
         is_verified: true,
       },
       {
