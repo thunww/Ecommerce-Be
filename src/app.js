@@ -33,8 +33,6 @@ app.use(express.urlencoded({ extended: true })); // Cho form-data
 
 // Log middleware để debug
 app.use((req, res, next) => {
-  console.log("Request Body:", req.body);
-  console.log("Request Headers:", req.headers);
   next();
 });
 // Routes
@@ -50,7 +48,7 @@ app.use("/api/v1/reviews", reviewRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/addresses", addressRoutes);
-app.use("/api/orders", orderRoutes);
+app.use("/api/v1/orders", orderRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/v1/categories", categoryRoutes);
 app.use("/api/chat", chatRoutes);
