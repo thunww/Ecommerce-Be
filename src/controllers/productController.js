@@ -19,135 +19,6 @@ const getAllProducts = async (req, res) => {
   }
 };
 
-const createProduct = async (req, res) => {
-  try {
-    console.log("Files received:", req.files);
-    console.log("Body received:", req.body);
-
-    const productData = { ...req.body };
-
-    // Xử lý biến thể nếu được gửi dưới dạng chuỗi JSON
-    if (req.body.variations && typeof req.body.variations === "string") {
-      try {
-        productData.variations = JSON.parse(req.body.variations);
-      } catch (error) {
-        console.error("Error parsing variations:", error);
-        return res.status(400).json({
-          success: false,
-          message: "Định dạng biến thể không hợp lệ",
-        });
-      }
-    }
-
-    // Xử lý files được upload
-    if (req.files) {
-      // Xử lý ảnh chính
-      if (req.files.image && req.files.image.length > 0) {
-        productData.image_url = req.files.image[0].path;
-      }
-
-      // Xử lý ảnh phụ
-      if (req.files.images && req.files.images.length > 0) {
-        productData.additional_images = req.files.images.map(
-          (file) => file.path
-        );
-      }
-
-      // Xử lý ảnh cho biến thể
-      if (req.files.variations && req.files.variations.length > 0) {
-        productData.variation_images = req.files.variations.map(
-          (file) => file.path
-        );
-      }
-    }
-
-    console.log("Product data being created:", productData);
-
-    const userId = req.user.id;
-    const result = await productService.createProduct(productData, userId);
-
-    if (!result.success) {
-      return res.status(400).json(result);
-    }
-
-    return res.status(201).json(result);
-  } catch (error) {
-    console.error("Error creating product:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Đã xảy ra lỗi khi tạo sản phẩm",
-      error: error.message,
-    });
-  }
-};
-
-const updateProduct = async (req, res) => {
-  try {
-    console.log("Files received for update:", req.files);
-    console.log("Body received for update:", req.body);
-
-    const { product_id } = req.params;
-    const productData = { ...req.body };
-
-    // Xử lý biến thể nếu được gửi dưới dạng chuỗi JSON
-    if (req.body.variations && typeof req.body.variations === "string") {
-      try {
-        productData.variations = JSON.parse(req.body.variations);
-      } catch (error) {
-        console.error("Error parsing variations:", error);
-        return res.status(400).json({
-          success: false,
-          message: "Định dạng biến thể không hợp lệ",
-        });
-      }
-    }
-
-    // Xử lý files được upload
-    if (req.files) {
-      // Xử lý ảnh chính nếu có cập nhật
-      if (req.files.image && req.files.image.length > 0) {
-        productData.image_url = req.files.image[0].path;
-      }
-
-      // Xử lý ảnh phụ nếu có cập nhật
-      if (req.files.images && req.files.images.length > 0) {
-        productData.additional_images = req.files.images.map(
-          (file) => file.path
-        );
-      }
-
-      // Xử lý ảnh cho biến thể nếu có cập nhật
-      if (req.files.variations && req.files.variations.length > 0) {
-        productData.variation_images = req.files.variations.map(
-          (file) => file.path
-        );
-      }
-    }
-
-    console.log("Product data being updated:", productData);
-
-    const userId = req.user.id;
-    const result = await productService.updateProduct(
-      product_id,
-      productData,
-      userId
-    );
-
-    if (!result.success) {
-      return res.status(400).json(result);
-    }
-
-    return res.status(200).json(result);
-  } catch (error) {
-    console.error("Error updating product:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Đã xảy ra lỗi khi cập nhật sản phẩm",
-      error: error.message,
-    });
-  }
-};
-
 const deleteProductImage = async (req, res) => {
   try {
     const { image_id } = req.params;
@@ -168,12 +39,6 @@ const deleteProductImage = async (req, res) => {
       error: error.message,
     });
   }
-};
-
-// Nhớ export hàm này
-module.exports = {
-  // ... các hàm khác
-  createProduct,
 };
 
 const getProductById = async (req, res) => {
@@ -313,7 +178,5 @@ module.exports = {
   handleAssignProduct,
   handleDeleteProduct,
   getProductsByCategoryId,
-  createProduct,
-  updateProduct,
   deleteProductImage,
 };

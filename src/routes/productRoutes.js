@@ -1,40 +1,24 @@
 const express = require("express");
 const router = express.Router();
-const upload = require("../middleware/uploadMiddleware");
 const productController = require("../controllers/productController");
 const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
-
-// router.post("/upload", upload.single("image"), handleUploadProductImage);
-// router.get("/:product_id/images", handleGetProductImages);
-// router.delete("/image/:image_id", handleDeleteProductImage);
+const vendorMiddleware = require("../middleware/vendorMiddleware");
+const upload = require("../middleware/uploadMiddleware");
 
 router.get("/", productController.getAllProducts);
 
-// Route tạo sản phẩm mới
+// Thêm route cho việc tạo sản phẩm
 router.post(
   "/",
   authMiddleware,
-  roleMiddleware(["admin", "vendor"]),
+  vendorMiddleware,
   upload.fields([
-    { name: "image", maxCount: 1 },
     { name: "images", maxCount: 8 },
-    { name: "variations", maxCount: 10 },
+    { name: "primary", maxCount: 1 },
+    { name: "variationImages", maxCount: 20 },
   ]),
   productController.createProduct
-);
-
-// Route cập nhật sản phẩm
-router.put(
-  "/:product_id",
-  authMiddleware,
-  roleMiddleware(["admin", "vendor"]),
-  upload.fields([
-    { name: "image", maxCount: 1 },
-    { name: "images", maxCount: 8 },
-    { name: "variations", maxCount: 10 },
-  ]),
-  productController.updateProduct
 );
 
 // Route xóa hình ảnh sản phẩm
