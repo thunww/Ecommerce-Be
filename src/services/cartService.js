@@ -1,3 +1,4 @@
+
 const { Cart, CartItem, Product, Shop, User, ProductVariant } = require('../models');
 const { Op } = require('sequelize');
 
@@ -20,10 +21,9 @@ class CartService {
 
         let price = product.price;
         let variantInfo = null;
-        let variant = null;
 
         if (variant_id) {
-            variant = await ProductVariant.findOne({ where: { variant_id, product_id } });
+            const variant = await ProductVariant.findOne({ where: { variant_id, product_id } });
             if (!variant) throw new Error('Biến thể không tồn tại');
             if (variant.stock < quantity) throw new Error('Kho không đủ hàng');
 
@@ -41,7 +41,7 @@ class CartService {
 
         if (cartItem) {
             const newQuantity = cartItem.quantity + quantity;
-            if ((variant_id && variant && variant.stock < newQuantity) || (!variant_id && product.stock < newQuantity)) {
+            if ((variant_id && variant.stock < newQuantity) || (!variant_id && product.stock < newQuantity)) {
                 throw new Error('Kho không đủ hàng');
             }
             cartItem.quantity = newQuantity;
