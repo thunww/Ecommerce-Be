@@ -56,7 +56,7 @@ const sendResetPasswordEmail = async (email, token) => {
     },
   });
 
-  const resetUrl = `http://localhost:8080/api/v1/auth/reset-password?token=${token}`;
+  const resetUrl = `http://localhost:5173/reset-password?token=${token}`;
 
   // Set up the email options
   const mailOptions = {
