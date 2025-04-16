@@ -35,7 +35,7 @@ module.exports = {
         sub_order_id: 4,
         order_id: 3,
         shop_id: 1,
-        total_price: 400.0,
+        total_price: 140.0,
         shipping_fee: 30.0,
         status: "delivered",
         created_at: new Date(),

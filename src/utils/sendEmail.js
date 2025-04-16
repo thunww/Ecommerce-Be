@@ -58,24 +58,41 @@ const sendResetPasswordEmail = async (email, token) => {
 
   const resetUrl = `http://localhost:5173/reset-password?token=${token}`;
 
-  // Set up the email options
+  // Thiết lập nội dung email với HTML và CSS
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,
     subject: "Reset Your Password",
     html: `
-      <p>You have requested to reset your password.</p>
-      <p>Please click the link below to reset your password (this link is valid for 1 hour):</p>
-      <a href="${resetUrl}">${resetUrl}</a>
+      <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; border: 1px solid #ddd; border-radius: 10px; max-width: 500px; margin: auto;">
+        <h2 style="color: #4CAF50;">Chào mừng bạn đến với CLASSYSHOP!</h2>
+        <p style="font-size: 16px; color: #555;">Bạn đã yêu cầu thay đổi mật khẩu. Để tiếp tục, vui lòng nhấn vào nút bên dưới:</p>
+        <a href="${resetUrl}" style="
+            display: inline-block;
+            background-color: #ff6600;
+            color: white;
+            padding: 12px 20px;
+            text-decoration: none;
+            font-size: 16px;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 10px;
+        ">Reset Your Password</a>
+        <p style="margin-top: 20px; font-size: 14px; color: #666;">
+          Link này sẽ có hiệu lực trong 1 giờ. Nếu bạn không yêu cầu thay đổi mật khẩu, vui lòng bỏ qua email này.
+        </p>
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+        <p style="font-size: 14px; color: #888;"> CLASSYSHOP - Mua sắm thông minh, giao hàng tận nơi.</p>
+      </div>
     `,
   };
 
-  // Send the email
+  // Gửi email
   try {
     await transporter.sendMail(mailOptions);
-    //console.log(`Reset password email sent to: ${email}`);
+    console.log("Password reset email sent to: ", email);
   } catch (error) {
-    console.error("Error sending reset password email:", error);
+    console.error("Error sending password reset email:", error);
     throw new Error("Failed to send reset password email");
   }
 };
