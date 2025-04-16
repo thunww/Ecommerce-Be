@@ -8,9 +8,6 @@ const {
   sendResetPasswordEmail,
 } = require("../utils/sendEmail");
 
-// Thêm BlacklistedToken model để lưu các token đã vô hiệu hóa
-const BlacklistedToken = require("../models/blacklistedToken");
-
 const registerUser = async (username, email, password) => {
   if (!username || !email || !password) {
     throw new Error("Missing information");
