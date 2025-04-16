@@ -3,21 +3,14 @@ const router = express.Router();
 const productController = require("../controllers/productController");
 const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
-const vendorMiddleware = require("../middleware/vendorMiddleware");
 const upload = require("../middleware/uploadMiddleware");
 
 router.get("/", productController.getAllProducts);
 
-// Thêm route cho việc tạo sản phẩm
 router.post(
-  "/",
+  "/create",
   authMiddleware,
-  vendorMiddleware,
-  upload.fields([
-    { name: "images", maxCount: 8 },
-    { name: "primary", maxCount: 1 },
-    { name: "variationImages", maxCount: 20 },
-  ]),
+  roleMiddleware(['vendor', 'admin']), // Sử dụng middleware role
   productController.createProduct
 );
 

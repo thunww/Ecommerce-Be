@@ -1,5 +1,5 @@
 const productService = require("../services/productService");
-
+const { Shop } = require("../models");
 const getAllProducts = async (req, res) => {
   try {
     const products = await productService.getAllProducts();
@@ -18,7 +18,80 @@ const getAllProducts = async (req, res) => {
     });
   }
 };
+// ham tao san pham
+const createProduct = async (req, res) => {
+  try {
+    // Lấy thông tin người dùng từ token
+    const userId = req.user.user_id;
+    
+    // Lấy thông tin từ request body với đúng tên trường từ frontend
+    const { 
+      productName,
+      category,
+      description,
+      price,
+      stock,
+      images,
+      variations,
+      weight,
+      parcelSize,
+      shippingOptions,
+      preOrder,
+      condition,
+      parentSKU,
+      promotionImage
+    } = req.body;
 
+    // Lấy shop_id từ user đã xác thực
+    const shop = await Shop.findOne({ where: { owner_id: userId } });
+    if (!shop) {
+      return res.status(400).json({
+        success: false,
+        message: "Không tìm thấy thông tin shop"
+      });
+    }
+
+    // Kiểm tra các trường bắt buộc
+    if (!productName || !category || !price || !stock) {
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu thông tin bắt buộc"
+      });
+    }
+
+    // Gọi service để tạo sản phẩm
+    const result = await productService.createProduct({
+      productName,
+      description,
+      price,
+      stock,
+      category_id: category, // Đổi tên trường để phù hợp với model
+      shop_id: shop.shop_id,
+      images,
+      variations,
+      weight,
+      dimensions: JSON.stringify(parcelSize) || null, // Đổi tên trường
+      status: "active", // Trạng thái khi nhấn Save and Public
+      promotionImage,
+      preOrder,
+      condition,
+      parentSKU
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Tạo sản phẩm thành công",
+      data: result
+    });
+  } catch (error) {
+    console.error("Error creating product:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
 const deleteProductImage = async (req, res) => {
   try {
     const { image_id } = req.params;
@@ -179,4 +252,5 @@ module.exports = {
   handleDeleteProduct,
   getProductsByCategoryId,
   deleteProductImage,
+  createProduct // Thêm hàm mới
 };
