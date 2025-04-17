@@ -21,7 +21,7 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const addressRoutes = require("./routes/addressRoutes");
 const shopRoutes = require("./routes/shopRoutes");
 const couponRoutes = require("./routes/couponRoutes");
-const chatRoutes = require('./routes/chatRoutes');
+const chatRoutes = require("./routes/chatRoutes");
 // Middleware
 app.use(helmet());
 app.use(compression());
@@ -52,7 +52,7 @@ app.use("/api/addresses", addressRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/coupons", couponRoutes);
 
-app.use('/api/chat', chatRoutes);
+app.use("/api/chat", chatRoutes);
 
 app.use("/api/v1/shops", shopRoutes);
 app.use("/api/v1/vendor", vendorRoutes);

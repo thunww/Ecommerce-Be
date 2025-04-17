@@ -13,21 +13,15 @@ const { Sequelize } = require("sequelize");
 // Tạm tạo đối tượng ProductImage giả để ngăn lỗi từ code đang tham chiếu đến nó
 const ProductImage = {
   create: (data) => {
-    console.log(
-      "ProductImage.create được gọi nhưng model không tồn tại:",
-      data
-    );
+    // console.log("ProductImage.create được gọi nhưng model không tồn tại:", data);
     return null;
   },
   findByPk: (id) => {
-    console.log(
-      "ProductImage.findByPk được gọi nhưng model không tồn tại:",
-      id
-    );
+    // console.log("ProductImage.findByPk được gọi nhưng model không tồn tại:", id);
     return null;
   },
   destroy: () => {
-    console.log("ProductImage.destroy được gọi nhưng model không tồn tại");
+    // console.log("ProductImage.destroy được gọi nhưng model không tồn tại");
     return null;
   },
 };
@@ -42,10 +36,7 @@ class ProductService {
       try {
         transaction = await sequelize.transaction();
       } catch (err) {
-        console.log(
-          "Không thể tạo transaction, tiếp tục không có transaction:",
-          err.message
-        );
+        // console.log("Không thể tạo transaction, tiếp tục không có transaction:", err.message);
         transaction = null;
       }
 
@@ -66,21 +57,18 @@ class ProductService {
         status = "active",
       } = productData;
 
-      console.log(
-        "Dữ liệu sản phẩm nhận được:",
-        JSON.stringify(productData, null, 2)
-      );
+      // console.log("Dữ liệu sản phẩm nhận được:", JSON.stringify(productData, null, 2));
 
       // Sử dụng ID người dùng mặc định cho môi trường phát triển nếu không có
       const effectiveUserId = userId || 1; // Dùng ID 1 nếu không có userId (chỉ dùng trong môi trường DEV)
-      console.log("Xử lý tạo sản phẩm cho userId:", effectiveUserId);
+      // console.log("Xử lý tạo sản phẩm cho userId:", effectiveUserId);
 
       // Xác minh danh mục
       let category_id = null; // Mặc định null để tránh gán giá trị không hợp lệ
       try {
         // Nếu category là một chuỗi (tên danh mục) thay vì ID
         if (typeof category === "string" && isNaN(parseInt(category))) {
-          console.log(`Đang tìm danh mục theo tên: "${category}"`);
+          // console.log(`Đang tìm danh mục theo tên: "${category}"`);
           // Tìm kiếm category theo tên chính xác (không dùng LIKE mà dùng so khớp chính xác)
           const categoryByName = await Category.findOne({
             where: {
@@ -90,13 +78,9 @@ class ProductService {
 
           if (categoryByName) {
             category_id = categoryByName.category_id;
-            console.log(
-              `Đã tìm thấy danh mục: ${categoryByName.category_name} với ID: ${category_id}`
-            );
+            // console.log(`Đã tìm thấy danh mục: ${categoryByName.category_name} với ID: ${category_id}`);
           } else {
-            console.log(
-              `Không tìm thấy danh mục chính xác với tên "${category}", thử tìm tương đối`
-            );
+            // console.log(`Không tìm thấy danh mục chính xác với tên "${category}", thử tìm tương đối`);
             // Tìm kiếm tương đối nếu không tìm thấy chính xác
             const categoryByLikeName = await Category.findOne({
               where: {
@@ -108,70 +92,53 @@ class ProductService {
 
             if (categoryByLikeName) {
               category_id = categoryByLikeName.category_id;
-              console.log(
-                `Đã tìm thấy danh mục tương đối: ${categoryByLikeName.category_name} với ID: ${category_id}`
-              );
+              // console.log(`Đã tìm thấy danh mục tương đối: ${categoryByLikeName.category_name} với ID: ${category_id}`);
             } else {
               // Lấy danh sách tất cả danh mục để debug
-              console.log(
-                `Không tìm thấy danh mục với tên tương đối "${category}", hiển thị tất cả danh mục`
-              );
+              // console.log(`Không tìm thấy danh mục với tên tương đối "${category}", hiển thị tất cả danh mục`);
               const allCategories = await Category.findAll({
                 attributes: ["category_id", "category_name"],
               });
-              console.log(
-                "Danh sách tất cả danh mục:",
-                allCategories.map((c) => `${c.category_id}: ${c.category_name}`)
-              );
+              // console.log(`Danh sách tất cả danh mục:`, allCategories.map((c) => `${c.category_id}: ${c.category_name}`));
 
               // Gán một category_id mặc định (3 = Computers) nếu không tìm thấy
               category_id = 3; // Gán ID mặc định cho danh mục Computers
-              console.log(`Sử dụng ID danh mục mặc định: ${category_id}`);
+              // console.log(`Sử dụng ID danh mục mặc định: ${category_id}`);
             }
           }
         } else {
           // Tìm kiếm theo ID như trước
           const categoryId = parseInt(category) || 0;
-          console.log(`Tìm danh mục theo ID: ${categoryId}`);
+          // console.log(`Tìm danh mục theo ID: ${categoryId}`);
 
           if (categoryId > 0) {
             const categoryObj = await Category.findByPk(categoryId);
             if (categoryObj) {
               category_id = categoryObj.category_id;
-              console.log(
-                `Đã tìm thấy danh mục theo ID: ${category_id} (${categoryObj.category_name})`
-              );
+              // console.log(`Đã tìm thấy danh mục theo ID: ${category_id} (${categoryObj.category_name})`);
             } else {
-              console.log(
-                `Danh mục với ID ${categoryId} không tồn tại, sử dụng ID mặc định 3 (Computers)`
-              );
+              // console.log(`Danh mục với ID ${categoryId} không tồn tại, sử dụng ID mặc định 3 (Computers)`);
               category_id = 3; // Gán ID mặc định cho danh mục
             }
           } else {
-            console.log(
-              `ID danh mục không hợp lệ: ${category}, sử dụng ID mặc định 3 (Computers)`
-            );
+            // console.log(`ID danh mục không hợp lệ: ${category}, sử dụng ID mặc định 3 (Computers)`);
             category_id = 3; // Gán ID mặc định cho danh mục
           }
         }
       } catch (error) {
-        console.log("Lỗi khi kiểm tra danh mục:", error.message);
+        // console.log("Lỗi khi kiểm tra danh mục:", error.message);
         // Sử dụng danh mục mặc định trong trường hợp lỗi
         category_id = 3; // Gán ID mặc định cho danh mục Computers
-        console.log(
-          `Đã xảy ra lỗi, sử dụng ID danh mục mặc định: ${category_id}`
-        );
+        // console.log(`Đã xảy ra lỗi, sử dụng ID danh mục mặc định: ${category_id}`);
       }
 
       // Đảm bảo category_id luôn là một số nguyên hợp lệ
       if (!category_id || isNaN(category_id)) {
         category_id = 3; // Gán ID mặc định cho danh mục Computers
-        console.log(
-          `category_id không hợp lệ, sử dụng giá trị mặc định: ${category_id}`
-        );
+        // console.log(`category_id không hợp lệ, sử dụng giá trị mặc định: ${category_id}`);
       }
 
-      console.log(`FINAL: Sử dụng category_id = ${category_id} cho sản phẩm`);
+      // console.log(`FINAL: Sử dụng category_id = ${category_id} cho sản phẩm`);
 
       // Xác minh shop - Tìm shop dựa vào userId nếu không có shopId
       let shop = null;
@@ -201,9 +168,7 @@ class ProductService {
         shop = await Shop.findOne();
         if (shop) {
           shop_id = shop.shop_id;
-          console.log(
-            `Sử dụng shop_id = ${shop_id} mặc định vì không tìm thấy shop cho user`
-          );
+          // console.log(`Sử dụng shop_id = ${shop_id} mặc định vì không tìm thấy shop cho user`);
         } else {
           throw new Error(
             `Không tìm thấy shop nào trong hệ thống. Vui lòng tạo shop trước khi thêm sản phẩm.`
@@ -217,12 +182,12 @@ class ProductService {
         try {
           parsedParcelSize = JSON.parse(parcelSize);
         } catch (e) {
-          console.log("Lỗi parse parcelSize:", e.message);
+          // console.log("Lỗi parse parcelSize:", e.message);
           parsedParcelSize = null;
         }
       }
 
-      console.log("parsedParcelSize nhận được:", parsedParcelSize);
+      // console.log("parsedParcelSize nhận được:", parsedParcelSize);
 
       // Xử lý ảnh chính - sẽ chỉ lưu vào biến thể sản phẩm, không lưu vào bảng products
       let primaryImageUrl = null;
@@ -235,10 +200,10 @@ class ProductService {
           primaryImageUrl = productData.images[0];
         }
       } catch (error) {
-        console.error("Lỗi khi xử lý ảnh chính:", error);
+        // console.error("Lỗi khi xử lý ảnh chính:", error);
       }
 
-      console.log("Tạo sản phẩm với shop_id:", shop_id);
+      // console.log("Tạo sản phẩm với shop_id:", shop_id);
 
       // Chuẩn bị dữ liệu theo cấu trúc bảng thực tế
       const weight_safe = parseFloat(weight) || 0.3;
@@ -256,7 +221,7 @@ class ProductService {
         dimensions_safe = "20 x 10 x 5 cm";
       }
 
-      console.log("Dimensions được lưu:", dimensions_safe);
+      // console.log("Dimensions được lưu:", dimensions_safe);
 
       // Lưu ý: Trường `discount` trong DB có định dạng DECIMAL(5,2), tối đa là 999.99
       // Nếu muốn lưu giá tiền, cần chuyển đổi sang cơ chế khác hoặc sử dụng giá trị mặc định
@@ -284,19 +249,17 @@ class ProductService {
       );
 
       // Kiểm tra xem sản phẩm đã được lưu với dimensions và category_id chưa
-      console.log("Sản phẩm được tạo:", {
-        id: newProduct.product_id,
-        name: newProduct.product_name,
-        dimensions: newProduct.dimensions,
-        category_id: newProduct.category_id,
-      });
+      // console.log("Sản phẩm được tạo:", {
+      //   id: newProduct.product_id,
+      //   name: newProduct.product_name,
+      //   dimensions: newProduct.dimensions,
+      //   category_id: newProduct.category_id,
+      // });
 
       // SQL để tạo sản phẩm mới nếu model Product không hoạt động
       // Đây là giải pháp dự phòng
       if (!newProduct || !newProduct.product_id) {
-        console.log(
-          "Không thể tạo sản phẩm bằng model Product, chuyển sang SQL"
-        );
+        // console.log("Không thể tạo sản phẩm bằng model Product, chuyển sang SQL");
         const productName_safe = productName
           ? productName.replace(/'/g, "''")
           : "Sản phẩm mới";
@@ -321,13 +284,13 @@ class ProductService {
           )
         `;
 
-        console.log("SQL INSERT Products:", insertProductSQL);
+        // console.log("SQL INSERT Products:", insertProductSQL);
         const queryOptions = transaction ? { transaction } : {};
         const [productResult] = await sequelize.query(
           insertProductSQL,
           queryOptions
         );
-        console.log("Kết quả tạo sản phẩm SQL:", productResult);
+        // console.log("Kết quả tạo sản phẩm SQL:", productResult);
         newProduct = { product_id: productResult, product_name: productName };
       }
 
@@ -335,9 +298,7 @@ class ProductService {
       try {
         if (variations && variations.length > 0) {
           // THÊM VÀO: Xóa tất cả biến thể cũ của sản phẩm trước khi tạo mới
-          console.log(
-            `Xóa tất cả biến thể cũ của sản phẩm ${newProduct.product_id} trước khi tạo mới`
-          );
+          // console.log(`Xóa tất cả biến thể cũ của sản phẩm ${newProduct.product_id} trước khi tạo mới`);
           const deleteExistingVariantsSQL = `
             DELETE FROM product_variants 
             WHERE product_id = ${newProduct.product_id}
@@ -345,7 +306,7 @@ class ProductService {
 
           const queryOptionsDelete = transaction ? { transaction } : {};
           await sequelize.query(deleteExistingVariantsSQL, queryOptionsDelete);
-          console.log("Đã xóa biến thể cũ");
+          // console.log("Đã xóa biến thể cũ");
 
           // Lọc variations hợp lệ trước khi thêm vào database
           const validVariations = variations.filter((variant) => {
@@ -359,9 +320,7 @@ class ProductService {
             return hasValidPrice && hasValidStock;
           });
 
-          console.log(
-            `Số lượng variations hợp lệ: ${validVariations.length}/${variations.length}`
-          );
+          // console.log(`Số lượng variations hợp lệ: ${validVariations.length}/${variations.length}`);
 
           // Dùng validVariations thay vì variations
           for (const variant of validVariations) {
@@ -440,9 +399,7 @@ class ProductService {
         } else {
           // Nếu không có biến thể, tạo một biến thể mặc định
           // THÊM VÀO: Xóa biến thể cũ trước khi tạo biến thể mặc định
-          console.log(
-            `Xóa tất cả biến thể cũ của sản phẩm ${newProduct.product_id} trước khi tạo mặc định`
-          );
+          // console.log(`Xóa tất cả biến thể cũ của sản phẩm ${newProduct.product_id} trước khi tạo mặc định`);
           const deleteExistingVariantsSQL = `
             DELETE FROM product_variants 
             WHERE product_id = ${newProduct.product_id}
@@ -450,7 +407,7 @@ class ProductService {
 
           const queryOptionsDelete = transaction ? { transaction } : {};
           await sequelize.query(deleteExistingVariantsSQL, queryOptionsDelete);
-          console.log("Đã xóa biến thể cũ");
+          // console.log("Đã xóa biến thể cũ");
 
           const defaultImageUrl_safe = primaryImageUrl
             ? primaryImageUrl.replace(/'/g, "''")
@@ -472,7 +429,7 @@ class ProductService {
           await sequelize.query(insertDefaultVariantSQL, queryOptions);
         }
       } catch (error) {
-        console.error("Lỗi khi xử lý biến thể sản phẩm:", error);
+        // console.error("Lỗi khi xử lý biến thể sản phẩm:", error);
         throw error;
       }
 
@@ -491,7 +448,7 @@ class ProductService {
     } catch (error) {
       // Rollback nếu có lỗi và transaction tồn tại
       if (transaction) await transaction.rollback();
-      console.error("Error creating product:", error);
+      // console.error("Error creating product:", error);
       throw error; // Ném lỗi để controller bắt và xử lý
     }
   }
@@ -505,7 +462,7 @@ class ProductService {
         data: null,
       };
     } catch (error) {
-      console.error("Error in deleteProductImage service:", error);
+      // console.error("Error in deleteProductImage service:", error);
       return {
         success: false,
         message: "Đã xảy ra lỗi khi xóa hình ảnh sản phẩm",
@@ -597,7 +554,7 @@ class ProductService {
         data: result,
       };
     } catch (error) {
-      console.error("Lỗi khi lấy tất cả sản phẩm:", error);
+      // console.error("Lỗi khi lấy tất cả sản phẩm:", error);
       return {
         success: false,
         message: "Đã xảy ra lỗi khi lấy thông tin sản phẩm",
@@ -680,7 +637,7 @@ class ProductService {
         data: result,
       };
     } catch (error) {
-      console.error("Lỗi khi lấy sản phẩm:", error);
+      // console.error("Lỗi khi lấy sản phẩm:", error);
       return {
         success: false,
         message: "Đã xảy ra lỗi khi lấy thông tin sản phẩm",
@@ -768,7 +725,7 @@ class ProductService {
         data: detailedProducts,
       };
     } catch (error) {
-      console.error("Lỗi khi lấy sản phẩm theo danh mục:", error);
+      // console.error("Lỗi khi lấy sản phẩm theo danh mục:", error);
       return {
         success: false,
         message: "Đã xảy ra lỗi khi lấy thông tin sản phẩm theo danh mục",
@@ -839,7 +796,7 @@ class ProductService {
         ],
       });
     } catch (error) {
-      console.error("Lỗi khi tìm kiếm sản phẩm:", error);
+      // console.error("Lỗi khi tìm kiếm sản phẩm:", error);
       return [];
     }
   }
@@ -875,7 +832,7 @@ class ProductService {
         ],
       });
     } catch (error) {
-      console.error("Lỗi khi lấy sản phẩm nổi bật:", error);
+      // console.error("Lỗi khi lấy sản phẩm nổi bật:", error);
       return [];
     }
   }
@@ -911,7 +868,7 @@ class ProductService {
         ],
       });
     } catch (error) {
-      console.error("Lỗi khi lấy sản phẩm mới:", error);
+      // console.error("Lỗi khi lấy sản phẩm mới:", error);
       return [];
     }
   }
@@ -950,7 +907,7 @@ class ProductService {
         ],
       });
     } catch (error) {
-      console.error("Lỗi khi lấy sản phẩm giảm giá:", error);
+      // console.error("Lỗi khi lấy sản phẩm giảm giá:", error);
       return [];
     }
   }
@@ -1027,7 +984,7 @@ class ProductService {
         ],
       });
     } catch (error) {
-      console.error("Lỗi khi tìm kiếm sản phẩm nâng cao:", error);
+      // console.error("Lỗi khi tìm kiếm sản phẩm nâng cao:", error);
       return [];
     }
   }
@@ -1061,7 +1018,7 @@ class ProductService {
 
       return { success: true, message: "Product deleted successfully" };
     } catch (error) {
-      console.error("Error in deleteProduct:", error);
+      // console.error("Error in deleteProduct:", error);
       throw error;
     }
   }

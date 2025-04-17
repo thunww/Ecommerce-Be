@@ -10,7 +10,6 @@ const getAllProducts = async (req, res) => {
       data: products,
     });
   } catch (error) {
-    console.error("Error fetching products:", error);
     return res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -23,9 +22,9 @@ const createProduct = async (req, res) => {
   try {
     // Lấy thông tin người dùng từ token
     const userId = req.user.user_id;
-    
+
     // Lấy thông tin từ request body với đúng tên trường từ frontend
-    const { 
+    const {
       productName,
       category,
       description,
@@ -39,7 +38,7 @@ const createProduct = async (req, res) => {
       preOrder,
       condition,
       parentSKU,
-      promotionImage
+      promotionImage,
     } = req.body;
 
     // Lấy shop_id từ user đã xác thực
@@ -47,7 +46,7 @@ const createProduct = async (req, res) => {
     if (!shop) {
       return res.status(400).json({
         success: false,
-        message: "Không tìm thấy thông tin shop"
+        message: "Không tìm thấy thông tin shop",
       });
     }
 
@@ -55,7 +54,7 @@ const createProduct = async (req, res) => {
     if (!productName || !category || !price || !stock) {
       return res.status(400).json({
         success: false,
-        message: "Thiếu thông tin bắt buộc"
+        message: "Thiếu thông tin bắt buộc",
       });
     }
 
@@ -75,16 +74,15 @@ const createProduct = async (req, res) => {
       promotionImage,
       preOrder,
       condition,
-      parentSKU
+      parentSKU,
     });
 
     return res.status(201).json({
       success: true,
       message: "Tạo sản phẩm thành công",
-      data: result
+      data: result,
     });
   } catch (error) {
-    console.error("Error creating product:", error);
     return res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -105,7 +103,7 @@ const deleteProductImage = async (req, res) => {
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Error deleting product image:", error);
+    // console.error("Error deleting product image:", error);
     return res.status(500).json({
       success: false,
       message: "Đã xảy ra lỗi khi xóa hình ảnh sản phẩm",
@@ -252,5 +250,5 @@ module.exports = {
   handleDeleteProduct,
   getProductsByCategoryId,
   deleteProductImage,
-  createProduct // Thêm hàm mới
+  createProduct, // Thêm hàm mới
 };
