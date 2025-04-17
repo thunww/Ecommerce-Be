@@ -368,18 +368,4 @@ module.exports = (db) => {
     as: "variant",
   });
 
-  // User - Shipper relationship
-  User.hasOne(Shipper, { foreignKey: 'user_id' });
-  Shipper.belongsTo(User, { foreignKey: 'user_id' });
-
-  // Shipper - Order relationship
-  Shipper.hasMany(Order, { foreignKey: 'shipper_id' });
-  Order.belongsTo(Shipper, { foreignKey: 'shipper_id' });
-
-  return {
-    User,
-    Shipper,
-    Order,
-    Shipment
-  };
 };

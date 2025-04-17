@@ -63,6 +63,8 @@ exports.registerShipper = async (req, res) => {
 // Lấy thông tin shipper
 exports.getShipperProfile = async (req, res) => {
   try {
+    console.log('User from request:', req.user);
+    
     if (!req.user || !req.user.user_id) {
       return res.status(401).json({
         success: false,
@@ -71,14 +73,14 @@ exports.getShipperProfile = async (req, res) => {
     }
 
     const userId = req.user.user_id;
+    console.log('Getting profile for userId:', userId);
 
+    // Lấy thông tin shipper
     const shipper = await Shipper.findOne({
-      where: { user_id: userId },
-      include: [{
-        model: User,
-        attributes: []
-      }]
+      where: { user_id: userId }
     });
+
+    console.log('Found shipper:', shipper ? shipper.toJSON() : null);
 
     if (!shipper) {
       return res.status(404).json({
@@ -87,12 +89,36 @@ exports.getShipperProfile = async (req, res) => {
       });
     }
 
+    // Lấy thông tin user
+    const user = await User.findByPk(userId, {
+      attributes: ['user_id', 'first_name', 'last_name', 'email']
+    });
+
+    console.log('Found user:', user ? user.toJSON() : null);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy thông tin user'
+      });
+    }
+
+    // Kết hợp thông tin
+    const shipperData = shipper.toJSON();
+    shipperData.user = user.toJSON();
+
+    console.log('Final response data:', shipperData);
+
     res.json({
       success: true,
-      data: shipper
+      data: shipperData
     });
   } catch (error) {
-    console.error('Error in getShipperProfile:', error);
+    console.error('Detailed error in getShipperProfile:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     return res.status(500).json({
       success: false,
       message: 'Lấy thông tin shipper thất bại',
