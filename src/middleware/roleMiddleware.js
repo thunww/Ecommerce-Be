@@ -1,15 +1,18 @@
-const roleMiddleware = (allowedRoles) => {
+const roleMiddleware = (roles) => {
   return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized - No user found" });
+    if (!req.user || !req.user.roles) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. No roles found.'
+      });
     }
 
-    // Kiểm tra nếu ít nhất một role của user thuộc allowedRoles
-    const userRoles = req.user.roles || []; // Mặc định là mảng rỗng nếu không có roles
-    const hasPermission = userRoles.some(role => allowedRoles.includes(role));
-
-    if (!hasPermission) {
-      return res.status(403).json({ message: "Forbidden - You do not have permission" });
+    const hasRole = roles.some(role => req.user.roles.includes(role));
+    if (!hasRole) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. You do not have the required role.'
+      });
     }
 
     next();

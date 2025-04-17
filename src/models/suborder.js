@@ -44,4 +44,12 @@ SubOrder.init(
   }
 );
 
+// Thêm associations
+SubOrder.associate = (models) => {
+  SubOrder.hasOne(models.Shipment, {
+    foreignKey: 'sub_order_id',
+    as: 'shipment'
+  });
+};
+
 module.exports = SubOrder;
