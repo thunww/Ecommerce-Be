@@ -10,9 +10,9 @@ const { generateToken } = require("../config/jwt");
 
 const handleregisterUser = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, address } = req.body;
 
-    const result = await registerUser(username, email, password);
+    const result = await registerUser(username, email, password, address);
 
     return res.status(201).json({
       message:

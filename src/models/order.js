@@ -32,6 +32,11 @@ Order.init(
       type: DataTypes.DECIMAL(15, 2),
       allowNull: false,
     },
+    shipping_fee: {
+      type: DataTypes.DECIMAL(15, 2),
+      allowNull: false,
+      defaultValue: 0,
+    },
     payment_method: {
       type: DataTypes.ENUM("cod", "momo", "vnpay", "bank_transfer"),
       allowNull: false,
@@ -64,10 +69,6 @@ Order.init(
     },
     updated_at: {
       type: DataTypes.DATE,
-    },
-    shipping_fee: {
-      type: DataTypes.DECIMAL(10, 2),
-      defaultValue: 0.0,
     },
     note: {
       type: DataTypes.STRING(255),

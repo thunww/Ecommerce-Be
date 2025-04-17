@@ -14,7 +14,7 @@ Shipment.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "SubOrders",
+        model: "Sub_Orders",
         key: "sub_order_id",
       },
       onUpdate: "CASCADE",
@@ -56,5 +56,13 @@ Shipment.init(
     underscored: true,
   }
 );
+
+// Thêm associations
+Shipment.associate = (models) => {
+  Shipment.belongsTo(models.SubOrder, {
+    foreignKey: 'sub_order_id',
+    as: 'subOrder'
+  });
+};
 
 module.exports = Shipment;
