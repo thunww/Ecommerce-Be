@@ -32,8 +32,6 @@ app.use(express.urlencoded({ extended: true })); // Cho form-data
 
 // Log middleware để debug
 app.use((req, res, next) => {
-  console.log("Request Body:", req.body);
-  console.log("Request Headers:", req.headers);
   next();
 });
 // Routes

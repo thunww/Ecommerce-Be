@@ -1,7 +1,7 @@
 //Quản lí đơn hàng, thanh toán, vận chuyển
 
-const orderService = require('../services/orderService');
-const { validationResult } = require('express-validator');
+const orderService = require("../services/orderService");
+const { validationResult } = require("express-validator");
 
 class OrderController {
     async createOrder(req, res) {
@@ -65,35 +65,36 @@ class OrderController {
             if (order.user_id !== user_id) {
                 return res.status(403).json({
                     success: false,
-                    message: 'Bạn không có quyền xem đơn hàng này'
+                    message: "Bạn không có quyền xem đơn hàng này",
                 });
             }
 
             res.status(200).json({
                 success: true,
-                data: order
+                data: order,
             });
         } catch (error) {
             res.status(400).json({
                 success: false,
-                message: error.message
+                message: error.message,
             });
         }
     }
-
     async getUserOrders(req, res) {
         try {
             const user_id = req.user.user_id;
+
             const orders = await orderService.getUserOrders(user_id);
 
             res.status(200).json({
                 success: true,
-                data: orders
+                message: "Lấy danh sách đơn hàng thành công",
+                data: orders,
             });
         } catch (error) {
             res.status(400).json({
                 success: false,
-                message: error.message
+                message: error.message || "Lỗi khi lấy danh sách đơn hàng",
             });
         }
     }

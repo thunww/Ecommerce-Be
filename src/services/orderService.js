@@ -134,34 +134,38 @@ class OrderService {
     try {
       const order = await Order.findOne({
         where: { order_id },
-        include: [{
-          model: SubOrder,
-          as: 'subOrders',
-          include: [{
-            model: OrderItem,
-            as: 'orderItems',
+        include: [
+          {
+            model: SubOrder,
+            as: "subOrders",
             include: [
               {
-                model: Product,
-                as: 'product',
+                model: OrderItem,
+                as: "orderItems",
                 include: [
                   {
-                    model: Shop,
-                    as: 'Shop'
-                  }
-                ]
+                    model: Product,
+                    as: "product",
+                    include: [
+                      {
+                        model: Shop,
+                        as: "Shop",
+                      },
+                    ],
+                  },
+                  {
+                    model: ProductVariant,
+                    as: "productVariant",
+                  },
+                ],
               },
               {
-                model: ProductVariant,
-                as: 'productVariant'
-              }
-            ]
+                model: Shop,
+                as: "shop",
+              },
+            ],
           },
-          {
-            model: Shop,
-            as: 'shop'
-          }]
-        }]
+        ],
       });
 
       if (!order) {
@@ -178,39 +182,44 @@ class OrderService {
     try {
       const orders = await Order.findAll({
         where: { user_id },
-        include: [{
-          model: SubOrder,
-          as: 'subOrders',
-          include: [{
-            model: OrderItem,
-            as: 'orderItems',
+        include: [
+          {
+            model: SubOrder,
+            as: "subOrders",
             include: [
               {
-                model: Product,
-                as: 'product',
+                model: OrderItem,
+                as: "orderItems",
                 include: [
                   {
-                    model: Shop,
-                    as: 'Shop'
-                  }
-                ]
+                    model: Product,
+                    as: "product",
+                    include: [
+                      {
+                        model: Shop,
+                        as: "Shop",
+                      },
+                    ],
+                  },
+                  {
+                    model: ProductVariant,
+                    as: "productVariant",
+                  },
+                ],
               },
               {
-                model: ProductVariant,
-                as: 'productVariant'
-              }
-            ]
+                model: Shop,
+                as: "shop",
+              },
+            ],
           },
-          {
-            model: Shop,
-            as: 'shop'
-          }]
-        }],
-        order: [['created_at', 'DESC']]
+        ],
+        order: [["created_at", "DESC"]],
       });
 
       return orders;
     } catch (error) {
+      console.error("Error fetching user orders:", error);
       throw error;
     }
   }

@@ -1,10 +1,8 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const orderController = require('../controllers/orderController');
-const authMiddleware = require('../middleware/authMiddleware');
-const { body } = require('express-validator');
-
-// Middleware validation
+const orderController = require("../controllers/orderController");
+const authMiddleware = require("../middleware/authMiddleware");
+const { body } = require("express-validator");
 const validateOrder = [
     body('shipping_address')
         .notEmpty()
@@ -53,18 +51,10 @@ const validateOrder = [
 // Sử dụng middleware xác thực cho tất cả các routes
 router.use(authMiddleware);
 
-// Routes
-router.post('/create',
-    validateOrder,
-    orderController.createOrder
-);
+router.get("/user", orderController.getUserOrders);
 
-router.get('/:order_id',
-    orderController.getOrderDetails
-);
+router.post("/create", validateOrder, orderController.createOrder);
 
-router.get('/user/orders',
-    orderController.getUserOrders
-);
+router.get("/:order_id", orderController.getOrderDetails);
 
-module.exports = router; 
+module.exports = router;
