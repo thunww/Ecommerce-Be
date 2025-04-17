@@ -601,6 +601,8 @@ exports.completeOrder = async (req, res) => {
 exports.getIncomeStats = async (req, res) => {
   try {
     const userId = req.user.user_id;
+    const { startDate, endDate } = req.query;
+    
     const shipper = await Shipper.findOne({ where: { user_id: userId } });
 
     if (!shipper) {
@@ -610,9 +612,18 @@ exports.getIncomeStats = async (req, res) => {
       });
     }
 
+    // Convert dates to UTC
+    const startDateTime = new Date(startDate);
+    startDateTime.setHours(0, 0, 0, 0);
+    const endDateTime = new Date(endDate);
+    endDateTime.setHours(23, 59, 59, 999);
+
     const completedSubOrders = await SubOrder.findAll({
       where: {
-        status: 'delivered'
+        status: 'delivered',
+        updated_at: {
+          [Op.between]: [startDateTime, endDateTime]
+        }
       },
       include: [{
         model: Shipment,
@@ -624,22 +635,37 @@ exports.getIncomeStats = async (req, res) => {
       }]
     });
 
-    const totalIncome = completedSubOrders.reduce((sum, subOrder) => {
-      return sum + (subOrder.shipping_fee || 0);
+    // Calculate statistics
+    const totalIncome = completedSubOrders.reduce((sum, order) => {
+      return sum + parseFloat(order.shipping_fee || 0);
     }, 0);
 
     const totalOrders = completedSubOrders.length;
     const averageIncome = totalOrders > 0 ? totalIncome / totalOrders : 0;
 
+    // Format orders for detailed view
+    const formattedOrders = completedSubOrders.map(order => ({
+      id: order.sub_order_id,
+      deliveryTime: order.updated_at,
+      customerName: order.customer_name || 'Không có tên',
+      address: order.delivery_address || 'Không có địa chỉ',
+      paymentMethod: order.payment_method || 'COD',
+      amount: parseFloat(order.shipping_fee || 0)
+    }));
+
     res.json({
       success: true,
       data: {
-        totalIncome,
-        totalOrders,
-        averageIncome
+        statistics: {
+          totalIncome: Math.round(totalIncome * 1000), // Convert to VND
+          totalOrders,
+          averagePerOrder: totalOrders > 0 ? Math.round((totalIncome * 1000) / totalOrders) : 0
+        },
+        orders: formattedOrders
       }
     });
   } catch (error) {
+    console.error('Error in getIncomeStats:', error);
     handleError(res, error, 'Lấy thống kê thu nhập thất bại');
   }
 };
@@ -730,11 +756,7 @@ exports.filterIncomeByDate = async (req, res) => {
     const userId = req.user.user_id;
     const { startDate, endDate } = req.query;
 
-    console.log('Filter income by date:', { startDate, endDate });
-
     const shipper = await Shipper.findOne({ where: { user_id: userId } });
-    console.log('Found shipper:', shipper ? shipper.toJSON() : null);
-
     if (!shipper) {
       return res.status(404).json({
         success: false,
@@ -742,89 +764,67 @@ exports.filterIncomeByDate = async (req, res) => {
       });
     }
 
-    const whereClause = {
-      status: 'delivered'
-    };
+    // Convert dates to UTC
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
 
-    if (startDate && endDate) {
-      // Tạo ngày bắt đầu từ 00:00:00
-      const start = new Date(startDate);
-      start.setHours(0, 0, 0, 0);
-      
-      // Tạo ngày kết thúc là 23:59:59
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-
-      whereClause.updated_at = {
-        [Op.between]: [start, end]
-      };
-    }
-
-    console.log('Where clause with fixed dates:', whereClause);
-
-    // Kiểm tra đơn hàng cụ thể ID 15
-    const specificOrder = await SubOrder.findOne({
-      where: { sub_order_id: 15 },
+    const completedOrders = await SubOrder.findAll({
+      attributes: ['sub_order_id', 'shipping_fee', 'updated_at'],
+      where: {
+        status: 'delivered',
+        updated_at: {
+          [Op.between]: [start, end]
+        }
+      },
       include: [{
         model: Shipment,
         as: 'shipment',
+        attributes: [],
         where: {
           shipper_id: shipper.shipper_id
         },
         required: true
-      }]
-    });
-
-    console.log('Specific order #15:', specificOrder ? specificOrder.toJSON() : null);
-
-    const subOrders = await SubOrder.findAll({
-      where: whereClause,
-      include: [{
-        model: Shipment,
-        as: 'shipment',
-        where: {
-          shipper_id: shipper.shipper_id
-        },
-        required: true,
-        attributes: ['actual_delivery_date']
+      }, {
+        model: Order,
+        attributes: ['payment_method'],
+        include: [{
+          model: User,
+          attributes: ['first_name', 'last_name']
+        }, {
+          model: Address,
+          as: 'shipping_address',
+          attributes: ['address_line', 'city', 'province']
+        }]
       }],
       order: [['updated_at', 'DESC']]
     });
 
-    console.log('Found orders:', subOrders.length);
-    console.log('Orders details:', subOrders.map(order => ({
+    // Format orders for detailed view
+    const formattedOrders = completedOrders.map(order => ({
       id: order.sub_order_id,
-      status: order.status,
-      shipping_fee: order.shipping_fee,
-      updated_at: order.updated_at
-    })));
-
-    const incomeDetails = subOrders.map(subOrder => ({
-      sub_order_id: subOrder.sub_order_id,
-      total_amount: subOrder.total_price || 0,
-      shipping_fee: subOrder.shipping_fee || 0,
-      delivery_date: subOrder.shipment ? subOrder.shipment.actual_delivery_date : null,
-      completed_date: subOrder.updated_at
+      deliveryTime: order.updated_at,
+      customerName: order.Order?.User ? `${order.Order.User.first_name} ${order.Order.User.last_name}` : 'Không có tên',
+      address: order.Order?.shipping_address ? `${order.Order.shipping_address.address_line}, ${order.Order.shipping_address.city}, ${order.Order.shipping_address.province}` : 'Không có địa chỉ',
+      paymentMethod: order.Order?.payment_method || 'COD',
+      amount: parseFloat(order.shipping_fee || 0) * 1000 // Convert to VND
     }));
 
-    const totalIncome = incomeDetails.reduce((sum, detail) => sum + detail.shipping_fee, 0);
-    const totalOrders = incomeDetails.length;
-    const averageIncome = totalOrders > 0 ? totalIncome / totalOrders : 0;
-
-    console.log('Final calculations:', {
-      totalIncome,
-      totalOrders,
-      averageIncome,
-      orderCount: incomeDetails.length
-    });
+    // Calculate statistics
+    const totalIncome = formattedOrders.reduce((sum, order) => sum + order.amount, 0);
+    const totalOrders = formattedOrders.length;
+    const averagePerOrder = totalOrders > 0 ? Math.round(totalIncome / totalOrders) : 0;
 
     res.json({
       success: true,
       data: {
-        totalIncome,
-        totalOrders,
-        averageIncome,
-        incomeDetails
+        statistics: {
+          totalIncome,
+          totalOrders,
+          averagePerOrder
+        },
+        orders: formattedOrders
       }
     });
   } catch (error) {
