@@ -240,14 +240,14 @@ module.exports = (db) => {
 
   // Quan hệ Shipment - SubOrder (1-1)
   SubOrder.hasOne(Shipment, {
-    foreignKey: 'sub_order_id',
-    as: 'shipment',
-    onDelete: 'CASCADE'
+    foreignKey: "sub_order_id",
+    as: "shipment",
+    onDelete: "CASCADE",
   });
   Shipment.belongsTo(SubOrder, {
-    foreignKey: 'sub_order_id',
-    as: 'subOrder',
-    onDelete: 'CASCADE'
+    foreignKey: "sub_order_id",
+    as: "subOrder",
+    onDelete: "CASCADE",
   });
 
   // Quan hệ Wishlist - User (N-1)
@@ -367,19 +367,4 @@ module.exports = (db) => {
     onDelete: "CASCADE",
     as: "variant",
   });
-
-  // User - Shipper relationship
-  User.hasOne(Shipper, { foreignKey: 'user_id' });
-  Shipper.belongsTo(User, { foreignKey: 'user_id' });
-
-  // Shipper - Order relationship
-  Shipper.hasMany(Order, { foreignKey: 'shipper_id' });
-  Order.belongsTo(Shipper, { foreignKey: 'shipper_id' });
-
-  return {
-    User,
-    Shipper,
-    Order,
-    Shipment
-  };
 };
