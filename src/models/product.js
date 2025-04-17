@@ -1,7 +1,27 @@
 const { Model, DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
 
-class Product extends Model {}
+class Product extends Model {
+  static associate(models) {
+    // Quan hệ với Shop
+    Product.belongsTo(models.Shop, {
+      foreignKey: "shop_id",
+      as: "shop",
+    });
+
+    // Quan hệ với Category
+    Product.belongsTo(models.Category, {
+      foreignKey: "category_id",
+      as: "category",
+    });
+
+    // Quan hệ với ProductVariant
+    Product.hasMany(models.ProductVariant, {
+      foreignKey: "product_id",
+      as: "variants",
+    });
+  }
+}
 
 Product.init(
   {

@@ -10,9 +10,7 @@ module.exports = {
                 city: 'Hà Nội',
                 province: 'Hà Nội',
                 postal_code: '100000',
-                is_default: true,
-                created_at: new Date(),
-                updated_at: new Date(),
+                is_default: true
             },
             {
                 address_id: 2,
@@ -23,9 +21,7 @@ module.exports = {
                 city: 'Hồ Chí Minh',
                 province: 'Hồ Chí Minh',
                 postal_code: '700000',
-                is_default: true,
-                created_at: new Date(),
-                updated_at: new Date(),
+                is_default: true
             },
             {
                 address_id: 3,
@@ -36,9 +32,7 @@ module.exports = {
                 city: 'Đà Nẵng',
                 province: 'Đà Nẵng',
                 postal_code: '550000',
-                is_default: true,
-                created_at: new Date(),
-                updated_at: new Date(),
+                is_default: true
             },
             {
                 address_id: 4,
@@ -50,8 +44,7 @@ module.exports = {
                 province: 'Hải Phòng',
                 postal_code: '180000',
                 is_default: true,
-                created_at: new Date(),
-                updated_at: new Date(),
+
             },
             {
                 address_id: 5,
@@ -63,8 +56,7 @@ module.exports = {
                 province: 'Cần Thơ',
                 postal_code: '900000',
                 is_default: true,
-                created_at: new Date(),
-                updated_at: new Date(),
+
             },
             {
                 address_id: 6,
@@ -76,8 +68,7 @@ module.exports = {
                 province: 'Hà Nội',
                 postal_code: '100000',
                 is_default: true,
-                created_at: new Date(),
-                updated_at: new Date(),
+
             },
             {
                 address_id: 7,
@@ -89,8 +80,7 @@ module.exports = {
                 province: 'Hồ Chí Minh',
                 postal_code: '700000',
                 is_default: true,
-                created_at: new Date(),
-                updated_at: new Date(),
+
             },
             {
                 address_id: 8,
@@ -102,8 +92,7 @@ module.exports = {
                 province: 'Đà Nẵng',
                 postal_code: '550000',
                 is_default: true,
-                created_at: new Date(),
-                updated_at: new Date(),
+
             },
             {
                 address_id: 9,
@@ -115,8 +104,7 @@ module.exports = {
                 province: 'Hải Phòng',
                 postal_code: '180000',
                 is_default: true,
-                created_at: new Date(),
-                updated_at: new Date(),
+
             },
             {
                 address_id: 10,
@@ -128,8 +116,7 @@ module.exports = {
                 province: 'Cần Thơ',
                 postal_code: '900000',
                 is_default: true,
-                created_at: new Date(),
-                updated_at: new Date(),
+
             },
             {
                 address_id: 11,
@@ -141,8 +128,7 @@ module.exports = {
                 province: 'Hà Nội',
                 postal_code: '100000',
                 is_default: true,
-                created_at: new Date(),
-                updated_at: new Date(),
+
             },
             {
                 address_id: 12,
@@ -154,8 +140,7 @@ module.exports = {
                 province: 'Hồ Chí Minh',
                 postal_code: '700000',
                 is_default: true,
-                created_at: new Date(),
-                updated_at: new Date(),
+
             },
             {
                 address_id: 13,
@@ -167,8 +152,7 @@ module.exports = {
                 province: 'Đà Nẵng',
                 postal_code: '550000',
                 is_default: true,
-                created_at: new Date(),
-                updated_at: new Date(),
+
             },
             {
                 address_id: 14,
@@ -180,8 +164,7 @@ module.exports = {
                 province: 'Hải Phòng',
                 postal_code: '180000',
                 is_default: true,
-                created_at: new Date(),
-                updated_at: new Date(),
+
             },
             {
                 address_id: 15,
@@ -193,8 +176,7 @@ module.exports = {
                 province: 'Cần Thơ',
                 postal_code: '900000',
                 is_default: true,
-                created_at: new Date(),
-                updated_at: new Date(),
+
             },
         ]);
     },

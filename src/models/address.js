@@ -1,7 +1,7 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-class Address extends Model {}
+class Address extends Model { }
 
 Address.init(
   {
@@ -16,15 +16,15 @@ Address.init(
     },
     recipient_name: {
       type: DataTypes.STRING(100),
-      allowNull: false,
+      allowNull: true,
     },
     phone: {
       type: DataTypes.STRING(15),
-      allowNull: false,
+      allowNull: true,
     },
     address_line: {
       type: DataTypes.STRING(255),
-      allowNull: false,
+      allowNull: true,
     },
     city: {
       type: DataTypes.STRING(50),
@@ -47,7 +47,7 @@ Address.init(
     sequelize,
     modelName: 'Address',
     tableName: 'Addresses',
-    timestamps: true,
+    timestamps: false,
   }
 );
 

@@ -19,15 +19,16 @@ module.exports = {
             },
             recipient_name: {
                 type: Sequelize.STRING(100),
-                allowNull: false,
+                allowNull: true,
+                defaultValue: 'Khách hàng'
             },
             phone: {
                 type: Sequelize.STRING(15),
-                allowNull: false,
+                allowNull: true,
             },
             address_line: {
                 type: Sequelize.STRING(255),
-                allowNull: false,
+                allowNull: true,
             },
             city: {
                 type: Sequelize.STRING(50),
@@ -44,14 +45,6 @@ module.exports = {
             is_default: {
                 type: Sequelize.BOOLEAN,
                 defaultValue: false,
-            },
-            created_at: {
-                type: Sequelize.DATE,
-                defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
-            },
-            updated_at: {
-                type: Sequelize.DATE,
-                defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
             },
         });
     },

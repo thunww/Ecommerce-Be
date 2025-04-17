@@ -6,17 +6,34 @@ const { validationResult } = require('express-validator');
 class OrderController {
     async createOrder(req, res) {
         try {
-            const { shipping_address_id, payment_method, coupon_code } = req.body;
+            const { order_items, shipping_address, payment_method, shipping_fee, total_amount } = req.body;
             const user_id = req.user.user_id;
 
-            // Validate payment method
+            // Validate phương thức thanh toán
             if (!['cod', 'momo', 'vnpay', 'bank_transfer'].includes(payment_method)) {
                 return res.status(400).json({ message: 'Phương thức thanh toán không hợp lệ' });
             }
 
-            const result = await orderService.createOrder(user_id, shipping_address_id, payment_method, coupon_code);
+            // Validate các trường bắt buộc
+            if (!order_items || !shipping_address || !payment_method || !total_amount) {
+                return res.status(400).json({ message: 'Thiếu thông tin bắt buộc' });
+            }
 
-            // Nếu là thanh toán online, trả về URL thanh toán
+            // Gộp toàn bộ dữ liệu lại thành 1 object
+            const orderData = {
+                user_id,
+                order_items,
+                shipping_address,
+                payment_method,
+                shipping_fee,
+                total_amount
+            };
+
+            console.log('🔥 orderData gửi vào service:', JSON.stringify(orderData, null, 2));
+
+            const result = await orderService.createOrder(orderData);
+
+            // Trường hợp thanh toán online → trả về URL thanh toán
             if (payment_method !== 'cod' && result.payment_url) {
                 return res.status(200).json({
                     message: 'Đơn hàng đã được tạo, vui lòng thanh toán',
@@ -25,14 +42,17 @@ class OrderController {
                 });
             }
 
+            // Trường hợp COD → trả về thành công
             res.status(201).json({
                 message: 'Đơn hàng đã được tạo thành công',
                 order: result
             });
         } catch (error) {
+            console.error('❌ Lỗi trong createOrder:', error);
             res.status(500).json({ message: error.message });
         }
     }
+
 
     async getOrderDetails(req, res) {
         try {
