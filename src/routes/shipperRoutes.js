@@ -21,13 +21,13 @@ router.put('/profile/avatar', authMiddleware, roleMiddleware(['shipper']), uploa
 router.get('/dashboard/stats', authMiddleware, roleMiddleware(['shipper']), shipperController.getDashboardStats);
 
 // Lấy danh sách sub_orders
-router.get('/sub_orders', authMiddleware,  shipperController.getOrders);
+router.get('/sub_orders', authMiddleware, shipperController.getOrders);
 
 // Lọc sub_orders theo khu vực
-router.get('/sub_orders/filter', authMiddleware,  shipperController.filterOrdersByArea);
+router.get('/sub_orders/filter', authMiddleware, shipperController.filterOrdersByArea);
 
 // Tìm kiếm sub_order
-router.get('/sub_orders/search', authMiddleware,  shipperController.searchOrder);
+router.get('/sub_orders/search', authMiddleware, shipperController.searchOrder);
 
 // Lấy chi tiết sub_order
 router.get('/sub_orders/:orderId', authMiddleware, shipperController.getOrderDetails);
@@ -35,9 +35,12 @@ router.get('/sub_orders/:orderId', authMiddleware, shipperController.getOrderDet
 // Nhận sub_order
 router.post('/sub_orders/:orderId/accept', authMiddleware, shipperController.acceptOrder);
 
-// Hoàn thành sub_order (hỗ trợ cả PUT và POST)
+// Hoàn thành sub_order
 router.put('/sub_orders/:orderId/complete', authMiddleware, shipperController.completeOrder);
 router.post('/sub_orders/:orderId/complete', authMiddleware, shipperController.completeOrder);
+
+// Hủy sub_order
+router.post('/sub_orders/:orderId/cancel', authMiddleware, shipperController.cancelOrder);
 
 // Xem lịch sử sub_orders
 router.get('/sub_orders/history', authMiddleware, shipperController.getOrderHistory);

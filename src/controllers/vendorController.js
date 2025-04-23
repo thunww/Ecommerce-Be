@@ -5,13 +5,13 @@ const {
   getShopRevenue,
   getShopRating,
   getShopProducts,
+  processOrderItem,
 } = require("../services/vendorService");
 
 // Lấy thông tin shop của vendor
 const handleGetMyShop = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    
 
     const shop = await vendorService.getShopByUserId(userId);
     if (!shop) {
@@ -29,7 +29,6 @@ const handleGetMyShop = async (req, res) => {
 const handleGetShopRevenue = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    
 
     const revenue = await getShopRevenue(userId);
     res.json(revenue);
@@ -43,7 +42,6 @@ const handleGetShopRevenue = async (req, res) => {
 const handleGetAllOrders = async (req, res) => {
   try {
     const userId = req.user.user_id;
-   
 
     const orders = await vendorService.getAllOrders(userId);
     res.json(orders);
@@ -57,7 +55,6 @@ const handleGetAllOrders = async (req, res) => {
 const handleGetRevenue = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    
 
     const revenue = await getRevenue(userId);
     res.json(revenue);
@@ -71,7 +68,6 @@ const handleGetRevenue = async (req, res) => {
 const handleGetShopAnalytics = async (req, res) => {
   try {
     const userId = req.user.user_id;
-   
 
     const analytics = await vendorService.getShopAnalytics(userId);
     res.json(analytics);
@@ -86,7 +82,6 @@ const handleUpdateShop = async (req, res) => {
   try {
     const userId = req.user.user_id;
     const shopData = req.body;
-   
 
     const updatedShop = await vendorService.updateShop(userId, shopData);
     res.json(updatedShop);
@@ -101,7 +96,6 @@ const handleUpdateShopLogo = async (req, res) => {
   try {
     const userId = req.user.user_id;
     const logoFile = req.file;
-   
 
     const updatedShop = await vendorService.updateShopLogo(userId, logoFile);
     res.json(updatedShop);
@@ -116,7 +110,6 @@ const handleUpdateShopBanner = async (req, res) => {
   try {
     const userId = req.user.user_id;
     const bannerFile = req.file;
-    
 
     const updatedShop = await vendorService.updateShopBanner(
       userId,
@@ -134,7 +127,6 @@ const handleGetShopReviews = async (req, res) => {
   try {
     const userId = req.user.user_id;
     const { page = 1, limit = 10 } = req.query;
-   
 
     const reviews = await vendorService.getShopReviews(userId, { page, limit });
     res.json(reviews);
@@ -148,10 +140,8 @@ const handleGetShopReviews = async (req, res) => {
 const handleGetShopRating = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    
 
     const ratingData = await getShopRating(userId);
-    
 
     res.json(ratingData);
   } catch (error) {
@@ -169,7 +159,6 @@ const openai = new OpenAI({
 const handleAIChat = async (req, res) => {
   try {
     const { message } = req.body;
-    
 
     if (!message) {
       return res.status(400).json({ message: "Message is required" });
@@ -216,48 +205,34 @@ const handleGetShopProducts = async (req, res) => {
   }
 };
 
-// Cập nhật trạng thái đơn hàng
-const handleUpdateOrderStatus = async (req, res) => {
+// Process đơn hàng
+const handleProcessProduct = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    const { order_id } = req.params;
-    const { status } = req.body;
+    const { product_id } = req.params;
 
-
-
-    // Validate status
-    const validStatuses = [
-      "pending",
-      "processing",
-      "shipped",
-      "delivered",
-      "cancelled",
-    ];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Invalid status. Status must be one of: pending, processing, shipped, delivered, cancelled",
-      });
-    }
-
-    // Call service to update order status
-    const updatedOrder = await vendorService.updateOrderStatus(
+    console.log("Processing product request:", {
       userId,
-      order_id,
-      status
+      product_id,
+      user: req.user,
+    });
+
+    // Gọi service để process sản phẩm
+    const processedProduct = await vendorService.processProduct(
+      userId,
+      product_id
     );
 
     res.json({
       success: true,
-      message: "Order status updated successfully",
-      data: updatedOrder,
+      message: "Product processed successfully",
+      data: processedProduct,
     });
   } catch (error) {
-    console.error("Error in handleUpdateOrderStatus:", error);
+    console.error("Error in handleProcessProduct:", error);
     res.status(500).json({
       success: false,
-      message: error.message || "Failed to update order status",
+      message: error.message || "Failed to process product",
     });
   }
 };
@@ -275,5 +250,5 @@ module.exports = {
   handleGetShopRating,
   handleAIChat,
   handleGetShopProducts,
-  handleUpdateOrderStatus,
+  handleProcessProduct,
 };

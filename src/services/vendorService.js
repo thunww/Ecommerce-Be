@@ -107,8 +107,6 @@ const getAllOrders = async (userId) => {
       nest: true,
     });
 
-    
-
     return orders;
   } catch (error) {
     console.error("Error in getAllOrders:", error);
@@ -119,8 +117,6 @@ const getAllOrders = async (userId) => {
 // Lấy doanh thu tổng
 const getRevenue = async (userId) => {
   try {
-    
-
     const shop = await Shop.findOne({
       where: { owner_id: userId },
       raw: true,
@@ -156,7 +152,6 @@ const getRevenue = async (userId) => {
         "updated_at",
       ],
     });
-    
 
     // Tính tổng giá trị đơn hàng (total_price + shipping_fee)
     const totalValue = allOrders.reduce((sum, order) => {
@@ -177,8 +172,6 @@ const getRevenue = async (userId) => {
       views: shopViews,
       deliveredOrdersList: allOrders,
     };
-
-    
 
     return result;
   } catch (error) {
@@ -507,63 +500,210 @@ const getShopProducts = async (userId) => {
 };
 
 // Cập nhật trạng thái đơn hàng
-const updateOrderStatus = async (userId, orderId, newStatus) => {
+const updateOrderStatus = async (userId, subOrderId, newStatus) => {
   try {
-    console.log(`=== Updating Order Status ===`);
+    console.log("Processing in service:", { userId, productId });
+
+    // Kiểm tra sản phẩm tồn tại
+    const product = await Product.findOne({
+      where: { product_id: productId },
+    });
+
     console.log(
-      `User ID: ${userId}, Order ID: ${orderId}, New Status: ${newStatus}`
+      "Found product:",
+      product
+        ? {
+            product_id: product.product_id,
+            shop_id: product.shop_id,
+            status: product.status,
+          }
+        : null
     );
 
-    // Tìm shop của vendor
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    // Kiểm tra user là vendor của sản phẩm thông qua shop_id
     const shop = await Shop.findOne({
       where: { owner_id: userId },
     });
 
+    console.log(
+      "Found shop:",
+      shop
+        ? {
+            shop_id: shop.shop_id,
+            owner_id: shop.owner_id,
+          }
+        : null
+    );
+
     if (!shop) {
-      throw new Error("Không tìm thấy shop");
+      throw new Error("Shop not found for this user");
     }
 
-    // Tìm đơn hàng cần cập nhật
-    const order = await SubOrder.findOne({
+    if (product.shop_id !== shop.shop_id) {
+      throw new Error("Unauthorized - You are not the vendor of this product");
+    }
+
+    // Tìm tất cả SubOrder có chứa sản phẩm này và đang ở trạng thái pending
+    const pendingSubOrders = await SubOrder.findAll({
+      include: [
+        {
+          model: OrderItem,
+          as: "orderItems",
+          where: {
+            product_id: productId,
+          },
+        },
+      ],
       where: {
-        sub_order_id: orderId,
         shop_id: shop.shop_id,
+        status: "pending",
       },
     });
 
-    if (!order) {
+    if (pendingSubOrders.length === 0) {
       throw new Error(
-        "Không tìm thấy đơn hàng hoặc đơn hàng không thuộc về shop của bạn"
+        "Không tìm thấy đơn hàng nào đang chờ xử lý cho sản phẩm này"
       );
     }
 
-    // Validate trạng thái mới
-    const validStatuses = [
-      "pending",
-      "processing",
-      "shipped",
-      "delivered",
-      "cancelled",
-    ];
-    if (!validStatuses.includes(newStatus)) {
-      throw new Error("Trạng thái không hợp lệ");
+    // Cập nhật trạng thái của các SubOrder thành processing
+    for (const subOrder of pendingSubOrders) {
+      await subOrder.update({
+        status: "processing",
+        processed_at: new Date(),
+      });
+
+      // Cập nhật trạng thái của các OrderItem liên quan
+      await OrderItem.update(
+        { status: "processing" },
+        {
+          where: {
+            sub_order_id: subOrder.sub_order_id,
+            product_id: productId,
+          },
+        }
+      );
     }
 
-    // Cập nhật trạng thái
-    order.status = newStatus;
-    await order.save();
-
-    console.log("Order status updated successfully");
-    console.log(`=== End Updating Order Status ===\n`);
-
     return {
-      sub_order_id: order.sub_order_id,
-      status: order.status,
-      updated_at: order.updated_at,
+      success: true,
+      message: `Đã cập nhật ${pendingSubOrders.length} đơn hàng sang trạng thái processing`,
+      processed_orders: pendingSubOrders.map((order) => ({
+        sub_order_id: order.sub_order_id,
+        status: "processing",
+      })),
     };
   } catch (error) {
-    console.error("Error in updateOrderStatus:", error);
-    throw new Error(`Không thể cập nhật trạng thái đơn hàng: ${error.message}`);
+    console.error("Error in processProduct service:", error);
+    throw error;
+  }
+};
+
+// Process sản phẩm theo product_id
+const processProduct = async (userId, productId) => {
+  try {
+    console.log("Processing in service:", { userId, productId });
+
+    // Kiểm tra sản phẩm tồn tại
+    const product = await Product.findOne({
+      where: { product_id: productId },
+    });
+
+    console.log(
+      "Found product:",
+      product
+        ? {
+            product_id: product.product_id,
+            shop_id: product.shop_id,
+            status: product.status,
+          }
+        : null
+    );
+
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    // Kiểm tra user là vendor của sản phẩm thông qua shop_id
+    const shop = await Shop.findOne({
+      where: { owner_id: userId },
+    });
+
+    console.log(
+      "Found shop:",
+      shop
+        ? {
+            shop_id: shop.shop_id,
+            owner_id: shop.owner_id,
+          }
+        : null
+    );
+
+    if (!shop) {
+      throw new Error("Shop not found for this user");
+    }
+
+    if (product.shop_id !== shop.shop_id) {
+      throw new Error("Unauthorized - You are not the vendor of this product");
+    }
+
+    // Tìm tất cả SubOrder có chứa sản phẩm này và đang ở trạng thái pending
+    const pendingSubOrders = await SubOrder.findAll({
+      include: [
+        {
+          model: OrderItem,
+          as: "orderItems",
+          where: {
+            product_id: productId,
+          },
+        },
+      ],
+      where: {
+        shop_id: shop.shop_id,
+        status: "pending",
+      },
+    });
+
+    if (pendingSubOrders.length === 0) {
+      throw new Error(
+        "Không tìm thấy đơn hàng nào đang chờ xử lý cho sản phẩm này"
+      );
+    }
+
+    // Cập nhật trạng thái của các SubOrder thành processing
+    for (const subOrder of pendingSubOrders) {
+      await subOrder.update({
+        status: "processing",
+        processed_at: new Date(),
+      });
+
+      // Cập nhật trạng thái của các OrderItem liên quan
+      await OrderItem.update(
+        { status: "processing" },
+        {
+          where: {
+            sub_order_id: subOrder.sub_order_id,
+            product_id: productId,
+          },
+        }
+      );
+    }
+
+    return {
+      success: true,
+      message: `Đã cập nhật ${pendingSubOrders.length} đơn hàng sang trạng thái processing`,
+      processed_orders: pendingSubOrders.map((order) => ({
+        sub_order_id: order.sub_order_id,
+        status: "processing",
+      })),
+    };
+  } catch (error) {
+    console.error("Error in processProduct service:", error);
+    throw error;
   }
 };
 
@@ -581,4 +721,5 @@ module.exports = {
   getShopRating,
   getShopProducts,
   updateOrderStatus,
+  processProduct,
 };

@@ -30,13 +30,6 @@ router.get("/revenue", vendorMiddleware, vendorController.handleGetRevenue);
 // Lấy danh sách đơn hàng
 router.get("/orders", vendorMiddleware, vendorController.handleGetAllOrders);
 
-// Cập nhật trạng thái đơn hàng
-router.put(
-  "/orders/:order_id/status",
-  vendorMiddleware,
-  vendorController.handleUpdateOrderStatus
-);
-
 // Lấy thống kê shop
 router.get(
   "/shop-analytics",
@@ -87,10 +80,16 @@ router.post(
   "/ai-chat",
   vendorMiddleware,
   (req, res, next) => {
-   
     next();
   },
   handleAIChat
+);
+
+// Process sản phẩm
+router.post(
+  "/products/:product_id/process",
+  vendorMiddleware,
+  vendorController.handleProcessProduct
 );
 
 module.exports = router;

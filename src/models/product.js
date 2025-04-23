@@ -39,7 +39,7 @@ Product.init(
       allowNull: true,
     },
     status: {
-      type: DataTypes.ENUM("pending", "active", "inactive"),
+      type: DataTypes.ENUM("pending", "active", "inactive", "processed"),
       allowNull: false,
       defaultValue: "pending",
     },

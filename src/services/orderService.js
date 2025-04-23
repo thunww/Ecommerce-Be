@@ -1,206 +1,140 @@
-const {
-  Order,
-  SubOrder,
-  OrderItem,
-  Cart,
-  CartItem,
-  Product,
-  Shop,
-  Payment,
-  ProductVariant,
-  Coupon,
-} = require("../models");
-const couponService = require("./couponService");
+const { Order, SubOrder, OrderItem, Cart, CartItem, Product, Shop, Payment, ProductVariant, Coupon, Address } = require('../models');
+const couponService = require('./couponService');
+const { Op } = require('sequelize');
 
 class OrderService {
-  async createOrder(
-    user_id,
-    shipping_address_id,
-    payment_method,
-    coupon_code = null
-  ) {
-    let order = null;
-    let cart = null;
-    let couponDiscount = 0;
-    let validatedCoupon = null;
+  async createOrder(orderData) {
+
+    console.log('🔥 Dữ liệu đơn hàng nhận được:', JSON.stringify(orderData, null, 2));
+
+    if (!orderData) throw new Error('Thiếu dữ liệu đơn hàng');
+
+    const {
+      user_id,
+      order_items,
+      shipping_address,
+      total_amount,
+      shipping_fee,
+      payment_method
+    } = orderData;
+    console.log('🔥 order_items từ FE:', JSON.stringify(order_items, null, 2));
+    if (!user_id) throw new Error('Thiếu thông tin user_id');
+    if (!shipping_address) throw new Error('Thiếu thông tin địa chỉ giao hàng');
+    if (!order_items || !Array.isArray(order_items) || order_items.length === 0) {
+      throw new Error('Thiếu thông tin sản phẩm đặt hàng');
+    }
 
     try {
-      // Lấy giỏ hàng của người dùng
-      cart = await Cart.findOne({
-        where: { user_id },
-        include: [
-          {
-            model: CartItem,
-            as: "items",
-            include: [
-              {
-                model: Product,
-                as: "product",
-              },
-              {
-                model: ProductVariant,
-                as: "variant",
-              },
-            ],
-          },
-        ],
-      });
-
-      if (!cart || !cart.items || cart.items.length === 0) {
-        throw new Error("Giỏ hàng trống");
-      }
-
-      // Kiểm tra và áp dụng mã giảm giá nếu có
-      if (coupon_code) {
-        try {
-          validatedCoupon = await couponService.validateCoupon(
-            coupon_code,
-            user_id,
-            cart.total_price
-          );
-          couponDiscount = validatedCoupon.discount_amount;
-        } catch (couponError) {
-          throw new Error(`Mã giảm giá không hợp lệ: ${couponError.message}`);
-        }
-      }
-
-      // Tính tổng tiền sau khi áp dụng mã giảm giá
-      const finalPrice = cart.total_price - couponDiscount;
-
-      // Tạo đơn hàng chính
-      order = await Order.create({
+      // 👉 1. Tạo địa chỉ giao hàng
+      // 👉 1. Tạo địa chỉ giao hàng
+      const address = await Address.create({
         user_id,
-        shipping_address_id,
-        total_price: cart.total_price,
-        discount_amount: couponDiscount,
-        final_amount: finalPrice,
-        coupon_id: validatedCoupon ? validatedCoupon.coupon_id : null,
-        payment_method,
-        status: "pending",
-        payment_status: "pending",
-        created_at: new Date(),
-        updated_at: new Date(),
+        recipient_name: shipping_address.recipient_name,
+        phone: shipping_address.phone,
+        address_line: shipping_address.address_line,
+        ward: shipping_address.ward,
+        district: shipping_address.district,
+        city: shipping_address.city,
+        is_default: false
       });
 
-      // Nhóm sản phẩm theo shop
-      const itemsByShop = {};
-      cart.items.forEach((item) => {
-        if (!itemsByShop[item.product.shop_id]) {
-          itemsByShop[item.product.shop_id] = [];
+
+      console.log('✅ Địa chỉ mới được tạo:', address);
+
+      // 👉 2. Tạo đơn hàng chính
+      const order = await Order.create({
+        user_id,
+        shipping_address_id: address.address_id,
+        status: 'pending',
+        total_price: total_amount,
+        shipping_fee,
+        payment_method
+      });
+
+      console.log('✅ Đơn hàng chính được tạo:', order);
+
+      // 👉 3. Lấy product_id duy nhất
+      const productIds = [...new Set(order_items.map(item => item.product_id))];
+
+      // 👉 4. Truy vấn sản phẩm để lấy shop_id
+      const products = await Product.findAll({
+        where: { product_id: { [Op.in]: productIds } }
+      });
+
+      if (products.length !== productIds.length) {
+        const existingIds = products.map(p => p.product_id);
+        const missingIds = productIds.filter(id => !existingIds.includes(id));
+        console.error('🚫 Sản phẩm không tồn tại:', missingIds);
+        throw new Error(`Sản phẩm không tồn tại: ${missingIds.join(', ')}`);
+      }
+
+      const productMap = {};
+      products.forEach(p => {
+        productMap[p.product_id] = p.shop_id;
+      });
+
+      // 👉 5. Nhóm order_items theo shop_id
+      const subOrderGroups = {};
+      for (const item of order_items) {
+        const shopId = productMap[item.product_id];
+        if (!subOrderGroups[shopId]) {
+          subOrderGroups[shopId] = [];
         }
-        itemsByShop[item.product.shop_id].push(item);
-      });
+        subOrderGroups[shopId].push(item);
+      }
 
-      // Tạo sub-orders và order items
-      for (const shop_id of Object.keys(itemsByShop)) {
-        const shopItems = itemsByShop[shop_id];
-        const subOrderTotal = shopItems.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0
-        );
+      const subOrders = [];
 
-        // Tạo sub-order
+      // 👉 6. Tạo từng SubOrder và các OrderItem chi tiết
+      for (const [shopId, items] of Object.entries(subOrderGroups)) {
+        const subTotal = items.reduce((sum, item) => {
+          const price = parseFloat(item.price);
+          const discount = parseFloat(item.discount || 0);
+          return sum + (price - discount) * item.quantity;
+        }, 0);
+
         const subOrder = await SubOrder.create({
           order_id: order.order_id,
-          shop_id,
-          total_price: subOrderTotal,
-          status: "pending",
+          shop_id: parseInt(shopId),
+          total_price: subTotal,
+          shipping_fee: 0,
+          status: 'pending',
         });
 
-        // Tạo order items và cập nhật số lượng tồn kho
-        for (const item of shopItems) {
-          await OrderItem.create({
+        const subOrderItems = items.map(item => {
+          const quantity = item.quantity;
+          const price = parseFloat(item.price);
+          const discount = parseFloat(item.discount || 0);
+          const total = (price - discount) * quantity;
+
+          return {
+            order_id: order.order_id,
             sub_order_id: subOrder.sub_order_id,
             product_id: item.product_id,
-            variant_id: item.product_variant_id || null,
-            quantity: item.quantity,
-            price: item.price,
-            total_price: item.total_price,
-            variant_info: item.variant_info,
-          });
-
-          // Cập nhật số lượng tồn kho cho sản phẩm hoặc biến thể
-          if (item.product_variant_id && item.variant) {
-            // Nếu là sản phẩm có biến thể, cập nhật stock của biến thể
-            await ProductVariant.decrement("stock", {
-              by: item.quantity,
-              where: { variant_id: item.product_variant_id },
-            });
-
-            // Cập nhật thêm giá trị sold cho biến thể nếu cần
-            await ProductVariant.increment("sold", {
-              by: item.quantity,
-              where: { variant_id: item.product_variant_id },
-            });
-          } else {
-            // Nếu là sản phẩm không có biến thể, cập nhật stock của sản phẩm
-            await Product.decrement("stock", {
-              by: item.quantity,
-              where: { product_id: item.product_id },
-            });
-
-            // Cập nhật thêm giá trị sold cho sản phẩm
-            await Product.increment("sold", {
-              by: item.quantity,
-              where: { product_id: item.product_id },
-            });
-          }
-        }
-
-        // Tạo payment cho sub-order
-        await Payment.create({
-          order_id: order.order_id,
-          sub_order_id: subOrder.sub_order_id,
-          payment_method: payment_method,
-          status: "pending",
-          amount: subOrderTotal,
+            variant_id: item.variant_id || null,
+            quantity,
+            price,
+            discount,
+            total,
+            variant_info: item.variant_info || null
+          };
         });
+
+        await OrderItem.bulkCreate(subOrderItems);
+        subOrders.push(subOrder);
       }
 
-      // Đánh dấu mã giảm giá đã được sử dụng nếu có
-      if (validatedCoupon) {
-        const coupon = await Coupon.findByPk(validatedCoupon.coupon_id);
-        if (coupon) {
-          await couponService.applyCouponToOrder(
-            order.order_id,
-            coupon.code,
-            user_id
-          );
-        }
-      }
-
-      // Nếu là thanh toán online, trả về URL thanh toán
-      if (payment_method !== "cod") {
-        // Reset giỏ hàng chỉ khi tất cả đều thành công
-        await CartItem.destroy({ where: { cart_id: cart.cart_id } });
-        await Cart.update(
-          { total_price: 0 },
-          { where: { cart_id: cart.cart_id } }
-        );
-
-        return {
-          order_id: order.order_id,
-          payment_url: `/api/payment/process/${order.order_id}`,
-          message: "Vui lòng thanh toán để hoàn tất đơn hàng",
-        };
-      }
-
-      // Reset giỏ hàng chỉ khi tất cả đều thành công
-      await CartItem.destroy({ where: { cart_id: cart.cart_id } });
-      await Cart.update(
-        { total_price: 0 },
-        { where: { cart_id: cart.cart_id } }
-      );
-
-      return await this.getOrderDetails(order.order_id);
+      console.log('✅ Đã tạo xong các SubOrder và OrderItem đầy đủ');
+      return order;
     } catch (error) {
-      // Nếu có lỗi và đã tạo order, xóa order
-      if (order) {
-        await Order.destroy({ where: { order_id: order.order_id } });
-      }
+      console.error('❌ Lỗi khi tạo đơn hàng:', error);
       throw error;
     }
   }
+
+
+
+
 
   async getOrderDetails(order_id) {
     try {
@@ -296,7 +230,6 @@ class OrderService {
     }
   }
 
-  // lay san pham da ban cua shop
   async getShopOrderedProducts(shop_id) {
     try {
       const subOrders = await SubOrder.findAll({
@@ -392,6 +325,18 @@ class OrderService {
         `Lỗi khi lấy danh sách sản phẩm đã bán: ${error.message}`
       );
     }
+  }
+
+  async getOrder(orderId) {
+    return await Order.findByPk(orderId, {
+      include: [
+        {
+          model: OrderItem,
+          include: [Product]
+        },
+        Address
+      ]
+    });
   }
 }
 

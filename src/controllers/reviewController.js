@@ -2,7 +2,13 @@ const reviewService = require("../services/reviewService");
 
 const createReview = async (req, res) => {
   try {
-    const { product_id, rating, comment, images } = req.body;
+    const { rating, comment } = req.body;
+    const product_id = req.params.id;
+
+    const images = req.file
+      ? req.file.secure_url || req.file.url || req.file.path
+      : null;
+
     const review = await reviewService.createReview(
       req.user.user_id,
       product_id,
@@ -12,6 +18,7 @@ const createReview = async (req, res) => {
     );
     res.status(201).json(review);
   } catch (error) {
+    console.error("Error creating review:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -51,7 +58,6 @@ const deleteReview = async (req, res) => {
   }
 };
 
-// ✅ Export tất cả các hàm ở cuối file
 module.exports = {
   createReview,
   getReviewsByProductId,

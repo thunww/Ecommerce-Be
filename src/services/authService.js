@@ -50,6 +50,7 @@ const registerUser = async (username, email, password) => {
   };
 };
 
+
 const loginUser = async (email, password) => {
   const user = await User.findOne({ where: { email } });
   if (!user) {
