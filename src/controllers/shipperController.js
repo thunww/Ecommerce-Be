@@ -38,7 +38,7 @@ exports.registerShipper = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Bạn đã đăng ký làm shipper'
-      }); 
+      });
     }
 
     // Tạo shipper mới
@@ -164,7 +164,7 @@ exports.updateShipperProfile = async (req, res) => {
 exports.updateAvatar = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    
+
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -197,8 +197,6 @@ exports.updateAvatar = async (req, res) => {
 exports.getOrders = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    console.log('Getting orders for user:', userId);
-
     const shipper = await Shipper.findOne({ 
       where: { user_id: userId },
       attributes: ['shipper_id']
@@ -215,7 +213,7 @@ exports.getOrders = async (req, res) => {
     console.log('Found shipper:', shipper.toJSON());
 
     const subOrders = await SubOrder.findAll({
-      where: { 
+      where: {
         [Op.or]: [
           {
             status: 'processing',
@@ -264,9 +262,9 @@ exports.getOrders = async (req, res) => {
             {
               model: User,
               attributes: [
-                'user_id', 
+                'user_id',
                 'first_name',
-                'last_name', 
+                'last_name',
                 'email',
                 'phone',
                 'profile_picture'
@@ -330,7 +328,7 @@ exports.getOrderDetails = async (req, res) => {
 
     // Lấy thông tin sub_order
     const subOrder = await SubOrder.findOne({
-      where: { 
+      where: {
         sub_order_id: orderId
       },
       include: [
@@ -351,9 +349,9 @@ exports.getOrderDetails = async (req, res) => {
             {
               model: User,
               attributes: [
-                'user_id', 
+                'user_id',
                 'first_name',
-                'last_name', 
+                'last_name',
                 'email',
                 'phone',
                 'profile_picture'
@@ -428,25 +426,27 @@ exports.getOrderDetails = async (req, res) => {
 // Nhận đơn hàng
 exports.acceptOrder = async (req, res) => {
   const t = await sequelize.transaction();
-  
+
   try {
     console.log('Accept order request params:', req.params);
     console.log('Accept order request body:', req.body);
-    
-    if (!req.params.orderId) {
+
+    const { orderId } = req.params;
+    const subOrderId = parseInt(orderId);
+
+    if (!orderId || isNaN(subOrderId)) {
       await t.rollback();
       return res.status(400).json({
         success: false,
-        message: 'Thiếu sub_order ID'
+        message: 'Sub_order ID không hợp lệ'
       });
     }
 
-    const subOrderId = parseInt(req.params.orderId);
     const userId = req.user.user_id;
     console.log('Processing request - subOrderId:', subOrderId, 'userId:', userId);
 
     // Kiểm tra shipper
-    const shipper = await Shipper.findOne({ 
+    const shipper = await Shipper.findOne({
       where: { user_id: userId },
       attributes: ['shipper_id', 'status'],
       transaction: t
@@ -499,9 +499,7 @@ exports.acceptOrder = async (req, res) => {
     // Tạo hoặc cập nhật shipment
     console.log('Finding existing shipment');
     const shipment = await Shipment.findOne({
-      where: {
-        sub_order_id: subOrderId
-      },
+      where: { sub_order_id: subOrderId },
       attributes: ['shipment_id', 'sub_order_id', 'shipper_id', 'status', 'tracking_number', 'estimated_delivery_date'],
       transaction: t
     });
@@ -513,7 +511,7 @@ exports.acceptOrder = async (req, res) => {
       updatedShipment = await shipment.update({
         status: 'in_transit',
         estimated_delivery_date: new Date(Date.now() + 24 * 60 * 60 * 1000)
-      }, { 
+      }, {
         transaction: t,
         fields: ['status', 'estimated_delivery_date']
       });
@@ -525,7 +523,7 @@ exports.acceptOrder = async (req, res) => {
         status: 'in_transit',
         tracking_number: 'TN' + Date.now(),
         estimated_delivery_date: new Date(Date.now() + 24 * 60 * 60 * 1000)
-      }, { 
+      }, {
         transaction: t,
         fields: ['sub_order_id', 'shipper_id', 'status', 'tracking_number', 'estimated_delivery_date']
       });
@@ -548,7 +546,7 @@ exports.acceptOrder = async (req, res) => {
   } catch (error) {
     // Rollback transaction nếu có lỗi
     await t.rollback();
-    
+
     console.error('Detailed error in acceptOrder:', {
       message: error.message,
       stack: error.stack,
@@ -565,17 +563,18 @@ exports.acceptOrder = async (req, res) => {
   }
 };
 
+
 // Hoàn thành đơn hàng
 exports.completeOrder = async (req, res) => {
   const t = await sequelize.transaction();
-  
+
   try {
     const { orderId } = req.params;
     const userId = req.user.user_id;
 
     console.log('Complete order request - orderId:', orderId, 'userId:', userId);
 
-    const shipper = await Shipper.findOne({ 
+    const shipper = await Shipper.findOne({
       where: { user_id: userId },
       attributes: ['shipper_id', 'status'],
       transaction: t
@@ -615,9 +614,9 @@ exports.completeOrder = async (req, res) => {
 
     // Cập nhật trạng thái sub_order
     console.log('Updating sub_order status to delivered');
-    await subOrder.update({ 
-      status: 'delivered' 
-    }, { 
+    await subOrder.update({
+      status: 'delivered'
+    }, {
       transaction: t,
       fields: ['status']
     });
@@ -685,7 +684,7 @@ exports.completeOrder = async (req, res) => {
   } catch (error) {
     // Rollback transaction nếu có lỗi
     await t.rollback();
-    
+
     console.error('Detailed error in completeOrder:', {
       message: error.message,
       stack: error.stack,
@@ -708,7 +707,7 @@ exports.getIncomeStats = async (req, res) => {
   try {
     const userId = req.user.user_id;
     const { startDate, endDate } = req.query;
-    
+
     const shipper = await Shipper.findOne({ where: { user_id: userId } });
 
     if (!shipper) {
@@ -944,7 +943,7 @@ exports.filterOrdersByArea = async (req, res) => {
   try {
     const userId = req.user.user_id;
     const { city, province, postal_code } = req.query;
-    
+
     const shipper = await Shipper.findOne({ where: { user_id: userId } });
     if (!shipper) {
       return res.status(404).json({
@@ -1083,7 +1082,7 @@ exports.getOrderHistory = async (req, res) => {
 exports.getDashboardStats = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    const shipper = await Shipper.findOne({ 
+    const shipper = await Shipper.findOne({
       where: { user_id: userId },
       attributes: ['shipper_id']
     });
