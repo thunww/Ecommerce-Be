@@ -5,7 +5,7 @@ const cloudinary = require("../config/cloudinary");
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: (req, file) => {
-    const folder = req.url.includes("avatar") ? "avatars" : "products"; // Example condition
+    const folder = req.url.includes("avatar") ? "avatars" : "products";
     return {
       folder: folder, // Use avatars or products based on the condition
       allowed_formats: ["jpg", "png", "jpeg"],
