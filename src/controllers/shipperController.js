@@ -17,7 +17,7 @@ const { validationResult } = require("express-validator");
 const { upload } = require("../middleware/upload");
 
 // Helper function for error handling
-const handleError = (res, error, message = "Lỗi server") => {
+const handleError = (res, error, message = "Server error") => {
   console.error("Error:", error);
   return res.status(500).json({ success: false, message });
 };
@@ -28,7 +28,7 @@ const validateRequest = (req) => {
   if (!errors.isEmpty()) {
     return {
       success: false,
-      message: "Dữ liệu không hợp lệ",
+      message: "Invalid data",
       errors: errors.array(),
     };
   }
@@ -51,7 +51,7 @@ exports.registerShipper = async (req, res) => {
     if (existingShipper) {
       return res.status(400).json({
         success: false,
-        message: "Bạn đã đăng ký làm shipper",
+        message: "You have already registered as a shipper",
       });
     }
 
@@ -66,11 +66,11 @@ exports.registerShipper = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Đăng ký shipper thành công",
+      message: "Shipper registration successful",
       data: shipper,
     });
   } catch (error) {
-    handleError(res, error, "Đăng ký shipper thất bại");
+    handleError(res, error, "Shipper registration failed");
   }
 };
 
@@ -88,7 +88,6 @@ exports.getShipperProfile = async (req, res) => {
     console.log("Getting profile for userId:", userId);
 
     // Lấy thông tin shipper
-    // Lấy thông tin shipper
     const shipper = await Shipper.findOne({
       where: { user_id: userId },
     });
@@ -98,7 +97,7 @@ exports.getShipperProfile = async (req, res) => {
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy thông tin shipper",
+        message: "Shipper information not found",
       });
     }
 
@@ -118,7 +117,7 @@ exports.getShipperProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy thông tin user",
+        message: "User information not found",
       });
     }
 
@@ -140,7 +139,7 @@ exports.getShipperProfile = async (req, res) => {
     });
     return res.status(500).json({
       success: false,
-      message: "Lấy thông tin shipper thất bại",
+      message: "Failed to get shipper profile",
       error: error.message,
     });
   }
@@ -159,7 +158,7 @@ exports.updateShipperProfile = async (req, res) => {
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy thông tin shipper",
+        message: "Shipper information not found",
       });
     }
 
@@ -170,11 +169,11 @@ exports.updateShipperProfile = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Cập nhật thông tin thành công",
+      message: "Profile updated successfully",
       data: shipper,
     });
   } catch (error) {
-    handleError(res, error, "Cập nhật thông tin thất bại");
+    handleError(res, error, "Failed to update profile");
   }
 };
 
@@ -186,7 +185,7 @@ exports.updateAvatar = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: "Vui lòng chọn ảnh đại diện",
+        message: "Please select a profile picture",
       });
     }
 
@@ -194,7 +193,7 @@ exports.updateAvatar = async (req, res) => {
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy thông tin shipper",
+        message: "Shipper information not found",
       });
     }
 
@@ -203,11 +202,11 @@ exports.updateAvatar = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Cập nhật ảnh đại diện thành công",
+      message: "Profile picture updated successfully",
       data: shipper,
     });
   } catch (error) {
-    handleError(res, error, "Cập nhật ảnh đại diện thất bại");
+    handleError(res, error, "Failed to update profile picture");
   }
 };
 
@@ -224,7 +223,7 @@ exports.getOrders = async (req, res) => {
       console.log("Shipper not found for user:", userId);
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy thông tin shipper",
+        message: "Shipper information not found",
       });
     }
 
@@ -341,7 +340,7 @@ exports.getOrders = async (req, res) => {
     console.error("Error in getOrders:", error);
     return res.status(500).json({
       success: false,
-      message: "Lấy danh sách sub_orders thất bại",
+      message: "Failed to get orders list",
       error: {
         message: error.message,
         name: error.name,
@@ -361,7 +360,7 @@ exports.getOrderDetails = async (req, res) => {
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy thông tin shipper",
+        message: "Shipper information not found",
       });
     }
 
@@ -418,7 +417,7 @@ exports.getOrderDetails = async (req, res) => {
     if (!subOrder) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy đơn hàng",
+        message: "Order not found",
       });
     }
 
@@ -465,12 +464,12 @@ exports.getOrderDetails = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Lấy chi tiết đơn hàng thành công",
+      message: "Order details retrieved successfully",
       data: subOrder,
     });
   } catch (error) {
     console.error("Error in getOrderDetails:", error);
-    handleError(res, error, "Lấy chi tiết đơn hàng thất bại");
+    handleError(res, error, "Failed to get order details");
   }
 };
 
@@ -489,7 +488,7 @@ exports.acceptOrder = async (req, res) => {
       await t.rollback();
       return res.status(400).json({
         success: false,
-        message: "Sub_order ID không hợp lệ",
+        message: "Invalid sub_order ID",
       });
     }
 
@@ -513,7 +512,7 @@ exports.acceptOrder = async (req, res) => {
       await t.rollback();
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy thông tin shipper",
+        message: "Shipper information not found",
       });
     }
 
@@ -521,7 +520,7 @@ exports.acceptOrder = async (req, res) => {
       await t.rollback();
       return res.status(400).json({
         success: false,
-        message: "Tài khoản shipper không hoạt động",
+        message: "Shipper account is not active",
       });
     }
 
@@ -542,8 +541,7 @@ exports.acceptOrder = async (req, res) => {
       await t.rollback();
       return res.status(404).json({
         success: false,
-        message:
-          "Không tìm thấy đơn hàng hoặc đơn hàng không ở trạng thái processing",
+        message: "Order not found or not in processing status",
       });
     }
 
@@ -615,7 +613,7 @@ exports.acceptOrder = async (req, res) => {
     console.log("Operation completed successfully");
     res.json({
       success: true,
-      message: "Nhận đơn hàng thành công",
+      message: "Order accepted successfully",
       data: {
         subOrder: subOrder.toJSON(),
         shipment: updatedShipment.toJSON(),
@@ -632,7 +630,7 @@ exports.acceptOrder = async (req, res) => {
     });
     return res.status(500).json({
       success: false,
-      message: "Lỗi khi nhận đơn hàng",
+      message: "Error accepting order",
       error: {
         message: error.message,
         name: error.name,
@@ -668,7 +666,7 @@ exports.completeOrder = async (req, res) => {
       await t.rollback();
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy thông tin shipper",
+        message: "Shipper information not found",
       });
     }
 
@@ -679,18 +677,32 @@ exports.completeOrder = async (req, res) => {
         sub_order_id: orderId,
         status: "shipped",
       },
-      attributes: ["sub_order_id", "status", "total_price", "shipping_fee"],
+      include: [
+        {
+          model: Shipment,
+          as: "shipment",
+          where: {
+            shipper_id: shipper.shipper_id
+          },
+          required: true
+        },
+        {
+          model: Payment,
+          as: "payments",
+          required: false
+        }
+      ],
       transaction: t,
       lock: true,
     });
 
-    console.log("Found sub_order:", subOrder ? subOrder.toJSON() : null);
+    console.log("Found subOrder:", subOrder ? subOrder.toJSON() : null);
 
     if (!subOrder) {
       await t.rollback();
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy đơn hàng hoặc đơn hàng không thể hoàn thành",
+        message: "Order not found or cannot be completed",
       });
     }
 
@@ -705,6 +717,21 @@ exports.completeOrder = async (req, res) => {
         fields: ["status"],
       }
     );
+
+    // Cập nhật trạng thái payment thành paid
+    if (subOrder.payments && subOrder.payments.length > 0) {
+      console.log("Updating payment status to paid");
+      await subOrder.payments[0].update(
+        {
+          status: "paid",
+          paid_at: new Date()
+        },
+        {
+          transaction: t,
+          fields: ["status", "paid_at"],
+        }
+      );
+    }
 
     // Cập nhật hoặc tạo mới shipment
     console.log("Finding shipment");
@@ -754,7 +781,7 @@ exports.completeOrder = async (req, res) => {
         await t.rollback();
         return res.status(403).json({
           success: false,
-          message: "Bạn không có quyền cập nhật đơn hàng này",
+          message: "You don't have permission to update this order",
         });
       }
 
@@ -776,7 +803,7 @@ exports.completeOrder = async (req, res) => {
     console.log("Operation completed successfully");
     res.json({
       success: true,
-      message: "Hoàn thành đơn hàng thành công",
+      message: "Order completed successfully",
       data: {
         subOrder: subOrder.toJSON(),
         shipment: shipment.toJSON(),
@@ -794,7 +821,7 @@ exports.completeOrder = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Hoàn thành đơn hàng thất bại",
+      message: "Failed to complete order",
       error: {
         message: error.message,
         name: error.name,
@@ -814,7 +841,7 @@ exports.getIncomeStats = async (req, res) => {
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy thông tin shipper",
+        message: "Shipper information not found",
       });
     }
 
@@ -855,8 +882,8 @@ exports.getIncomeStats = async (req, res) => {
     const formattedOrders = completedSubOrders.map((order) => ({
       id: order.sub_order_id,
       deliveryTime: order.updated_at,
-      customerName: order.customer_name || "Không có tên",
-      address: order.delivery_address || "Không có địa chỉ",
+      customerName: order.customer_name || "No name",
+      address: order.delivery_address || "No address",
       paymentMethod: order.payment_method || "COD",
       amount: parseFloat(order.shipping_fee || 0),
     }));
@@ -877,7 +904,7 @@ exports.getIncomeStats = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in getIncomeStats:", error);
-    handleError(res, error, "Lấy thống kê thu nhập thất bại");
+    handleError(res, error, "Failed to get income statistics");
   }
 };
 
@@ -895,7 +922,7 @@ exports.getIncomeDetails = async (req, res) => {
     if (!orderId) {
       return res.status(400).json({
         success: false,
-        message: "Thiếu mã đơn hàng",
+        message: "Missing order ID",
       });
     }
 
@@ -905,7 +932,7 @@ exports.getIncomeDetails = async (req, res) => {
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy thông tin shipper",
+        message: "Shipper information not found",
       });
     }
 
@@ -928,7 +955,7 @@ exports.getIncomeDetails = async (req, res) => {
     if (!subOrder) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy thông tin thu nhập từ đơn hàng này",
+        message: "Income information for this order not found",
       });
     }
 
@@ -939,7 +966,7 @@ exports.getIncomeDetails = async (req, res) => {
     ) {
       return res.status(403).json({
         success: false,
-        message: "Bạn không có quyền xem thông tin thu nhập của đơn hàng này",
+        message: "You don't have permission to view income information for this order",
       });
     }
 
@@ -962,7 +989,7 @@ exports.getIncomeDetails = async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error("Error in getIncomeDetails:", error);
-    handleError(res, error, "Lấy chi tiết thu nhập thất bại");
+    handleError(res, error, "Failed to get income details");
   }
 };
 
@@ -976,7 +1003,7 @@ exports.filterIncomeByDate = async (req, res) => {
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy thông tin shipper",
+        message: "Shipper information not found",
       });
     }
 
@@ -1029,10 +1056,10 @@ exports.filterIncomeByDate = async (req, res) => {
       deliveryTime: order.updated_at,
       customerName: order.Order?.User
         ? `${order.Order.User.first_name} ${order.Order.User.last_name}`
-        : "Không có tên",
+        : "No name",
       address: order.Order?.shipping_address
         ? `${order.Order.shipping_address.address_line}, ${order.Order.shipping_address.city}`
-        : "Không có địa chỉ",
+        : "No address",
       paymentMethod: order.Order?.payment_method || "COD",
       amount: parseFloat(order.shipping_fee || 0) * 1000, // Convert to VND
     }));
@@ -1059,7 +1086,7 @@ exports.filterIncomeByDate = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in filterIncomeByDate:", error);
-    handleError(res, error, "Lọc thu nhập theo ngày thất bại");
+    handleError(res, error, "Failed to filter income by date");
   }
 };
 
@@ -1073,7 +1100,7 @@ exports.filterOrdersByArea = async (req, res) => {
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy thông tin shipper",
+        message: "Shipper information not found",
       });
     }
 
@@ -1108,7 +1135,7 @@ exports.filterOrdersByArea = async (req, res) => {
       data: orders,
     });
   } catch (error) {
-    handleError(res, error, "Lọc đơn hàng theo khu vực thất bại");
+    handleError(res, error, "Failed to filter orders by area");
   }
 };
 
@@ -1122,7 +1149,7 @@ exports.searchOrder = async (req, res) => {
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy thông tin shipper",
+        message: "Shipper information not found",
       });
     }
 
@@ -1152,7 +1179,7 @@ exports.searchOrder = async (req, res) => {
     if (!order) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy đơn hàng",
+        message: "Order not found",
       });
     }
 
@@ -1161,7 +1188,7 @@ exports.searchOrder = async (req, res) => {
       data: order,
     });
   } catch (error) {
-    handleError(res, error, "Tìm kiếm đơn hàng thất bại");
+    handleError(res, error, "Failed to search order");
   }
 };
 
@@ -1174,7 +1201,7 @@ exports.getOrderHistory = async (req, res) => {
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy thông tin shipper",
+        message: "Shipper information not found",
       });
     }
 
@@ -1209,7 +1236,7 @@ exports.getOrderHistory = async (req, res) => {
       data: orders,
     });
   } catch (error) {
-    handleError(res, error, "Lấy lịch sử đơn hàng thất bại");
+    handleError(res, error, "Failed to get order history");
   }
 };
 
@@ -1225,7 +1252,7 @@ exports.getDashboardStats = async (req, res) => {
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy thông tin shipper",
+        message: "Shipper information not found",
       });
     }
 
@@ -1341,7 +1368,7 @@ exports.getDashboardStats = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: "Lấy thống kê dashboard thất bại",
+      message: "Failed to get dashboard statistics",
       error: {
         message: error.message,
         name: error.name,
@@ -1365,7 +1392,7 @@ exports.cancelOrder = async (req, res) => {
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy thông tin shipper",
+        message: "Shipper information not found",
       });
     }
 
@@ -1374,21 +1401,28 @@ exports.cancelOrder = async (req, res) => {
       where: {
         sub_order_id: orderId,
         status: "shipped",
-        "$shipment.shipper_id$": shipper.shipper_id,
       },
       include: [
         {
           model: Shipment,
           as: "shipment",
-          required: true,
+          where: {
+            shipper_id: shipper.shipper_id
+          },
+          required: true
         },
+        {
+          model: Payment,
+          as: "payments",
+          required: false
+        }
       ],
     });
 
     if (!subOrder) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy đơn hàng hoặc đơn hàng không thể hủy",
+        message: "Order not found or cannot be cancelled",
       });
     }
 
@@ -1400,19 +1434,24 @@ exports.cancelOrder = async (req, res) => {
       // Cập nhật trạng thái shipment
       await subOrder.shipment.update({ status: "failed" }, { transaction: t });
 
+      // Cập nhật trạng thái payment thành failed
+      if (subOrder.payments && subOrder.payments.length > 0) {
+        await subOrder.payments[0].update({ status: "failed" }, { transaction: t });
+      }
+
       return subOrder;
     });
 
     res.json({
       success: true,
-      message: "Hủy đơn hàng thành công",
+      message: "Order cancelled successfully",
       data: result,
     });
   } catch (error) {
     console.error("Error in cancelOrder:", error);
     return res.status(500).json({
       success: false,
-      message: "Hủy đơn hàng thất bại",
+      message: "Failed to cancel order",
       error: error.message,
     });
   }
