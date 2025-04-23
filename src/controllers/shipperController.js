@@ -77,8 +77,6 @@ exports.registerShipper = async (req, res) => {
 // Lấy thông tin shipper
 exports.getShipperProfile = async (req, res) => {
   try {
-    console.log("User from request:", req.user);
-
     if (!req.user || !req.user.user_id) {
       return res.status(401).json({
         success: false,
@@ -358,11 +356,8 @@ exports.getOrderDetails = async (req, res) => {
   try {
     const { orderId } = req.params;
     const userId = req.user.user_id;
-    console.log("Getting order details for:", { orderId, userId });
 
     const shipper = await Shipper.findOne({ where: { user_id: userId } });
-    console.log("Found shipper:", shipper ? shipper.toJSON() : null);
-
     if (!shipper) {
       return res.status(404).json({
         success: false,
