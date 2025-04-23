@@ -220,14 +220,11 @@ exports.getOrders = async (req, res) => {
     });
 
     if (!shipper) {
-      console.log("Shipper not found for user:", userId);
       return res.status(404).json({
         success: false,
         message: "Shipper information not found",
       });
     }
-
-    console.log("Found shipper:", shipper.toJSON());
 
     const subOrders = await SubOrder.findAll({
       where: {
@@ -314,16 +311,6 @@ exports.getOrders = async (req, res) => {
       ],
       order: [["created_at", "DESC"]],
     });
-
-    console.log("Found subOrders:", subOrders.length);
-    console.log(
-      "Order statuses:",
-      subOrders.map((order) => ({
-        id: order.sub_order_id,
-        status: order.status,
-        shipper_id: order.shipment?.shipper_id,
-      }))
-    );
 
     // Set headers to prevent caching
     res.set({
