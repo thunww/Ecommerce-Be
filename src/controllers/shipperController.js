@@ -1,4 +1,4 @@
-const { Shipper, User, Order, Shipment, Address, Payment, SubOrder, sequelize } = require('../models');
+const { Shipper, User, Order, Shipment, Address, Payment, SubOrder, sequelize, OrderItem, Product, ProductVariant } = require('../models');
 const { Op } = require('sequelize');
 const { format } = require('date-fns');
 const { validationResult } = require('express-validator');
@@ -63,6 +63,8 @@ exports.registerShipper = async (req, res) => {
 // Lấy thông tin shipper
 exports.getShipperProfile = async (req, res) => {
   try {
+    console.log('1. Request user:', req.user);
+    
     if (!req.user || !req.user.user_id) {
       return res.status(401).json({
         success: false,
@@ -71,14 +73,14 @@ exports.getShipperProfile = async (req, res) => {
     }
 
     const userId = req.user.user_id;
+    console.log('2. Getting profile for userId:', userId);
 
+    // Lấy thông tin shipper
     const shipper = await Shipper.findOne({
-      where: { user_id: userId },
-      include: [{
-        model: User,
-        attributes: []
-      }]
+      where: { user_id: userId }
     });
+
+    console.log('3. Found shipper:', shipper ? shipper.toJSON() : null);
 
     if (!shipper) {
       return res.status(404).json({
@@ -87,12 +89,58 @@ exports.getShipperProfile = async (req, res) => {
       });
     }
 
+    // Lấy thông tin user
+    const user = await User.findOne({
+      where: { user_id: userId },
+      attributes: ['user_id', 'first_name', 'last_name', 'email']
+    });
+
+    console.log('4. Found user:', user ? user.toJSON() : null);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy thông tin user'
+      });
+    }
+
+    // Kết hợp thông tin
+    const shipperData = {
+      ...shipper.toJSON(),
+      user: user.toJSON()
+    };
+
+    console.log('5. Final response data:', shipperData);
+
     res.json({
       success: true,
-      data: shipper
+      data: shipperData
     });
   } catch (error) {
-    console.error('Error in getShipperProfile:', error);
+    console.error('Detailed error in getShipperProfile:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      code: error.code
+    });
+
+    // Check specific error types
+    if (error.name === 'SequelizeConnectionError') {
+      return res.status(500).json({
+        success: false,
+        message: 'Database connection error',
+        error: error.message
+      });
+    }
+
+    if (error.name === 'SequelizeValidationError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        error: error.message
+      });
+    }
+
     return res.status(500).json({
       success: false,
       message: 'Lấy thông tin shipper thất bại',
@@ -259,7 +307,10 @@ exports.getOrderDetails = async (req, res) => {
   try {
     const { orderId } = req.params;
     const userId = req.user.user_id;
+    console.log('Getting order details for:', { orderId, userId });
+
     const shipper = await Shipper.findOne({ where: { user_id: userId } });
+    console.log('Found shipper:', shipper ? shipper.toJSON() : null);
 
     if (!shipper) {
       return res.status(404).json({
@@ -268,6 +319,7 @@ exports.getOrderDetails = async (req, res) => {
       });
     }
 
+    // Lấy thông tin sub_order
     const subOrder = await SubOrder.findOne({
       where: { 
         sub_order_id: orderId
@@ -303,19 +355,82 @@ exports.getOrderDetails = async (req, res) => {
       ]
     });
 
+    console.log('Found subOrder:', subOrder ? subOrder.toJSON() : null);
+
     if (!subOrder) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy sub_order'
+        message: 'Không tìm thấy đơn hàng'
       });
     }
 
+    // Lấy thông tin order items riêng
+    console.log('Fetching order items for sub_order_id:', orderId);
+    const orderItems = await OrderItem.findAll({
+      where: { sub_order_id: orderId },
+      include: [
+        {
+          model: Product,
+          as: 'product',
+          attributes: [
+            'product_id',
+            'product_name',
+            'description',
+            'weight',
+            'dimensions'
+          ]
+        },
+        {
+          model: ProductVariant,
+          as: 'productVariant',
+          attributes: [
+            'variant_id',
+            'size',
+            'color',
+            'material',
+            'storage',
+            'ram',
+            'processor',
+            'weight',
+            'price',
+            'stock',
+            'image_url'
+          ]
+        }
+      ]
+    });
+
+    console.log('Found order items:', orderItems ? orderItems.length : 0);
+    if (orderItems && orderItems.length > 0) {
+      orderItems.forEach((item, index) => {
+        console.log(`Order item ${index + 1}:`, {
+          order_item_id: item.order_item_id,
+          product_id: item.product_id,
+          variant_id: item.variant_id,
+          product: item.product ? {
+            id: item.product.product_id,
+            name: item.product.product_name
+          } : null,
+          variant: item.productVariant ? {
+            id: item.productVariant.variant_id,
+            size: item.productVariant.size,
+            color: item.productVariant.color
+          } : null
+        });
+      });
+    }
+
+    // Thêm order items vào subOrder
+    subOrder.dataValues.orderItems = orderItems;
+
     res.json({
       success: true,
+      message: 'Lấy chi tiết đơn hàng thành công',
       data: subOrder
     });
   } catch (error) {
-    handleError(res, error, 'Lấy chi tiết sub_order thất bại');
+    console.error('Error in getOrderDetails:', error);
+    handleError(res, error, 'Lấy chi tiết đơn hàng thất bại');
   }
 };
 
@@ -562,7 +677,7 @@ exports.completeOrder = async (req, res) => {
       });
     }
 
-    // Commit transaction nếu mọi thứ OK
+    
     await t.commit();
 
     // Trả về kết quả
