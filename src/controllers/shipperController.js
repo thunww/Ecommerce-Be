@@ -55,6 +55,30 @@ exports.registerShipper = async (req, res) => {
       });
     }
 
+    // Kiểm tra số điện thoại đã được đăng ký chưa
+    const existingPhone = await Shipper.findOne({
+      where: { phone },
+    });
+    if (existingPhone) {
+      return res.status(400).json({
+        success: false,
+        code: "DUPLICATE_PHONE",
+        message: "Số điện thoại này đã được đăng ký bởi shipper khác",
+      });
+    }
+
+    // Kiểm tra biển số xe đã được đăng ký chưa
+    const existingLicensePlate = await Shipper.findOne({
+      where: { license_plate },
+    });
+    if (existingLicensePlate) {
+      return res.status(400).json({
+        success: false,
+        code: "DUPLICATE_LICENSE_PLATE",
+        message: "Biển số xe này đã được đăng ký bởi shipper khác",
+      });
+    }
+
     // Tạo shipper mới
     const shipper = await Shipper.create({
       user_id: userId,
