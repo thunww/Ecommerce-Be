@@ -1,6 +1,6 @@
 const { ProductReview, Product, User } = require("../models");
 const { Op } = require("sequelize");
-
+const { sequelize } = require("../models");
 class ReviewService {
   async createReview(user_id, product_id, rating, comment, images) {
     // Kiểm tra sản phẩm có tồn tại không
@@ -9,8 +9,7 @@ class ReviewService {
       throw new Error("Sản phẩm không tồn tại");
     }
 
-    // Kiểm tra người dùng đã mua sản phẩm chưa
-    // TODO: Implement check if user has purchased the product
+    // TODO: Kiểm tra người dùng đã mua sản phẩm chưa
 
     // Tạo đánh giá mới
     const review = await ProductReview.create({
@@ -18,22 +17,29 @@ class ReviewService {
       product_id,
       rating,
       comment,
-      images: images || [],
+      images: images || "",
     });
 
     // Cập nhật điểm đánh giá trung bình của sản phẩm
     await this.updateProductAverageRating(product_id);
 
-    // Lấy thông tin chi tiết của đánh giá
-    return await ProductReview.findByPk(review.id, {
+    // Lấy thông tin chi tiết của đánh giá vừa tạo
+    const detailedReview = await ProductReview.findByPk(review.review_id, {
       include: [
         {
           model: User,
           as: "user",
-          attributes: ["name", "avatar"],
+          attributes: ["username", "profile_picture"],
         },
       ],
     });
+
+    // Trả về response chuẩn
+    return {
+      status: "success",
+      message: "Tạo đánh giá thành công",
+      data: detailedReview,
+    };
   }
 
   async getReviewsByProductId(product_id) {
@@ -125,7 +131,7 @@ class ReviewService {
 
     await Product.update(
       { average_rating: averageRating },
-      { where: { id: product_id } }
+      { where: { product_id: product_id } }
     );
   }
 }
