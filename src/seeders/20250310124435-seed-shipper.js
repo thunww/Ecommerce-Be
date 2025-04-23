@@ -29,7 +29,7 @@ module.exports = {
         phone: "0968543210",
         vehicle_type: "truck",
         license_plate: "31C-98765",
-        status: "inactive",
+        status: "active",
         created_at: new Date(),
         updated_at: new Date(),
       },

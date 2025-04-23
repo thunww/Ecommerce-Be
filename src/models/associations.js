@@ -241,11 +241,12 @@ module.exports = (db) => {
   // Quan hệ Shipment - SubOrder (1-1)
   SubOrder.hasOne(Shipment, {
     foreignKey: "sub_order_id",
-    onDelete: "CASCADE",
     as: "shipment",
+    onDelete: "CASCADE",
   });
   Shipment.belongsTo(SubOrder, {
     foreignKey: "sub_order_id",
+    as: "subOrder",
     onDelete: "CASCADE",
   });
 

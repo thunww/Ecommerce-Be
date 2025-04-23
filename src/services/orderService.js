@@ -92,7 +92,8 @@ class OrderService {
           order_id: order.order_id,
           shop_id: parseInt(shopId),
           total_price: subTotal,
-          shipping_fee: 0
+          shipping_fee: 0,
+          status: 'pending',
         });
 
         const subOrderItems = items.map(item => {

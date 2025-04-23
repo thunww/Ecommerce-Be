@@ -12,7 +12,7 @@ class AddressService {
         });
     }
 
-    async addAddress(user_id, full_name, phone, address, city, district, ward, is_default) {
+    async addAddress(user_id, recipient_name, phone, address_line, city, province, postal_code, is_default) {
         // Nếu địa chỉ mới là mặc định, bỏ mặc định của các địa chỉ khác
         if (is_default) {
             await Address.update(
@@ -24,17 +24,17 @@ class AddressService {
         // Tạo địa chỉ mới
         return await Address.create({
             user_id,
-            full_name,
+            recipient_name,
             phone,
-            address,
+            address_line,
             city,
-            district,
-            ward,
+            province,
+            postal_code,
             is_default: is_default || false
         });
     }
 
-    async updateAddress(address_id, full_name, phone, address, city, district, ward, is_default) {
+    async updateAddress(address_id, recipient_name, phone, address_line, city, province, postal_code, is_default) {
         const addressObj = await Address.findByPk(address_id);
         if (!addressObj) {
             throw new Error('Không tìm thấy địa chỉ');
@@ -47,19 +47,19 @@ class AddressService {
                 {
                     where: {
                         user_id: addressObj.user_id,
-                        id: { [Op.ne]: address_id }
+                        address_id: { [Op.ne]: address_id }
                     }
                 }
             );
         }
 
         // Cập nhật thông tin địa chỉ
-        addressObj.full_name = full_name;
+        addressObj.recipient_name = recipient_name;
         addressObj.phone = phone;
-        addressObj.address = address;
+        addressObj.address_line = address_line;
         addressObj.city = city;
-        addressObj.district = district;
-        addressObj.ward = ward;
+        addressObj.province = province;
+        addressObj.postal_code = postal_code;
         addressObj.is_default = is_default || false;
         await addressObj.save();
 
