@@ -26,13 +26,18 @@ class OrderService {
 
     try {
       // 👉 1. Tạo địa chỉ giao hàng
+      // 👉 1. Tạo địa chỉ giao hàng
       const address = await Address.create({
         user_id,
+        recipient_name: shipping_address.recipient_name,
         phone: shipping_address.phone,
         address_line: shipping_address.address_line,
+        ward: shipping_address.ward,
+        district: shipping_address.district,
         city: shipping_address.city,
-        province: shipping_address.province
+        is_default: false
       });
+
 
       console.log('✅ Địa chỉ mới được tạo:', address);
 

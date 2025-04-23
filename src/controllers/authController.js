@@ -78,11 +78,9 @@ const handleForgotPassword = async (req, res) => {
       return res.status(404).json({ message: error.message });
     }
     console.error("Error in forgotPassword:", error);
-    return res
-      .status(500)
-      .json({
-        message: "Failed to send reset password email, please try again later",
-      });
+    return res.status(500).json({
+      message: "Failed to send reset password email, please try again later",
+    });
   }
 };
 
