@@ -9,8 +9,8 @@ const {
   sendResetPasswordEmail,
 } = require("../utils/sendEmail");
 
-const registerUser = async (username, email, password, address) => {
-  if (!username || !email || !password || !address) {
+const registerUser = async (username, email, password) => {
+  if (!username || !email || !password) {
     throw new Error("Missing information");
   }
   const existingUser = await User.findOne({ where: { email } });
@@ -27,15 +27,6 @@ const registerUser = async (username, email, password, address) => {
   await UserRole.create({
     user_id: newUser.user_id,
     role_id: customerRole.role_id,
-  });
-
-  // Create default address
-  await Address.create({
-    user_id: newUser.user_id,
-    recipient_name: username,
-    phone: '', // User can update later
-    address_line: address,
-    is_default: true
   });
 
   const verificationToken = generateToken({

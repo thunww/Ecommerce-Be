@@ -1,14 +1,34 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const authMiddleware = require('../middleware/authMiddleware');
+const authMiddleware = require("../middleware/authMiddleware");
+const {
+  getAllAddressesById,
+  createAddress,
+  getAddressById,
+  updateAddress,
+  deleteAddress,
+  setDefaultAddress,
+} = require("../controllers/AddressController");
 
-
-const addressController = require('../controllers/addressController');
-// Address routes
+// Áp dụng authMiddleware cho tất cả routes
 router.use(authMiddleware);
-router.get('/addresses', addressController.getAddresses);
-router.post('/addresses', addressController.addAddress);
-router.put('/addresses/:id', addressController.updateAddress);
-router.delete('/addresses/:id', addressController.deleteAddress);
 
-module.exports = router; 
+// Lấy tất cả địa chỉ của user
+router.get("/", getAllAddressesById);
+
+// Tạo địa chỉ mới
+router.post("/", createAddress);
+
+// Lấy một địa chỉ theo address_id
+router.get("/:address_id", getAddressById);
+
+// Cập nhật địa chỉ
+router.put("/:address_id", updateAddress);
+
+// Xóa địa chỉ
+router.delete("/:address_id", deleteAddress);
+
+// Đặt địa chỉ làm mặc định
+router.patch("/:address_id/default", setDefaultAddress);
+
+module.exports = router;
