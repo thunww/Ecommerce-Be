@@ -19,7 +19,6 @@ const getShopByUserId = async (userId) => {
     });
     return shop;
   } catch (error) {
-    console.error("Error in getShopByUserId:", error);
     throw new Error("Không thể lấy thông tin shop");
   }
 };
@@ -108,8 +107,7 @@ const getAllOrders = async (userId) => {
       nest: true,
     });
 
-    console.log("Found Orders:", JSON.stringify(orders, null, 2));
-    console.log("=== End Getting All Orders ===\n");
+    
 
     return orders;
   } catch (error) {
@@ -121,8 +119,7 @@ const getAllOrders = async (userId) => {
 // Lấy doanh thu tổng
 const getRevenue = async (userId) => {
   try {
-    console.log("=== Getting Revenue ===");
-    console.log("User ID:", userId);
+    
 
     const shop = await Shop.findOne({
       where: { owner_id: userId },
@@ -159,7 +156,7 @@ const getRevenue = async (userId) => {
         "updated_at",
       ],
     });
-    console.log("All delivered orders for shop:", allOrders);
+    
 
     // Tính tổng giá trị đơn hàng (total_price + shipping_fee)
     const totalValue = allOrders.reduce((sum, order) => {
@@ -181,8 +178,7 @@ const getRevenue = async (userId) => {
       deliveredOrdersList: allOrders,
     };
 
-    console.log("Final Result:", result);
-    console.log("=== End Getting Revenue ===\n");
+    
 
     return result;
   } catch (error) {

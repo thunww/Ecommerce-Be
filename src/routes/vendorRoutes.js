@@ -8,7 +8,6 @@ const categoryController = require("../controllers/categoryController");
 
 // Middleware cho vendor routes
 const vendorMiddleware = [authMiddleware, roleMiddleware(["vendor"], true)];
-const vendorMiddleware = [authMiddleware, roleMiddleware(["vendor"], true)];
 
 // Lấy thông tin shop của vendor
 router.get("/my-shop", vendorMiddleware, vendorController.handleGetMyShop);
@@ -88,7 +87,7 @@ router.post(
   "/ai-chat",
   vendorMiddleware,
   (req, res, next) => {
-    console.log("AI Chat Route - Request Body:", req.body);
+   
     next();
   },
   handleAIChat

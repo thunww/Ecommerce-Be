@@ -13,15 +13,12 @@ const { Sequelize } = require("sequelize");
 // Tạm tạo đối tượng ProductImage giả để ngăn lỗi từ code đang tham chiếu đến nó
 const ProductImage = {
   create: (data) => {
-    // console.log("ProductImage.create được gọi nhưng model không tồn tại:", data);
     return null;
   },
   findByPk: (id) => {
-    // console.log("ProductImage.findByPk được gọi nhưng model không tồn tại:", id);
     return null;
   },
   destroy: () => {
-    // console.log("ProductImage.destroy được gọi nhưng model không tồn tại");
     return null;
   },
 };
@@ -36,7 +33,6 @@ class ProductService {
       try {
         transaction = await sequelize.transaction();
       } catch (err) {
-        // console.log("Không thể tạo transaction, tiếp tục không có transaction:", err.message);
         transaction = null;
       }
 
@@ -57,11 +53,9 @@ class ProductService {
         status = "active",
       } = productData;
 
-      // console.log("Dữ liệu sản phẩm nhận được:", JSON.stringify(productData, null, 2));
 
       // Sử dụng ID người dùng mặc định cho môi trường phát triển nếu không có
       const effectiveUserId = userId || 1; // Dùng ID 1 nếu không có userId (chỉ dùng trong môi trường DEV)
-      // console.log("Xử lý tạo sản phẩm cho userId:", effectiveUserId);
 
       // Xác minh danh mục
       let category_id = null; // Mặc định null để tránh gán giá trị không hợp lệ
