@@ -367,4 +367,5 @@ module.exports = (db) => {
     onDelete: "CASCADE",
     as: "variant",
   });
+
 };

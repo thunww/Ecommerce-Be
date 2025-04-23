@@ -1,12 +1,24 @@
-const { Shipper, User, Order, Shipment, Address, Payment, SubOrder, sequelize } = require('../models');
-const { Op } = require('sequelize');
-const { format } = require('date-fns');
-const { validationResult } = require('express-validator');
-const { upload } = require('../middleware/upload');
+const {
+  Shipper,
+  User,
+  Order,
+  Shipment,
+  Address,
+  Payment,
+  SubOrder,
+  sequelize,
+  OrderItem,
+  Product,
+  ProductVariant,
+} = require("../models");
+const { Op } = require("sequelize");
+const { format } = require("date-fns");
+const { validationResult } = require("express-validator");
+const { upload } = require("../middleware/upload");
 
 // Helper function for error handling
-const handleError = (res, error, message = 'Lỗi server') => {
-  console.error('Error:', error);
+const handleError = (res, error, message = "Lỗi server") => {
+  console.error("Error:", error);
   return res.status(500).json({ success: false, message });
 };
 
@@ -16,8 +28,8 @@ const validateRequest = (req) => {
   if (!errors.isEmpty()) {
     return {
       success: false,
-      message: 'Dữ liệu không hợp lệ',
-      errors: errors.array()
+      message: "Dữ liệu không hợp lệ",
+      errors: errors.array(),
     };
   }
   return null;
@@ -33,12 +45,14 @@ exports.registerShipper = async (req, res) => {
     const userId = req.user.user_id;
 
     // Kiểm tra xem user đã đăng ký shipper chưa
-    const existingShipper = await Shipper.findOne({ where: { user_id: userId } });
+    const existingShipper = await Shipper.findOne({
+      where: { user_id: userId },
+    });
     if (existingShipper) {
       return res.status(400).json({
         success: false,
-        message: 'Bạn đã đăng ký làm shipper'
-      }); 
+        message: "Bạn đã đăng ký làm shipper",
+      });
     }
 
     // Tạo shipper mới
@@ -47,16 +61,16 @@ exports.registerShipper = async (req, res) => {
       vehicle_type,
       license_plate,
       phone,
-      status: 'active'
+      status: "pending",
     });
 
     res.status(201).json({
       success: true,
-      message: 'Đăng ký shipper thành công',
-      data: shipper
+      message: "Đăng ký shipper thành công",
+      data: shipper,
     });
   } catch (error) {
-    handleError(res, error, 'Đăng ký shipper thất bại');
+    handleError(res, error, "Đăng ký shipper thất bại");
   }
 };
 
@@ -66,37 +80,68 @@ exports.getShipperProfile = async (req, res) => {
     if (!req.user || !req.user.user_id) {
       return res.status(401).json({
         success: false,
-        message: 'Unauthorized: User information not found'
+        message: "Unauthorized: User information not found",
       });
     }
 
     const userId = req.user.user_id;
+    console.log("Getting profile for userId:", userId);
 
+    // Lấy thông tin shipper
+    // Lấy thông tin shipper
     const shipper = await Shipper.findOne({
       where: { user_id: userId },
-      include: [{
-        model: User,
-        attributes: []
-      }]
     });
+
+    console.log("Found shipper:", shipper ? shipper.toJSON() : null);
 
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy thông tin shipper'
+        message: "Không tìm thấy thông tin shipper",
       });
     }
 
+    // Lấy thông tin user
+    const user = await User.findByPk(userId, {
+      attributes: [
+        "user_id",
+        "first_name",
+        "last_name",
+        "email",
+        "profile_picture",
+      ],
+    });
+
+    console.log("Found user:", user ? user.toJSON() : null);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy thông tin user",
+      });
+    }
+
+    // Kết hợp thông tin
+    const shipperData = shipper.toJSON();
+    shipperData.user = user.toJSON();
+
+    console.log("Final response data:", shipperData);
+
     res.json({
       success: true,
-      data: shipper
+      data: shipperData,
     });
   } catch (error) {
-    console.error('Error in getShipperProfile:', error);
+    console.error("Detailed error in getShipperProfile:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+    });
     return res.status(500).json({
       success: false,
-      message: 'Lấy thông tin shipper thất bại',
-      error: error.message
+      message: "Lấy thông tin shipper thất bại",
+      error: error.message,
     });
   }
 };
@@ -114,7 +159,7 @@ exports.updateShipperProfile = async (req, res) => {
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy thông tin shipper'
+        message: "Không tìm thấy thông tin shipper",
       });
     }
 
@@ -125,11 +170,11 @@ exports.updateShipperProfile = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Cập nhật thông tin thành công',
-      data: shipper
+      message: "Cập nhật thông tin thành công",
+      data: shipper,
     });
   } catch (error) {
-    handleError(res, error, 'Cập nhật thông tin thất bại');
+    handleError(res, error, "Cập nhật thông tin thất bại");
   }
 };
 
@@ -137,11 +182,11 @@ exports.updateShipperProfile = async (req, res) => {
 exports.updateAvatar = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    
+
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: 'Vui lòng chọn ảnh đại diện'
+        message: "Vui lòng chọn ảnh đại diện",
       });
     }
 
@@ -149,7 +194,7 @@ exports.updateAvatar = async (req, res) => {
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy thông tin shipper'
+        message: "Không tìm thấy thông tin shipper",
       });
     }
 
@@ -158,11 +203,11 @@ exports.updateAvatar = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Cập nhật ảnh đại diện thành công',
-      data: shipper
+      message: "Cập nhật ảnh đại diện thành công",
+      data: shipper,
     });
   } catch (error) {
-    handleError(res, error, 'Cập nhật ảnh đại diện thất bại');
+    handleError(res, error, "Cập nhật ảnh đại diện thất bại");
   }
 };
 
@@ -170,86 +215,125 @@ exports.updateAvatar = async (req, res) => {
 exports.getOrders = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    const shipper = await Shipper.findOne({ 
+    const shipper = await Shipper.findOne({
       where: { user_id: userId },
-      attributes: ['shipper_id']
+      attributes: ["shipper_id"],
     });
 
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy thông tin shipper'
+        message: "Không tìm thấy thông tin shipper",
       });
     }
 
     const subOrders = await SubOrder.findAll({
-      where: { 
+      where: {
         [Op.or]: [
           {
-            status: 'processing',
-            '$shipment.shipper_id$': null
+            status: "processing",
+            "$shipment.shipper_id$": null,
           },
           {
-            status: {
-              [Op.in]: ['shipped', 'delivered']
-            },
-            '$shipment.shipper_id$': shipper.shipper_id
-          }
-        ]
+            [Op.and]: [
+              {
+                status: {
+                  [Op.in]: ["shipped", "delivered"],
+                },
+              },
+              {
+                "$shipment.shipper_id$": shipper.shipper_id,
+              },
+            ],
+          },
+          {
+            [Op.and]: [
+              {
+                status: "cancelled",
+              },
+              {
+                "$shipment.shipper_id$": shipper.shipper_id,
+              },
+            ],
+          },
+        ],
       },
       include: [
         {
           model: Shipment,
-          as: 'shipment',
+          as: "shipment",
           required: false,
-          attributes: ['status', 'created_at', 'updated_at', 'estimated_delivery_date']
+          attributes: [
+            "status",
+            "created_at",
+            "updated_at",
+            "estimated_delivery_date",
+            "shipper_id",
+          ],
         },
         {
           model: Order,
-          attributes: ['order_id', 'user_id', 'total_price', 'status', 'payment_status', 'note'],
+          attributes: [
+            "order_id",
+            "user_id",
+            "total_price",
+            "status",
+            "payment_status",
+            "note",
+          ],
           include: [
             {
               model: Address,
-              as: 'shipping_address',
-              attributes: ['address_line', 'city', 'province', 'postal_code']
+              as: "shipping_address",
+              attributes: ["address_line", "city"],
             },
             {
               model: User,
               attributes: [
-                'user_id', 
-                'first_name',
-                'last_name', 
-                'email',
-                'phone',
-                'profile_picture'
-              ]
-            }
-          ]
-        }
+                "user_id",
+                "first_name",
+                "last_name",
+                "email",
+                "phone",
+                "profile_picture",
+              ],
+            },
+          ],
+        },
       ],
-      attributes: ['sub_order_id', 'order_id', 'status', 'total_price', 'shipping_fee', 'created_at', 'updated_at'],
-      order: [['created_at', 'DESC']]
+      attributes: [
+        "sub_order_id",
+        "order_id",
+        "status",
+        "total_price",
+        "shipping_fee",
+        "created_at",
+        "updated_at",
+      ],
+      order: [["created_at", "DESC"]],
     });
 
     // Set headers to prevent caching
     res.set({
-      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
+      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
     });
 
     res.json({
       success: true,
-      data: subOrders
+      data: subOrders,
     });
   } catch (error) {
+    console.error("Error in getOrders:", error);
     return res.status(500).json({
       success: false,
-      message: 'Lấy danh sách sub_orders thất bại',
+      message: "Lấy danh sách sub_orders thất bại",
       error: {
         message: error.message,
-        name: error.name
-      }
+        name: error.name,
+        stack: error.stack,
+      },
     });
   }
 };
@@ -259,202 +343,287 @@ exports.getOrderDetails = async (req, res) => {
   try {
     const { orderId } = req.params;
     const userId = req.user.user_id;
-    const shipper = await Shipper.findOne({ where: { user_id: userId } });
 
+    const shipper = await Shipper.findOne({ where: { user_id: userId } });
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy thông tin shipper'
+        message: "Không tìm thấy thông tin shipper",
       });
     }
 
+    // Lấy thông tin sub_order
     const subOrder = await SubOrder.findOne({
-      where: { 
-        sub_order_id: orderId
+      where: {
+        sub_order_id: orderId,
       },
       include: [
         {
           model: Shipment,
-          as: 'shipment',
-          attributes: ['status', 'created_at', 'updated_at', 'estimated_delivery_date']
+          as: "shipment",
+          attributes: [
+            "status",
+            "created_at",
+            "updated_at",
+            "estimated_delivery_date",
+          ],
         },
         {
           model: Order,
-          attributes: ['order_id', 'user_id', 'total_price', 'status', 'payment_status', 'note'],
+          attributes: [
+            "order_id",
+            "user_id",
+            "total_price",
+            "status",
+            "payment_status",
+            "note",
+          ],
           include: [
             {
               model: Address,
-              as: 'shipping_address',
-              attributes: ['address_line', 'city', 'province', 'postal_code']
+              as: "shipping_address",
+              attributes: ["address_line", "city"],
             },
             {
               model: User,
               attributes: [
-                'user_id', 
-                'first_name',
-                'last_name', 
-                'email',
-                'phone',
-                'profile_picture'
-              ]
-            }
-          ]
-        }
-      ]
+                "user_id",
+                "first_name",
+                "last_name",
+                "email",
+                "phone",
+                "profile_picture",
+              ],
+            },
+          ],
+        },
+      ],
     });
+
+    console.log("Found subOrder:", subOrder ? subOrder.toJSON() : null);
 
     if (!subOrder) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy sub_order'
+        message: "Không tìm thấy đơn hàng",
       });
     }
 
+    // Lấy thông tin order items riêng
+    console.log("Fetching order items for sub_order_id:", orderId);
+    const orderItems = await OrderItem.findAll({
+      where: { sub_order_id: orderId },
+      include: [
+        {
+          model: Product,
+          as: "product",
+          attributes: [
+            "product_id",
+            "product_name",
+            "description",
+            "weight",
+            "dimensions",
+          ],
+        },
+        {
+          model: ProductVariant,
+          as: "productVariant",
+          attributes: [
+            "variant_id",
+            "size",
+            "color",
+            "material",
+            "storage",
+            "ram",
+            "processor",
+            "weight",
+            "price",
+            "stock",
+            "image_url",
+          ],
+        },
+      ],
+    });
+
+    console.log("Found order items:", orderItems ? orderItems.length : 0);
+
+    // Thêm order items vào subOrder
+    subOrder.dataValues.orderItems = orderItems;
+
     res.json({
       success: true,
-      data: subOrder
+      message: "Lấy chi tiết đơn hàng thành công",
+      data: subOrder,
     });
   } catch (error) {
-    handleError(res, error, 'Lấy chi tiết sub_order thất bại');
+    console.error("Error in getOrderDetails:", error);
+    handleError(res, error, "Lấy chi tiết đơn hàng thất bại");
   }
 };
 
 // Nhận đơn hàng
 exports.acceptOrder = async (req, res) => {
   const t = await sequelize.transaction();
-  
+
   try {
-    console.log('Accept order request params:', req.params);
-    console.log('Accept order request body:', req.body);
-    
-    if (!req.params.orderId) {
+    console.log("Accept order request params:", req.params);
+    console.log("Accept order request body:", req.body);
+
+    const { orderId } = req.params;
+    const subOrderId = parseInt(orderId);
+
+    if (!orderId || isNaN(subOrderId)) {
       await t.rollback();
       return res.status(400).json({
         success: false,
-        message: 'Thiếu sub_order ID'
+        message: "Sub_order ID không hợp lệ",
       });
     }
 
-    const subOrderId = parseInt(req.params.orderId);
     const userId = req.user.user_id;
-    console.log('Processing request - subOrderId:', subOrderId, 'userId:', userId);
+    console.log(
+      "Processing request - subOrderId:",
+      subOrderId,
+      "userId:",
+      userId
+    );
 
     // Kiểm tra shipper
-    const shipper = await Shipper.findOne({ 
+    const shipper = await Shipper.findOne({
       where: { user_id: userId },
-      attributes: ['shipper_id', 'status'],
-      transaction: t
+      attributes: ["shipper_id", "status"],
+      transaction: t,
     });
-    console.log('Found shipper:', shipper ? shipper.toJSON() : null);
+    console.log("Found shipper:", shipper ? shipper.toJSON() : null);
 
     if (!shipper) {
       await t.rollback();
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy thông tin shipper'
+        message: "Không tìm thấy thông tin shipper",
       });
     }
 
-    if (shipper.status !== 'active') {
+    if (shipper.status !== "active") {
       await t.rollback();
       return res.status(400).json({
         success: false,
-        message: 'Tài khoản shipper không hoạt động'
+        message: "Tài khoản shipper không hoạt động",
       });
     }
 
     // Kiểm tra sub_order
-    console.log('Finding sub_order with ID:', subOrderId);
+    console.log("Finding sub_order with ID:", subOrderId);
     const subOrder = await SubOrder.findOne({
       where: {
         sub_order_id: subOrderId,
-        status: 'processing'
+        status: "processing",
       },
-      attributes: ['sub_order_id', 'status', 'total_price', 'shipping_fee'],
+      attributes: ["sub_order_id", "status", "total_price", "shipping_fee"],
       transaction: t,
-      lock: true
+      lock: true,
     });
-    console.log('Found sub_order:', subOrder ? subOrder.toJSON() : null);
+    console.log("Found sub_order:", subOrder ? subOrder.toJSON() : null);
 
     if (!subOrder) {
       await t.rollback();
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy đơn hàng hoặc đơn hàng không ở trạng thái processing'
+        message:
+          "Không tìm thấy đơn hàng hoặc đơn hàng không ở trạng thái processing",
       });
     }
 
     // Cập nhật trạng thái sub_order
-    console.log('Updating sub_order status to shipped');
-    await subOrder.update({
-      status: 'shipped'
-    }, { transaction: t });
+    console.log("Updating sub_order status to shipped");
+    await subOrder.update(
+      {
+        status: "shipped",
+      },
+      { transaction: t }
+    );
 
     // Tạo hoặc cập nhật shipment
-    console.log('Finding existing shipment');
+    console.log("Finding existing shipment");
     const shipment = await Shipment.findOne({
-      where: {
-        sub_order_id: subOrderId
-      },
-      attributes: ['shipment_id', 'sub_order_id', 'shipper_id', 'status', 'tracking_number', 'estimated_delivery_date'],
-      transaction: t
+      where: { sub_order_id: subOrderId },
+      attributes: [
+        "shipment_id",
+        "sub_order_id",
+        "shipper_id",
+        "status",
+        "tracking_number",
+        "estimated_delivery_date",
+      ],
+      transaction: t,
     });
-    console.log('Existing shipment:', shipment ? shipment.toJSON() : null);
+    console.log("Existing shipment:", shipment ? shipment.toJSON() : null);
 
     let updatedShipment;
     if (shipment) {
-      console.log('Updating existing shipment');
-      updatedShipment = await shipment.update({
-        status: 'in_transit',
-        estimated_delivery_date: new Date(Date.now() + 24 * 60 * 60 * 1000)
-      }, { 
-        transaction: t,
-        fields: ['status', 'estimated_delivery_date']
-      });
+      console.log("Updating existing shipment");
+      updatedShipment = await shipment.update(
+        {
+          status: "in_transit",
+          estimated_delivery_date: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        },
+        {
+          transaction: t,
+          fields: ["status", "estimated_delivery_date"],
+        }
+      );
     } else {
-      console.log('Creating new shipment');
-      updatedShipment = await Shipment.create({
-        sub_order_id: subOrderId,
-        shipper_id: shipper.shipper_id,
-        status: 'in_transit',
-        tracking_number: 'TN' + Date.now(),
-        estimated_delivery_date: new Date(Date.now() + 24 * 60 * 60 * 1000)
-      }, { 
-        transaction: t,
-        fields: ['sub_order_id', 'shipper_id', 'status', 'tracking_number', 'estimated_delivery_date']
-      });
+      console.log("Creating new shipment");
+      updatedShipment = await Shipment.create(
+        {
+          sub_order_id: subOrderId,
+          shipper_id: shipper.shipper_id,
+          status: "in_transit",
+          tracking_number: "TN" + Date.now(),
+          estimated_delivery_date: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        },
+        {
+          transaction: t,
+          fields: [
+            "sub_order_id",
+            "shipper_id",
+            "status",
+            "tracking_number",
+            "estimated_delivery_date",
+          ],
+        }
+      );
     }
 
     // Commit transaction nếu mọi thứ OK
     await t.commit();
 
     // Trả về kết quả
-    console.log('Operation completed successfully');
+    console.log("Operation completed successfully");
     res.json({
       success: true,
-      message: 'Nhận đơn hàng thành công',
+      message: "Nhận đơn hàng thành công",
       data: {
         subOrder: subOrder.toJSON(),
-        shipment: updatedShipment.toJSON()
-      }
+        shipment: updatedShipment.toJSON(),
+      },
     });
-
   } catch (error) {
     // Rollback transaction nếu có lỗi
     await t.rollback();
-    
-    console.error('Detailed error in acceptOrder:', {
+
+    console.error("Detailed error in acceptOrder:", {
       message: error.message,
       stack: error.stack,
-      name: error.name
+      name: error.name,
     });
     return res.status(500).json({
       success: false,
-      message: 'Lỗi khi nhận đơn hàng',
+      message: "Lỗi khi nhận đơn hàng",
       error: {
         message: error.message,
-        name: error.name
-      }
+        name: error.name,
+      },
     });
   }
 };
@@ -462,137 +631,161 @@ exports.acceptOrder = async (req, res) => {
 // Hoàn thành đơn hàng
 exports.completeOrder = async (req, res) => {
   const t = await sequelize.transaction();
-  
+
   try {
     const { orderId } = req.params;
     const userId = req.user.user_id;
 
-    console.log('Complete order request - orderId:', orderId, 'userId:', userId);
+    console.log(
+      "Complete order request - orderId:",
+      orderId,
+      "userId:",
+      userId
+    );
 
-    const shipper = await Shipper.findOne({ 
+    const shipper = await Shipper.findOne({
       where: { user_id: userId },
-      attributes: ['shipper_id', 'status'],
-      transaction: t
+      attributes: ["shipper_id", "status"],
+      transaction: t,
     });
 
-    console.log('Found shipper:', shipper ? shipper.toJSON() : null);
+    console.log("Found shipper:", shipper ? shipper.toJSON() : null);
 
     if (!shipper) {
       await t.rollback();
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy thông tin shipper'
+        message: "Không tìm thấy thông tin shipper",
       });
     }
 
     // Kiểm tra sub_order
-    console.log('Finding sub_order with ID:', orderId);
+    console.log("Finding sub_order with ID:", orderId);
     const subOrder = await SubOrder.findOne({
       where: {
         sub_order_id: orderId,
-        status: 'shipped'
+        status: "shipped",
       },
-      attributes: ['sub_order_id', 'status', 'total_price', 'shipping_fee'],
+      attributes: ["sub_order_id", "status", "total_price", "shipping_fee"],
       transaction: t,
-      lock: true
+      lock: true,
     });
 
-    console.log('Found sub_order:', subOrder ? subOrder.toJSON() : null);
+    console.log("Found sub_order:", subOrder ? subOrder.toJSON() : null);
 
     if (!subOrder) {
       await t.rollback();
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy đơn hàng hoặc đơn hàng không thể hoàn thành'
+        message: "Không tìm thấy đơn hàng hoặc đơn hàng không thể hoàn thành",
       });
     }
 
     // Cập nhật trạng thái sub_order
-    console.log('Updating sub_order status to delivered');
-    await subOrder.update({ 
-      status: 'delivered' 
-    }, { 
-      transaction: t,
-      fields: ['status']
-    });
+    console.log("Updating sub_order status to delivered");
+    await subOrder.update(
+      {
+        status: "delivered",
+      },
+      {
+        transaction: t,
+        fields: ["status"],
+      }
+    );
 
     // Cập nhật hoặc tạo mới shipment
-    console.log('Finding shipment');
+    console.log("Finding shipment");
     let shipment = await Shipment.findOne({
       where: {
-        sub_order_id: subOrder.sub_order_id
+        sub_order_id: subOrder.sub_order_id,
       },
-      attributes: ['shipment_id', 'status', 'actual_delivery_date', 'shipper_id'],
-      transaction: t
+      attributes: [
+        "shipment_id",
+        "status",
+        "actual_delivery_date",
+        "shipper_id",
+      ],
+      transaction: t,
     });
 
-    console.log('Found shipment:', shipment ? shipment.toJSON() : null);
+    console.log("Found shipment:", shipment ? shipment.toJSON() : null);
 
     if (!shipment) {
-      console.log('Creating new shipment');
+      console.log("Creating new shipment");
       // Nếu không tìm thấy shipment, tạo mới
-      shipment = await Shipment.create({
-        sub_order_id: subOrder.sub_order_id,
-        shipper_id: shipper.shipper_id,
-        status: 'delivered',
-        tracking_number: 'TN' + Date.now(),
-        actual_delivery_date: new Date(),
-        estimated_delivery_date: new Date()
-      }, {
-        transaction: t,
-        fields: ['sub_order_id', 'shipper_id', 'status', 'tracking_number', 'actual_delivery_date', 'estimated_delivery_date']
-      });
+      shipment = await Shipment.create(
+        {
+          sub_order_id: subOrder.sub_order_id,
+          shipper_id: shipper.shipper_id,
+          status: "delivered",
+          tracking_number: "TN" + Date.now(),
+          actual_delivery_date: new Date(),
+          estimated_delivery_date: new Date(),
+        },
+        {
+          transaction: t,
+          fields: [
+            "sub_order_id",
+            "shipper_id",
+            "status",
+            "tracking_number",
+            "actual_delivery_date",
+            "estimated_delivery_date",
+          ],
+        }
+      );
     } else {
-      console.log('Updating existing shipment');
+      console.log("Updating existing shipment");
       // Kiểm tra xem shipment có thuộc về shipper hiện tại không
       if (shipment.shipper_id !== shipper.shipper_id) {
         await t.rollback();
         return res.status(403).json({
           success: false,
-          message: 'Bạn không có quyền cập nhật đơn hàng này'
+          message: "Bạn không có quyền cập nhật đơn hàng này",
         });
       }
 
-      await shipment.update({
-        status: 'delivered',
-        actual_delivery_date: new Date()
-      }, {
-        transaction: t,
-        fields: ['status', 'actual_delivery_date']
-      });
+      await shipment.update(
+        {
+          status: "delivered",
+          actual_delivery_date: new Date(),
+        },
+        {
+          transaction: t,
+          fields: ["status", "actual_delivery_date"],
+        }
+      );
     }
 
-    // Commit transaction nếu mọi thứ OK
     await t.commit();
 
     // Trả về kết quả
-    console.log('Operation completed successfully');
+    console.log("Operation completed successfully");
     res.json({
       success: true,
-      message: 'Hoàn thành đơn hàng thành công',
+      message: "Hoàn thành đơn hàng thành công",
       data: {
         subOrder: subOrder.toJSON(),
-        shipment: shipment.toJSON()
-      }
+        shipment: shipment.toJSON(),
+      },
     });
-
   } catch (error) {
     // Rollback transaction nếu có lỗi
     await t.rollback();
-    
-    console.error('Detailed error in completeOrder:', {
+
+    console.error("Detailed error in completeOrder:", {
       message: error.message,
       stack: error.stack,
-      name: error.name
+      name: error.name,
     });
 
     return res.status(500).json({
       success: false,
-      message: 'Hoàn thành đơn hàng thất bại',
+      message: "Hoàn thành đơn hàng thất bại",
       error: {
         message: error.message,
-        name: error.name
-      }
+        name: error.name,
+      },
     });
   }
 };
@@ -602,13 +795,13 @@ exports.getIncomeStats = async (req, res) => {
   try {
     const userId = req.user.user_id;
     const { startDate, endDate } = req.query;
-    
+
     const shipper = await Shipper.findOne({ where: { user_id: userId } });
 
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy thông tin shipper'
+        message: "Không tìm thấy thông tin shipper",
       });
     }
 
@@ -620,19 +813,21 @@ exports.getIncomeStats = async (req, res) => {
 
     const completedSubOrders = await SubOrder.findAll({
       where: {
-        status: 'delivered',
+        status: "delivered",
         updated_at: {
-          [Op.between]: [startDateTime, endDateTime]
-        }
-      },
-      include: [{
-        model: Shipment,
-        as: 'shipment',
-        where: {
-          shipper_id: shipper.shipper_id
+          [Op.between]: [startDateTime, endDateTime],
         },
-        required: true
-      }]
+      },
+      include: [
+        {
+          model: Shipment,
+          as: "shipment",
+          where: {
+            shipper_id: shipper.shipper_id,
+          },
+          required: true,
+        },
+      ],
     });
 
     // Calculate statistics
@@ -644,13 +839,13 @@ exports.getIncomeStats = async (req, res) => {
     const averageIncome = totalOrders > 0 ? totalIncome / totalOrders : 0;
 
     // Format orders for detailed view
-    const formattedOrders = completedSubOrders.map(order => ({
+    const formattedOrders = completedSubOrders.map((order) => ({
       id: order.sub_order_id,
       deliveryTime: order.updated_at,
-      customerName: order.customer_name || 'Không có tên',
-      address: order.delivery_address || 'Không có địa chỉ',
-      paymentMethod: order.payment_method || 'COD',
-      amount: parseFloat(order.shipping_fee || 0)
+      customerName: order.customer_name || "Không có tên",
+      address: order.delivery_address || "Không có địa chỉ",
+      paymentMethod: order.payment_method || "COD",
+      amount: parseFloat(order.shipping_fee || 0),
     }));
 
     res.json({
@@ -659,14 +854,17 @@ exports.getIncomeStats = async (req, res) => {
         statistics: {
           totalIncome: Math.round(totalIncome * 1000), // Convert to VND
           totalOrders,
-          averagePerOrder: totalOrders > 0 ? Math.round((totalIncome * 1000) / totalOrders) : 0
+          averagePerOrder:
+            totalOrders > 0
+              ? Math.round((totalIncome * 1000) / totalOrders)
+              : 0,
         },
-        orders: formattedOrders
-      }
+        orders: formattedOrders,
+      },
     });
   } catch (error) {
-    console.error('Error in getIncomeStats:', error);
-    handleError(res, error, 'Lấy thống kê thu nhập thất bại');
+    console.error("Error in getIncomeStats:", error);
+    handleError(res, error, "Lấy thống kê thu nhập thất bại");
   }
 };
 
@@ -674,58 +872,61 @@ exports.getIncomeStats = async (req, res) => {
 exports.getIncomeDetails = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    const orderId = req.params.orderId || req.params.order_id;  // Hỗ trợ cả 2 dạng tham số
+    const orderId = req.params.orderId || req.params.order_id; // Hỗ trợ cả 2 dạng tham số
 
-    console.log('Getting income details for:', {
+    console.log("Getting income details for:", {
       userId,
-      orderId
+      orderId,
     });
 
     if (!orderId) {
       return res.status(400).json({
         success: false,
-        message: 'Thiếu mã đơn hàng'
+        message: "Thiếu mã đơn hàng",
       });
     }
 
     const shipper = await Shipper.findOne({ where: { user_id: userId } });
-    console.log('Found shipper:', shipper ? shipper.toJSON() : null);
+    console.log("Found shipper:", shipper ? shipper.toJSON() : null);
 
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy thông tin shipper'
+        message: "Không tìm thấy thông tin shipper",
       });
     }
 
     const subOrder = await SubOrder.findOne({
       where: {
         sub_order_id: orderId,
-        status: 'delivered'
+        status: "delivered",
       },
       include: [
         {
           model: Shipment,
-          as: 'shipment',
-          required: false  // Đổi thành false để lấy được sub_order trước
-        }
-      ]
+          as: "shipment",
+          required: false, // Đổi thành false để lấy được sub_order trước
+        },
+      ],
     });
 
-    console.log('Found subOrder:', subOrder ? subOrder.toJSON() : null);
+    console.log("Found subOrder:", subOrder ? subOrder.toJSON() : null);
 
     if (!subOrder) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy thông tin thu nhập từ đơn hàng này'
+        message: "Không tìm thấy thông tin thu nhập từ đơn hàng này",
       });
     }
 
     // Kiểm tra xem đơn hàng có thuộc về shipper này không
-    if (!subOrder.shipment || subOrder.shipment.shipper_id !== shipper.shipper_id) {
+    if (
+      !subOrder.shipment ||
+      subOrder.shipment.shipper_id !== shipper.shipper_id
+    ) {
       return res.status(403).json({
         success: false,
-        message: 'Bạn không có quyền xem thông tin thu nhập của đơn hàng này'
+        message: "Bạn không có quyền xem thông tin thu nhập của đơn hàng này",
       });
     }
 
@@ -737,16 +938,18 @@ exports.getIncomeDetails = async (req, res) => {
         sub_order_id: subOrder.sub_order_id,
         total_amount: subOrder.total_price || 0,
         shipping_fee: income,
-        delivery_date: subOrder.shipment ? subOrder.shipment.actual_delivery_date : null,
-        status: subOrder.status
-      }
+        delivery_date: subOrder.shipment
+          ? subOrder.shipment.actual_delivery_date
+          : null,
+        status: subOrder.status,
+      },
     };
 
-    console.log('Sending response:', result);
+    console.log("Sending response:", result);
     res.json(result);
   } catch (error) {
-    console.error('Error in getIncomeDetails:', error);
-    handleError(res, error, 'Lấy chi tiết thu nhập thất bại');
+    console.error("Error in getIncomeDetails:", error);
+    handleError(res, error, "Lấy chi tiết thu nhập thất bại");
   }
 };
 
@@ -760,7 +963,7 @@ exports.filterIncomeByDate = async (req, res) => {
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy thông tin shipper'
+        message: "Không tìm thấy thông tin shipper",
       });
     }
 
@@ -771,50 +974,64 @@ exports.filterIncomeByDate = async (req, res) => {
     end.setHours(23, 59, 59, 999);
 
     const completedOrders = await SubOrder.findAll({
-      attributes: ['sub_order_id', 'shipping_fee', 'updated_at'],
+      attributes: ["sub_order_id", "shipping_fee", "updated_at"],
       where: {
-        status: 'delivered',
+        status: "delivered",
         updated_at: {
-          [Op.between]: [start, end]
-        }
-      },
-      include: [{
-        model: Shipment,
-        as: 'shipment',
-        attributes: [],
-        where: {
-          shipper_id: shipper.shipper_id
+          [Op.between]: [start, end],
         },
-        required: true
-      }, {
-        model: Order,
-        attributes: ['payment_method'],
-        include: [{
-          model: User,
-          attributes: ['first_name', 'last_name']
-        }, {
-          model: Address,
-          as: 'shipping_address',
-          attributes: ['address_line', 'city', 'province']
-        }]
-      }],
-      order: [['updated_at', 'DESC']]
+      },
+      include: [
+        {
+          model: Shipment,
+          as: "shipment",
+          attributes: [],
+          where: {
+            shipper_id: shipper.shipper_id,
+          },
+          required: true,
+        },
+        {
+          model: Order,
+          attributes: ["payment_method"],
+          include: [
+            {
+              model: User,
+              attributes: ["first_name", "last_name"],
+            },
+            {
+              model: Address,
+              as: "shipping_address",
+              attributes: ["address_line", "city"],
+            },
+          ],
+        },
+      ],
+      order: [["updated_at", "DESC"]],
     });
 
     // Format orders for detailed view
-    const formattedOrders = completedOrders.map(order => ({
+    const formattedOrders = completedOrders.map((order) => ({
       id: order.sub_order_id,
       deliveryTime: order.updated_at,
-      customerName: order.Order?.User ? `${order.Order.User.first_name} ${order.Order.User.last_name}` : 'Không có tên',
-      address: order.Order?.shipping_address ? `${order.Order.shipping_address.address_line}, ${order.Order.shipping_address.city}, ${order.Order.shipping_address.province}` : 'Không có địa chỉ',
-      paymentMethod: order.Order?.payment_method || 'COD',
-      amount: parseFloat(order.shipping_fee || 0) * 1000 // Convert to VND
+      customerName: order.Order?.User
+        ? `${order.Order.User.first_name} ${order.Order.User.last_name}`
+        : "Không có tên",
+      address: order.Order?.shipping_address
+        ? `${order.Order.shipping_address.address_line}, ${order.Order.shipping_address.city}`
+        : "Không có địa chỉ",
+      paymentMethod: order.Order?.payment_method || "COD",
+      amount: parseFloat(order.shipping_fee || 0) * 1000, // Convert to VND
     }));
 
     // Calculate statistics
-    const totalIncome = formattedOrders.reduce((sum, order) => sum + order.amount, 0);
+    const totalIncome = formattedOrders.reduce(
+      (sum, order) => sum + order.amount,
+      0
+    );
     const totalOrders = formattedOrders.length;
-    const averagePerOrder = totalOrders > 0 ? Math.round(totalIncome / totalOrders) : 0;
+    const averagePerOrder =
+      totalOrders > 0 ? Math.round(totalIncome / totalOrders) : 0;
 
     res.json({
       success: true,
@@ -822,14 +1039,14 @@ exports.filterIncomeByDate = async (req, res) => {
         statistics: {
           totalIncome,
           totalOrders,
-          averagePerOrder
+          averagePerOrder,
         },
-        orders: formattedOrders
-      }
+        orders: formattedOrders,
+      },
     });
   } catch (error) {
-    console.error('Error in filterIncomeByDate:', error);
-    handleError(res, error, 'Lọc thu nhập theo ngày thất bại');
+    console.error("Error in filterIncomeByDate:", error);
+    handleError(res, error, "Lọc thu nhập theo ngày thất bại");
   }
 };
 
@@ -838,17 +1055,17 @@ exports.filterOrdersByArea = async (req, res) => {
   try {
     const userId = req.user.user_id;
     const { city, province, postal_code } = req.query;
-    
+
     const shipper = await Shipper.findOne({ where: { user_id: userId } });
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy thông tin shipper'
+        message: "Không tìm thấy thông tin shipper",
       });
     }
 
     const whereClause = {
-      shipper_id: shipper.shipper_id
+      shipper_id: shipper.shipper_id,
     };
 
     const addressWhere = {};
@@ -861,24 +1078,24 @@ exports.filterOrdersByArea = async (req, res) => {
       include: [
         {
           model: Shipment,
-          attributes: ['status', 'created_at', 'updated_at']
+          attributes: ["status", "created_at", "updated_at"],
         },
         {
           model: Address,
-          as: 'shippingAddress',
+          as: "shippingAddress",
           where: addressWhere,
-          attributes: ['address_line', 'city', 'province', 'postal_code']
-        }
+          attributes: ["address_line", "city", "province", "postal_code"],
+        },
       ],
-      order: [['created_at', 'DESC']]
+      order: [["created_at", "DESC"]],
     });
 
     res.json({
       success: true,
-      data: orders
+      data: orders,
     });
   } catch (error) {
-    handleError(res, error, 'Lọc đơn hàng theo khu vực thất bại');
+    handleError(res, error, "Lọc đơn hàng theo khu vực thất bại");
   }
 };
 
@@ -892,41 +1109,46 @@ exports.searchOrder = async (req, res) => {
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy thông tin shipper'
+        message: "Không tìm thấy thông tin shipper",
       });
     }
 
     const order = await Order.findOne({
       where: {
         order_id: orderId,
-        shipper_id: shipper.shipper_id
+        shipper_id: shipper.shipper_id,
       },
       include: [
         {
           model: Shipment,
-          attributes: ['status', 'created_at', 'updated_at', 'expected_delivery_date']
+          attributes: [
+            "status",
+            "created_at",
+            "updated_at",
+            "expected_delivery_date",
+          ],
         },
         {
           model: Address,
-          as: 'shippingAddress',
-          attributes: ['address_line', 'city', 'province', 'postal_code']
-        }
-      ]
+          as: "shippingAddress",
+          attributes: ["address_line", "city", "province", "postal_code"],
+        },
+      ],
     });
 
     if (!order) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy đơn hàng'
+        message: "Không tìm thấy đơn hàng",
       });
     }
 
     res.json({
       success: true,
-      data: order
+      data: order,
     });
   } catch (error) {
-    handleError(res, error, 'Tìm kiếm đơn hàng thất bại');
+    handleError(res, error, "Tìm kiếm đơn hàng thất bại");
   }
 };
 
@@ -939,7 +1161,7 @@ exports.getOrderHistory = async (req, res) => {
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy thông tin shipper'
+        message: "Không tìm thấy thông tin shipper",
       });
     }
 
@@ -947,29 +1169,34 @@ exports.getOrderHistory = async (req, res) => {
       where: {
         shipper_id: shipper.shipper_id,
         status: {
-          [Op.in]: ['completed', 'cancelled']
-        }
+          [Op.in]: ["completed", "cancelled"],
+        },
       },
       include: [
         {
           model: Shipment,
-          attributes: ['status', 'created_at', 'updated_at', 'actual_delivery_date']
+          attributes: [
+            "status",
+            "created_at",
+            "updated_at",
+            "actual_delivery_date",
+          ],
         },
         {
           model: Address,
-          as: 'shippingAddress',
-          attributes: ['address_line', 'city', 'province', 'postal_code']
-        }
+          as: "shippingAddress",
+          attributes: ["address_line", "city", "province", "postal_code"],
+        },
       ],
-      order: [['updated_at', 'DESC']]
+      order: [["updated_at", "DESC"]],
     });
 
     res.json({
       success: true,
-      data: orders
+      data: orders,
     });
   } catch (error) {
-    handleError(res, error, 'Lấy lịch sử đơn hàng thất bại');
+    handleError(res, error, "Lấy lịch sử đơn hàng thất bại");
   }
 };
 
@@ -977,15 +1204,15 @@ exports.getOrderHistory = async (req, res) => {
 exports.getDashboardStats = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    const shipper = await Shipper.findOne({ 
+    const shipper = await Shipper.findOne({
       where: { user_id: userId },
-      attributes: ['shipper_id']
+      attributes: ["shipper_id"],
     });
 
     if (!shipper) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy thông tin shipper'
+        message: "Không tìm thấy thông tin shipper",
       });
     }
 
@@ -997,41 +1224,45 @@ exports.getDashboardStats = async (req, res) => {
     const todayOrders = await SubOrder.count({
       where: {
         created_at: {
-          [Op.gte]: today
+          [Op.gte]: today,
         },
         [Op.or]: [
           {
-            status: 'processing',
-            '$shipment.shipper_id$': null
+            status: "processing",
+            "$shipment.shipper_id$": null,
           },
           {
             status: {
-              [Op.in]: ['shipped', 'delivered']
+              [Op.in]: ["shipped", "delivered"],
             },
-            '$shipment.shipper_id$': shipper.shipper_id
-          }
-        ]
+            "$shipment.shipper_id$": shipper.shipper_id,
+          },
+        ],
       },
-      include: [{
-        model: Shipment,
-        as: 'shipment',
-        required: false,
-        attributes: []
-      }]
+      include: [
+        {
+          model: Shipment,
+          as: "shipment",
+          required: false,
+          attributes: [],
+        },
+      ],
     });
 
     // Đếm số đơn hàng đã hoàn thành
     const completedOrders = await SubOrder.count({
       where: {
-        status: 'delivered',
-        '$shipment.shipper_id$': shipper.shipper_id
+        status: "delivered",
+        "$shipment.shipper_id$": shipper.shipper_id,
       },
-      include: [{
-        model: Shipment,
-        as: 'shipment',
-        required: true,
-        attributes: []
-      }]
+      include: [
+        {
+          model: Shipment,
+          as: "shipment",
+          required: true,
+          attributes: [],
+        },
+      ],
     });
 
     // Đếm số đơn hàng đang chờ (chưa có shipper hoặc đang giao)
@@ -1039,45 +1270,50 @@ exports.getDashboardStats = async (req, res) => {
       where: {
         [Op.or]: [
           {
-            status: 'processing',
-            '$shipment.shipper_id$': null
+            status: "processing",
+            "$shipment.shipper_id$": null,
           },
           {
-            status: 'shipped',
-            '$shipment.shipper_id$': shipper.shipper_id
-          }
-        ]
+            status: "shipped",
+            "$shipment.shipper_id$": shipper.shipper_id,
+          },
+        ],
       },
-      include: [{
-        model: Shipment,
-        as: 'shipment',
-        required: false,
-        attributes: []
-      }]
+      include: [
+        {
+          model: Shipment,
+          as: "shipment",
+          required: false,
+          attributes: [],
+        },
+      ],
     });
 
     // Tính tổng doanh thu hôm nay
-    const todayRevenue = await SubOrder.sum('shipping_fee', {
-      where: {
-        status: 'delivered',
-        updated_at: {
-          [Op.gte]: today
+    const todayRevenue =
+      (await SubOrder.sum("shipping_fee", {
+        where: {
+          status: "delivered",
+          updated_at: {
+            [Op.gte]: today,
+          },
+          "$shipment.shipper_id$": shipper.shipper_id,
         },
-        '$shipment.shipper_id$': shipper.shipper_id
-      },
-      include: [{
-        model: Shipment,
-        as: 'shipment',
-        required: true,
-        attributes: []
-      }]
-    }) || 0;
+        include: [
+          {
+            model: Shipment,
+            as: "shipment",
+            required: true,
+            attributes: [],
+          },
+        ],
+      })) || 0;
 
     // Set headers to prevent caching
     res.set({
-      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
+      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
     });
 
     res.json({
@@ -1086,17 +1322,85 @@ exports.getDashboardStats = async (req, res) => {
         todayOrders,
         completedOrders,
         pendingOrders,
-        todayRevenue
-      }
+        todayRevenue,
+      },
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: 'Lấy thống kê dashboard thất bại',
+      message: "Lấy thống kê dashboard thất bại",
       error: {
         message: error.message,
-        name: error.name
-      }
+        name: error.name,
+      },
     });
   }
-}; 
+};
+
+// Hủy đơn hàng
+exports.cancelOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const userId = req.user.user_id;
+
+    // Tìm shipper
+    const shipper = await Shipper.findOne({
+      where: { user_id: userId },
+      attributes: ["shipper_id"],
+    });
+
+    if (!shipper) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy thông tin shipper",
+      });
+    }
+
+    // Tìm sub_order và kiểm tra trạng thái
+    const subOrder = await SubOrder.findOne({
+      where: {
+        sub_order_id: orderId,
+        status: "shipped",
+        "$shipment.shipper_id$": shipper.shipper_id,
+      },
+      include: [
+        {
+          model: Shipment,
+          as: "shipment",
+          required: true,
+        },
+      ],
+    });
+
+    if (!subOrder) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy đơn hàng hoặc đơn hàng không thể hủy",
+      });
+    }
+
+    // Bắt đầu transaction
+    const result = await sequelize.transaction(async (t) => {
+      // Cập nhật trạng thái sub_order
+      await subOrder.update({ status: "cancelled" }, { transaction: t });
+
+      // Cập nhật trạng thái shipment
+      await subOrder.shipment.update({ status: "failed" }, { transaction: t });
+
+      return subOrder;
+    });
+
+    res.json({
+      success: true,
+      message: "Hủy đơn hàng thành công",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error in cancelOrder:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Hủy đơn hàng thất bại",
+      error: error.message,
+    });
+  }
+};
