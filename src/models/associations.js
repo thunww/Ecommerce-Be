@@ -368,4 +368,13 @@ module.exports = (db) => {
     as: "variant",
   });
 
+  Shipper.belongsTo(User, {
+    foreignKey: "user_id",
+    as: "users",
+  });
+
+  User.hasOne(Shipper, {
+    foreignKey: "user_id",
+    as: "shipper",
+  });
 };

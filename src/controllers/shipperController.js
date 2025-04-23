@@ -35,7 +35,105 @@ const validateRequest = (req) => {
   return null;
 };
 
-// Đăng ký shipper
+exports.getAllShipper = async (req, res) => {
+  try {
+    // Lấy tất cả shipper từ database
+    const shippers = await Shipper.findAll({
+      attributes: [
+        "shipper_id",
+        "user_id",
+        "phone",
+        "vehicle_type",
+        "license_plate",
+        "status",
+        "created_at",
+        "updated_at",
+      ],
+      include: [
+        {
+          model: User,
+          as: "users", // Alias cho bảng User
+          attributes: ["username", "profile_picture"], // Chỉ lấy username và profile_picture
+        },
+      ],
+    });
+
+    // Kiểm tra xem có shipper nào không
+    if (shippers.length === 0) {
+      return res.status(404).json({
+        status: "error",
+        message: "Không tìm thấy shipper nào",
+        data: [],
+      });
+    }
+
+    // Trả về response thành công
+    return res.status(200).json({
+      status: "success",
+      message: "Lấy danh sách shipper thành công",
+      data: shippers,
+    });
+  } catch (error) {
+    // Xử lý lỗi
+    console.error("Lỗi khi lấy danh sách shipper:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Lỗi server khi lấy danh sách shipper",
+      data: [],
+    });
+  }
+};
+
+exports.updateShipperStatus = async (req, res) => {
+  try {
+    const { shipper_id } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ["pending", "active", "inactive", "banned"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        status: "error",
+        message:
+          "Trạng thái không hợp lệ. Chỉ chấp nhận: pending, active, inactive, banned",
+        data: null,
+      });
+    }
+
+    // Tìm shipper theo shipper_id
+    const shipper = await Shipper.findByPk(shipper_id);
+    if (!shipper) {
+      return res.status(404).json({
+        status: "error",
+        message: "Không tìm thấy shipper với ID cung cấp",
+        data: null,
+      });
+    }
+
+    // Cập nhật trạng thái
+    shipper.status = status;
+    await shipper.save();
+
+    // Trả về response thành công
+    return res.status(200).json({
+      status: "success",
+      message: "Cập nhật trạng thái shipper thành công",
+      data: {
+        shipper_id: shipper.shipper_id,
+        status: shipper.status,
+        updated_at: shipper.updated_at,
+      },
+    });
+  } catch (error) {
+    // Xử lý lỗi
+    console.error("Lỗi khi cập nhật trạng thái shipper:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Lỗi server khi cập nhật trạng thái shipper",
+      data: null,
+    });
+  }
+};
+
 exports.registerShipper = async (req, res) => {
   try {
     const validationError = validateRequest(req);
@@ -85,15 +183,10 @@ exports.getShipperProfile = async (req, res) => {
     }
 
     const userId = req.user.user_id;
-    console.log("Getting profile for userId:", userId);
 
-    // Lấy thông tin shipper
-    // Lấy thông tin shipper
     const shipper = await Shipper.findOne({
       where: { user_id: userId },
     });
-
-    console.log("Found shipper:", shipper ? shipper.toJSON() : null);
 
     if (!shipper) {
       return res.status(404).json({

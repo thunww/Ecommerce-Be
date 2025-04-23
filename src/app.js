@@ -23,8 +23,8 @@ const shopRoutes = require("./routes/shopRoutes");
 const couponRoutes = require("./routes/couponRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
-const shipperRoutes = require('./routes/shipperRoutes');
-const { handleUploadError } = require('./middleware/upload');
+const shipperRoutes = require("./routes/shipperRoutes");
+const { handleUploadError } = require("./middleware/upload");
 
 // Middleware
 app.use(helmet());
@@ -56,7 +56,7 @@ app.use("/api/v1/categories", categoryRoutes);
 app.use("/api/v1/chat", chatRoutes);
 app.use("/api/v1/shops", shopRoutes);
 app.use("/api/v1/vendor", vendorRoutes);
-app.use('/api/v1/shippers', shipperRoutes);
+app.use("/api/v1/shippers", shipperRoutes);
 // app.use("/api/v1/admin", adminRoutes);
 
 // Upload error handling
