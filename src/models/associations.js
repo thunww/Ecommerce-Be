@@ -240,14 +240,14 @@ module.exports = (db) => {
 
   // Quan hệ Shipment - SubOrder (1-1)
   SubOrder.hasOne(Shipment, {
-    foreignKey: 'sub_order_id',
-    as: 'shipment',
-    onDelete: 'CASCADE'
+    foreignKey: "sub_order_id",
+    as: "shipment",
+    onDelete: "CASCADE",
   });
   Shipment.belongsTo(SubOrder, {
-    foreignKey: 'sub_order_id',
-    as: 'subOrder',
-    onDelete: 'CASCADE'
+    foreignKey: "sub_order_id",
+    as: "subOrder",
+    onDelete: "CASCADE",
   });
 
   // Quan hệ Wishlist - User (N-1)

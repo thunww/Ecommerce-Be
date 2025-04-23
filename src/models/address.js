@@ -1,5 +1,5 @@
-const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { Model, DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
 
 class Address extends Model {}
 
@@ -28,15 +28,15 @@ Address.init(
     },
     city: {
       type: DataTypes.STRING(50),
-      allowNull: true,
+      allowNull: false,
     },
-    province: {
+    district: {
       type: DataTypes.STRING(50),
-      allowNull: true,
+      allowNull: false,
     },
-    postal_code: {
-      type: DataTypes.STRING(10),
-      allowNull: true,
+    ward: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
     },
     is_default: {
       type: DataTypes.BOOLEAN,
@@ -45,9 +45,10 @@ Address.init(
   },
   {
     sequelize,
-    modelName: 'Address',
-    tableName: 'Addresses',
+    modelName: "Address",
+    tableName: "Addresses",
     timestamps: true,
+    underscored: true,
   }
 );
 
