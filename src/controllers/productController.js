@@ -1,5 +1,8 @@
 const productService = require("../services/productService");
 const { Shop } = require("../models");
+const Product = require('../models/product');
+const { deleteImagesByUrls } = require("../utils/cloudinaryHelper");
+
 const getAllProducts = async (req, res) => {
   try {
     const products = await productService.getAllProducts();
@@ -18,30 +21,31 @@ const getAllProducts = async (req, res) => {
   }
 };
 // ham tao san pham
-const createProduct = async (req, res) => {
+// BE/src/controllers/productController.js
+// BE/src/controllers/productController.js
+
+
+const checkDuplicateProductName = async (req, res, next) => {
   try {
-    // Lấy thông tin người dùng từ token
+    // Lấy userId từ token xác thực
+    if (!req.user || !req.user.user_id) {
+      return res.status(401).json({
+        success: false,
+        message: "Không có quyền truy cập hoặc token không hợp lệ",
+      });
+    }
+    
     const userId = req.user.user_id;
-
-    // Lấy thông tin từ request body với đúng tên trường từ frontend
-    const {
-      productName,
-      category,
-      description,
-      price,
-      stock,
-      images,
-      variations,
-      weight,
-      parcelSize,
-      shippingOptions,
-      preOrder,
-      condition,
-      parentSKU,
-      promotionImage,
-    } = req.body;
-
-    // Lấy shop_id từ user đã xác thực
+    const { productName } = req.body;
+    
+    if (!productName) {
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu tên sản phẩm",
+      });
+    }
+    
+    // Tìm shop dựa vào userId
     const shop = await Shop.findOne({ where: { owner_id: userId } });
     if (!shop) {
       return res.status(400).json({
@@ -49,45 +53,153 @@ const createProduct = async (req, res) => {
         message: "Không tìm thấy thông tin shop",
       });
     }
-
-    // Kiểm tra các trường bắt buộc
-    if (!productName || !category || !price || !stock) {
+    
+    // Kiểm tra tên sản phẩm đã tồn tại chưa
+    const existingProduct = await Product.findOne({
+      where: {
+        product_name: productName,
+        shop_id: shop.shop_id
+      }
+    });
+    
+    if (existingProduct) {
       return res.status(400).json({
         success: false,
-        message: "Thiếu thông tin bắt buộc",
+        message: `Sản phẩm có tên "${productName}" đã tồn tại trong shop của bạn. Vui lòng chọn tên khác.`,
       });
+    }
+    
+    // Lưu shop_id vào req để sử dụng sau
+    req.shop_id = shop.shop_id;
+    next();
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi khi kiểm tra tên sản phẩm",
+      error: error.message,
+    });
+  }
+};
+
+// Hàm xử lý tạo sản phẩm
+const createProduct = async (req, res, next) => {
+  try {
+    // Lấy userId từ token xác thực
+    if (!req.user || !req.user.user_id) {
+      if (req.uploadedImages && req.uploadedImages.length > 0) {
+        await deleteImagesByUrls(req.uploadedImages);
+      }
+      return res.status(401).json({
+        success: false,
+        message: "Không có quyền truy cập"
+      });
+    }
+    
+    const userId = req.user.user_id;
+    
+    // Kiểm tra các trường bắt buộc
+    const { productName, price, stock, category } = req.body;
+    if (!productName || !price || !stock || !category) {
+      if (req.uploadedImages && req.uploadedImages.length > 0) {
+        await deleteImagesByUrls(req.uploadedImages);
+      }
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu thông tin bắt buộc"
+      });
+    }
+    
+    // Tìm shop của user
+    const shop = await Shop.findOne({ where: { owner_id: userId } });
+    if (!shop) {
+      if (req.uploadedImages && req.uploadedImages.length > 0) {
+        await deleteImagesByUrls(req.uploadedImages);
+      }
+      return res.status(400).json({
+        success: false,
+        message: "Không tìm thấy shop"
+      });
+    }
+    
+    // KIỂM TRA TÊN TRÙNG TỪ req.body
+    const existingProduct = await Product.findOne({
+      where: { product_name: productName, shop_id: shop.shop_id }
+    });
+
+    if (existingProduct) {
+      // Nếu tên trùng, xóa ảnh đã upload
+      if (req.uploadedImages && req.uploadedImages.length > 0) {
+        await deleteImagesByUrls(req.uploadedImages);
+      }
+      return res.status(400).json({
+        success: false,
+        message: `Sản phẩm có tên "${productName}" đã tồn tại trong shop của bạn. Vui lòng chọn tên khác.`
+      });
+    }
+    
+    // Xử lý các trường JSON
+    let parsedVariations = [];
+    if (req.body.variations) {
+      try {
+        parsedVariations = typeof req.body.variations === 'string' 
+          ? JSON.parse(req.body.variations) 
+          : req.body.variations;
+          
+        if (!Array.isArray(parsedVariations)) {
+          parsedVariations = [];
+        }
+      } catch (e) {
+        console.error("Lỗi parse variations:", e);
+        parsedVariations = [];
+      }
+    }
+
+    let parsedParcelSize = null;
+    if (req.body.parcelSize) {
+      try {
+        parsedParcelSize = typeof req.body.parcelSize === 'string' 
+          ? JSON.parse(req.body.parcelSize) 
+          : req.body.parcelSize;
+      } catch (e) {
+        console.error("Lỗi parse parcelSize:", e);
+        parsedParcelSize = { width: 20, height: 10, length: 5 };
+      }
+    }
+
+    // Xử lý dữ liệu ảnh
+    let cloudinaryImages = req.uploadedImages || [];
+    let primaryImageUrl = null;
+    
+    if (req.files && req.files.primaryImage && req.files.primaryImage[0]) {
+      primaryImageUrl = req.files.primaryImage[0].path;
+    } else if (cloudinaryImages.length > 0) {
+      primaryImageUrl = cloudinaryImages[0];
     }
 
     // Gọi service để tạo sản phẩm
     const result = await productService.createProduct({
       productName,
-      description,
+      description: req.body.description,
       price,
       stock,
-      category_id: category, // Đổi tên trường để phù hợp với model
+      category,
+      userId,
       shop_id: shop.shop_id,
-      images,
-      variations,
-      weight,
-      dimensions: JSON.stringify(parcelSize) || null, // Đổi tên trường
-      status: "active", // Trạng thái khi nhấn Save and Public
-      promotionImage,
-      preOrder,
-      condition,
-      parentSKU,
+      primaryImageUrl,
+      images: cloudinaryImages,
+      variations: parsedVariations,
+      parcelSize: parsedParcelSize,
+      weight: req.body.weight
     });
 
     return res.status(201).json({
       success: true,
       message: "Tạo sản phẩm thành công",
-      data: result,
+      data: result
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      error: error.message,
-    });
+    // Chuyển lỗi cho middleware handleProductError xử lý
+    next(error);
   }
 };
 const deleteProductImage = async (req, res) => {
@@ -301,4 +413,5 @@ module.exports = {
   suggestProducts,
   deleteProductImage,
   createProduct, // Thêm hàm mới
+  checkDuplicateProductName,
 };

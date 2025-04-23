@@ -4,14 +4,17 @@ const productController = require("../controllers/productController");
 const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
 const upload = require("../middleware/uploadMiddleware");
+const { uploadProduct } = require("../config/cloudinary");
+const { parseFormAndUpload, handleProductError } = require('../middleware/checkFileUpload');
 
 router.get("/", productController.getAllProducts);
 
-router.post(
-  "/create",
+router.post('/create',
   authMiddleware,
-  roleMiddleware(['vendor', 'admin']), // Sử dụng middleware role
-  productController.createProduct
+  roleMiddleware(["vendor"]),
+  parseFormAndUpload, // Upload ảnh & parse form data
+  productController.createProduct, // Controller kiểm tra tên + tạo sản phẩm
+  handleProductError // Xử lý lỗi và xóa ảnh
 );
 
 // Route xóa hình ảnh sản phẩm

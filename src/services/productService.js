@@ -27,7 +27,7 @@ class ProductService {
   // tạo sản phẩm
   async createProduct(productData) {
     let transaction;
-
+  
     try {
       // Thử tạo transaction với try-catch để bắt lỗi
       try {
@@ -35,46 +35,68 @@ class ProductService {
       } catch (err) {
         transaction = null;
       }
-
+  
       const {
         productName,
         description,
         price,
         stock,
         category,
-        shopId,
-        userId = 1, // Cung cấp giá trị mặc định để tránh lỗi trong môi trường phát triển
-        primaryImage,
-        additionalImages,
-        variationImages,
+        userId,
+        primaryImageUrl,
+        images = [],
         variations,
         parcelSize,
         weight,
-        status = "active",
+        status = "pending",
       } = productData;
-
-
-      // Sử dụng ID người dùng mặc định cho môi trường phát triển nếu không có
-      const effectiveUserId = userId || 1; // Dùng ID 1 nếu không có userId (chỉ dùng trong môi trường DEV)
-
+  
+      // Đảm bảo userId tồn tại
+      if (!userId) {
+        throw new Error("Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.");
+      }
+  
+      // Tìm shop dựa vào userId từ token
+      let shop = null;
+      let shop_id = null;
+  
+      // Tìm shop dựa trên owner_id = userId
+      shop = await Shop.findOne({
+        where: { owner_id: userId },
+      });
+      
+      if (shop) {
+        shop_id = shop.shop_id;
+      } else {
+        throw new Error(`Không tìm thấy shop nào thuộc người dùng với ID ${userId}. Vui lòng tạo shop trước khi thêm sản phẩm.`);
+      }
+  
+      // Kiểm tra tên sản phẩm đã tồn tại trong shop chưa
+      const existingProduct = await Product.findOne({
+        where: {
+          product_name: productName,
+          shop_id: shop_id
+        }
+      });
+  
+      if (existingProduct) {
+        throw new Error(`Sản phẩm có tên "${productName}" đã tồn tại trong shop của bạn. Vui lòng chọn tên khác.`);
+      }
+  
       // Xác minh danh mục
       let category_id = null; // Mặc định null để tránh gán giá trị không hợp lệ
       try {
         // Nếu category là một chuỗi (tên danh mục) thay vì ID
         if (typeof category === "string" && isNaN(parseInt(category))) {
-          // console.log(`Đang tìm danh mục theo tên: "${category}"`);
-          // Tìm kiếm category theo tên chính xác (không dùng LIKE mà dùng so khớp chính xác)
           const categoryByName = await Category.findOne({
             where: {
               category_name: category,
             },
           });
-
+  
           if (categoryByName) {
             category_id = categoryByName.category_id;
-            // console.log(`Đã tìm thấy danh mục: ${categoryByName.category_name} với ID: ${category_id}`);
           } else {
-            // console.log(`Không tìm thấy danh mục chính xác với tên "${category}", thử tìm tương đối`);
             // Tìm kiếm tương đối nếu không tìm thấy chính xác
             const categoryByLikeName = await Category.findOne({
               where: {
@@ -83,127 +105,61 @@ class ProductService {
                 },
               },
             });
-
+  
             if (categoryByLikeName) {
               category_id = categoryByLikeName.category_id;
-              // console.log(`Đã tìm thấy danh mục tương đối: ${categoryByLikeName.category_name} với ID: ${category_id}`);
             } else {
-              // Lấy danh sách tất cả danh mục để debug
-              // console.log(`Không tìm thấy danh mục với tên tương đối "${category}", hiển thị tất cả danh mục`);
-              const allCategories = await Category.findAll({
-                attributes: ["category_id", "category_name"],
-              });
-              // console.log(`Danh sách tất cả danh mục:`, allCategories.map((c) => `${c.category_id}: ${c.category_name}`));
-
-              // Gán một category_id mặc định (3 = Computers) nếu không tìm thấy
-              category_id = 3; // Gán ID mặc định cho danh mục Computers
-              // console.log(`Sử dụng ID danh mục mặc định: ${category_id}`);
+              // Báo lỗi nếu không tìm thấy danh mục
+              throw new Error(`Không tìm thấy danh mục "${category}". Vui lòng chọn danh mục khác.`);
             }
           }
         } else {
-          // Tìm kiếm theo ID như trước
+          // Tìm kiếm theo ID
           const categoryId = parseInt(category) || 0;
-          // console.log(`Tìm danh mục theo ID: ${categoryId}`);
-
+  
           if (categoryId > 0) {
             const categoryObj = await Category.findByPk(categoryId);
             if (categoryObj) {
               category_id = categoryObj.category_id;
-              // console.log(`Đã tìm thấy danh mục theo ID: ${category_id} (${categoryObj.category_name})`);
             } else {
-              // console.log(`Danh mục với ID ${categoryId} không tồn tại, sử dụng ID mặc định 3 (Computers)`);
-              category_id = 3; // Gán ID mặc định cho danh mục
+              throw new Error(`Danh mục với ID ${categoryId} không tồn tại. Vui lòng chọn danh mục khác.`);
             }
           } else {
-            // console.log(`ID danh mục không hợp lệ: ${category}, sử dụng ID mặc định 3 (Computers)`);
-            category_id = 3; // Gán ID mặc định cho danh mục
+            throw new Error(`ID danh mục không hợp lệ: ${category}. Vui lòng chọn danh mục hợp lệ.`);
           }
         }
       } catch (error) {
-        // console.log("Lỗi khi kiểm tra danh mục:", error.message);
-        // Sử dụng danh mục mặc định trong trường hợp lỗi
-        category_id = 3; // Gán ID mặc định cho danh mục Computers
-        // console.log(`Đã xảy ra lỗi, sử dụng ID danh mục mặc định: ${category_id}`);
+        throw new Error(`Lỗi khi kiểm tra danh mục: ${error.message}`);
       }
-
-      // Đảm bảo category_id luôn là một số nguyên hợp lệ
-      if (!category_id || isNaN(category_id)) {
-        category_id = 3; // Gán ID mặc định cho danh mục Computers
-        // console.log(`category_id không hợp lệ, sử dụng giá trị mặc định: ${category_id}`);
-      }
-
-      // console.log(`FINAL: Sử dụng category_id = ${category_id} cho sản phẩm`);
-
-      // Xác minh shop - Tìm shop dựa vào userId nếu không có shopId
-      let shop = null;
-      let shop_id = null;
-
-      // Trường hợp 1: Có shopId cụ thể
-      if (shopId) {
-        shop = await Shop.findByPk(shopId);
-        // Không cần kiểm tra owner_id nếu đang ở chế độ phát triển
-        if (shop) {
-          shop_id = shop.shop_id;
-        }
-      }
-
-      // Trường hợp 2: Không có shopId, tìm shop dựa vào userId
-      if (!shop_id) {
-        shop = await Shop.findOne({
-          where: { owner_id: effectiveUserId },
-        });
-        if (shop) {
-          shop_id = shop.shop_id;
-        }
-      }
-
-      // Trường hợp 3: Vẫn không tìm thấy shop, lấy shop đầu tiên trong DB (chỉ cho môi trường phát triển)
-      if (!shop) {
-        shop = await Shop.findOne();
-        if (shop) {
-          shop_id = shop.shop_id;
-          // console.log(`Sử dụng shop_id = ${shop_id} mặc định vì không tìm thấy shop cho user`);
-        } else {
-          throw new Error(
-            `Không tìm thấy shop nào trong hệ thống. Vui lòng tạo shop trước khi thêm sản phẩm.`
-          );
-        }
-      }
-
+  
       // Parse JSON strings if needed
       let parsedParcelSize = parcelSize;
       if (typeof parcelSize === "string") {
         try {
           parsedParcelSize = JSON.parse(parcelSize);
         } catch (e) {
-          // console.log("Lỗi parse parcelSize:", e.message);
-          parsedParcelSize = null;
+          throw new Error(`Lỗi định dạng parcelSize: ${e.message}`);
         }
       }
-
-      // console.log("parsedParcelSize nhận được:", parsedParcelSize);
-
-      // Xử lý ảnh chính - sẽ chỉ lưu vào biến thể sản phẩm, không lưu vào bảng products
-      let primaryImageUrl = null;
+  
+      // Xử lý ảnh chính
+      let mainImageUrl = null;
       try {
-        if (primaryImage && primaryImage.filename) {
-          // Tạm thời sử dụng đường dẫn local cho demo
-          primaryImageUrl = `/uploads/products/${primaryImage.filename}`;
-        } else if (productData.images && productData.images.length > 0) {
-          // Sử dụng URL ảnh từ mảng images nếu không có primaryImage
-          primaryImageUrl = productData.images[0];
+        if (primaryImageUrl) {
+          // Sử dụng URL từ Cloudinary
+          mainImageUrl = primaryImageUrl;
+        } else if (images && images.length > 0) {
+          // Sử dụng URL ảnh từ mảng images nếu không có primaryImageUrl
+          mainImageUrl = images[0];
         }
       } catch (error) {
-        // console.error("Lỗi khi xử lý ảnh chính:", error);
+        throw new Error(`Lỗi khi xử lý ảnh sản phẩm: ${error.message}`);
       }
-
-      // console.log("Tạo sản phẩm với shop_id:", shop_id);
-
+  
       // Chuẩn bị dữ liệu theo cấu trúc bảng thực tế
       const weight_safe = parseFloat(weight) || 0.3;
-
-      // Chuyển đổi parcelSize từ object sang chuỗi định dạng "width x height x length cm"
-      // Đặt giá trị mặc định nếu không có
+  
+      // Chuyển đổi parcelSize từ object sang chuỗi định dạng
       let dimensions_safe = null;
       if (parsedParcelSize) {
         const width = parsedParcelSize.width || 0;
@@ -211,24 +167,17 @@ class ProductService {
         const length = parsedParcelSize.length || 0;
         dimensions_safe = `${width} x ${height} x ${length} cm`;
       } else {
-        // Giá trị mặc định để đảm bảo không null
         dimensions_safe = "20 x 10 x 5 cm";
       }
-
-      // console.log("Dimensions được lưu:", dimensions_safe);
-
-      // Lưu ý: Trường `discount` trong DB có định dạng DECIMAL(5,2), tối đa là 999.99
-      // Nếu muốn lưu giá tiền, cần chuyển đổi sang cơ chế khác hoặc sử dụng giá trị mặc định
-      // Ví dụ: 0.00 nghĩa là không giảm giá
-
-      // Tạo sản phẩm sử dụng Sequelize model để tránh lỗi SQL
+  
+      // Tạo sản phẩm sử dụng Sequelize model
       const options = transaction ? { transaction } : {};
-
+  
       const newProduct = await Product.create(
         {
           product_name: productName || "Sản phẩm mới",
           description: description || "",
-          discount: 0.0, // Sử dụng giá trị mặc định 0 cho discount thay vì lưu giá sản phẩm
+          discount: 0.0, // Sử dụng giá trị mặc định 0 cho discount
           stock: parseInt(stock, 10) || 0,
           sold: 0,
           weight: weight_safe,
@@ -237,73 +186,29 @@ class ProductService {
           average_rating: 0,
           review_count: 0,
           shop_id: shop_id,
-          category_id: category_id, // Đảm bảo category_id được truyền đúng, không để null
+          category_id: category_id,
+          image_url: mainImageUrl // Thêm URL ảnh chính
         },
         options
       );
-
-      // Kiểm tra xem sản phẩm đã được lưu với dimensions và category_id chưa
-      // console.log("Sản phẩm được tạo:", {
-      //   id: newProduct.product_id,
-      //   name: newProduct.product_name,
-      //   dimensions: newProduct.dimensions,
-      //   category_id: newProduct.category_id,
-      // });
-
-      // SQL để tạo sản phẩm mới nếu model Product không hoạt động
-      // Đây là giải pháp dự phòng
-      if (!newProduct || !newProduct.product_id) {
-        // console.log("Không thể tạo sản phẩm bằng model Product, chuyển sang SQL");
-        const productName_safe = productName
-          ? productName.replace(/'/g, "''")
-          : "Sản phẩm mới";
-        const description_safe = description
-          ? description.replace(/'/g, "''")
-          : "";
-        const dimensions_sql_safe = dimensions_safe
-          ? dimensions_safe.replace(/'/g, "''")
-          : "";
-
-        let insertProductSQL = `
-          INSERT INTO products (
-            \`product_name\`, \`description\`, \`discount\`, \`stock\`, \`sold\`,
-            \`category_id\`, \`shop_id\`, \`status\`, \`weight\`, 
-            \`dimensions\`, \`average_rating\`, \`review_count\`
-          ) VALUES (
-            '${productName_safe}', '${description_safe}', 0.00, ${
-          parseInt(stock, 10) || 0
-        }, 0,
-            ${category_id || 3}, ${shop_id}, '${status}', ${weight_safe},
-            '${dimensions_sql_safe}', 0, 0
-          )
-        `;
-
-        // console.log("SQL INSERT Products:", insertProductSQL);
-        const queryOptions = transaction ? { transaction } : {};
-        const [productResult] = await sequelize.query(
-          insertProductSQL,
-          queryOptions
-        );
-        // console.log("Kết quả tạo sản phẩm SQL:", productResult);
-        newProduct = { product_id: productResult, product_name: productName };
-      }
-
+  
       // Xử lý biến thể nếu có
       try {
-        if (variations && variations.length > 0) {
-          // THÊM VÀO: Xóa tất cả biến thể cũ của sản phẩm trước khi tạo mới
-          // console.log(`Xóa tất cả biến thể cũ của sản phẩm ${newProduct.product_id} trước khi tạo mới`);
+        // Đảm bảo variations là một mảng
+        const variationsArray = Array.isArray(variations) ? variations : [];
+        
+        if (variationsArray.length > 0) {
+          // Xóa tất cả biến thể cũ của sản phẩm trước khi tạo mới
           const deleteExistingVariantsSQL = `
             DELETE FROM product_variants 
             WHERE product_id = ${newProduct.product_id}
           `;
-
+  
           const queryOptionsDelete = transaction ? { transaction } : {};
           await sequelize.query(deleteExistingVariantsSQL, queryOptionsDelete);
-          // console.log("Đã xóa biến thể cũ");
-
+  
           // Lọc variations hợp lệ trước khi thêm vào database
-          const validVariations = variations.filter((variant) => {
+          const validVariations = variationsArray.filter((variant) => {
             // Kiểm tra giá và stock có hợp lệ không
             const hasValidPrice =
               variant.price &&
@@ -313,29 +218,14 @@ class ProductService {
               variant.stock && !isNaN(parseInt(variant.stock, 10));
             return hasValidPrice && hasValidStock;
           });
-
-          // console.log(`Số lượng variations hợp lệ: ${validVariations.length}/${variations.length}`);
-
+  
+          console.log(`Số lượng biến thể hợp lệ: ${validVariations.length}/${variationsArray.length}`);
+  
           // Dùng validVariations thay vì variations
           for (const variant of validVariations) {
-            // Xử lý ảnh biến thể nếu có
-            let variantImageUrl = variant.image_url || null;
-
-            if (
-              !variantImageUrl &&
-              variationImages &&
-              variationImages[variant.id] &&
-              variationImages[variant.id].filename
-            ) {
-              // Tạm thời sử dụng đường dẫn local
-              variantImageUrl = `/uploads/products/variants/${
-                variationImages[variant.id].filename
-              }`;
-            } else if (!variantImageUrl) {
-              // Sử dụng ảnh chính nếu không có ảnh biến thể
-              variantImageUrl = primaryImageUrl;
-            }
-
+            // Sử dụng ảnh từ variant nếu có, nếu không dùng ảnh chính của sản phẩm
+            let variantImageUrl = variant.image_url || mainImageUrl;
+            
             // Chuẩn bị dữ liệu an toàn cho biến thể
             const variantSize = variant.size
               ? variant.size.replace(/'/g, "''")
@@ -365,9 +255,8 @@ class ProductService {
             const variantImageUrl_safe = variantImageUrl
               ? variantImageUrl.replace(/'/g, "''")
               : null;
-
+  
             // Sử dụng SQL trực tiếp để tạo biến thể
-            // Bỏ trường created_at và updated_at, để MySQL tự quản lý
             let insertVariantSQL = `
               INSERT INTO product_variants (
                 product_id, size, color, material, 
@@ -386,27 +275,25 @@ class ProductService {
                 ${variantImageUrl_safe ? `'${variantImageUrl_safe}'` : "NULL"}
               )
             `;
-
+  
             const queryOptions = transaction ? { transaction } : {};
             await sequelize.query(insertVariantSQL, queryOptions);
           }
         } else {
           // Nếu không có biến thể, tạo một biến thể mặc định
-          // THÊM VÀO: Xóa biến thể cũ trước khi tạo biến thể mặc định
-          // console.log(`Xóa tất cả biến thể cũ của sản phẩm ${newProduct.product_id} trước khi tạo mặc định`);
+          // Xóa biến thể cũ trước khi tạo biến thể mặc định
           const deleteExistingVariantsSQL = `
             DELETE FROM product_variants 
             WHERE product_id = ${newProduct.product_id}
           `;
-
+  
           const queryOptionsDelete = transaction ? { transaction } : {};
           await sequelize.query(deleteExistingVariantsSQL, queryOptionsDelete);
-          // console.log("Đã xóa biến thể cũ");
-
-          const defaultImageUrl_safe = primaryImageUrl
-            ? primaryImageUrl.replace(/'/g, "''")
+  
+          const defaultImageUrl_safe = mainImageUrl
+            ? mainImageUrl.replace(/'/g, "''")
             : null;
-
+  
           // Sử dụng SQL trực tiếp để tạo biến thể mặc định
           let insertDefaultVariantSQL = `
             INSERT INTO product_variants (
@@ -418,18 +305,18 @@ class ProductService {
               ${defaultImageUrl_safe ? `'${defaultImageUrl_safe}'` : "NULL"}
             )
           `;
-
+  
           const queryOptions = transaction ? { transaction } : {};
           await sequelize.query(insertDefaultVariantSQL, queryOptions);
         }
       } catch (error) {
-        // console.error("Lỗi khi xử lý biến thể sản phẩm:", error);
-        throw error;
+        console.error("Lỗi chi tiết khi xử lý biến thể:", error);
+        throw new Error(`Lỗi khi xử lý biến thể sản phẩm: ${error.message}`);
       }
-
+  
       // Commit transaction nếu tồn tại
       if (transaction) await transaction.commit();
-
+  
       // Trả về sản phẩm đã tạo
       return {
         success: true,
@@ -437,12 +324,12 @@ class ProductService {
         data: {
           product_id: newProduct.product_id,
           product_name: newProduct.product_name,
+          image_url: mainImageUrl
         },
       };
     } catch (error) {
       // Rollback nếu có lỗi và transaction tồn tại
       if (transaction) await transaction.rollback();
-      // console.error("Error creating product:", error);
       throw error; // Ném lỗi để controller bắt và xử lý
     }
   }
