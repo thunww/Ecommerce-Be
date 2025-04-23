@@ -179,6 +179,8 @@ const updateUser = async (userId, updatedData) => {
     return { success: false, message: "Internal Server Error", user: null };
   }
 };
+// hàm lấy thông tin shop của user
+
 
 const uploadAvatar = async (user_id, imageUrl) => {
   try {

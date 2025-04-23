@@ -5,13 +5,13 @@ const {
   getShopRevenue,
   getShopRating,
   getShopProducts,
+  processOrderItem,
 } = require("../services/vendorService");
 
 // Lấy thông tin shop của vendor
 const handleGetMyShop = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    console.log("Getting shop info for user:", userId);
 
     const shop = await vendorService.getShopByUserId(userId);
     if (!shop) {
@@ -29,7 +29,6 @@ const handleGetMyShop = async (req, res) => {
 const handleGetShopRevenue = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    console.log("Getting shop revenue for user:", userId);
 
     const revenue = await getShopRevenue(userId);
     res.json(revenue);
@@ -43,7 +42,6 @@ const handleGetShopRevenue = async (req, res) => {
 const handleGetAllOrders = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    console.log("Getting all orders for user:", userId);
 
     const orders = await vendorService.getAllOrders(userId);
     res.json(orders);
@@ -57,7 +55,6 @@ const handleGetAllOrders = async (req, res) => {
 const handleGetRevenue = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    console.log("Getting revenue for user:", userId);
 
     const revenue = await getRevenue(userId);
     res.json(revenue);
@@ -71,7 +68,6 @@ const handleGetRevenue = async (req, res) => {
 const handleGetShopAnalytics = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    console.log("Getting shop analytics for user:", userId);
 
     const analytics = await vendorService.getShopAnalytics(userId);
     res.json(analytics);
@@ -86,7 +82,6 @@ const handleUpdateShop = async (req, res) => {
   try {
     const userId = req.user.user_id;
     const shopData = req.body;
-    console.log("Updating shop for user:", userId, "with data:", shopData);
 
     const updatedShop = await vendorService.updateShop(userId, shopData);
     res.json(updatedShop);
@@ -101,7 +96,6 @@ const handleUpdateShopLogo = async (req, res) => {
   try {
     const userId = req.user.user_id;
     const logoFile = req.file;
-    console.log("Updating shop logo for user:", userId);
 
     const updatedShop = await vendorService.updateShopLogo(userId, logoFile);
     res.json(updatedShop);
@@ -116,7 +110,6 @@ const handleUpdateShopBanner = async (req, res) => {
   try {
     const userId = req.user.user_id;
     const bannerFile = req.file;
-    console.log("Updating shop banner for user:", userId);
 
     const updatedShop = await vendorService.updateShopBanner(
       userId,
@@ -134,7 +127,6 @@ const handleGetShopReviews = async (req, res) => {
   try {
     const userId = req.user.user_id;
     const { page = 1, limit = 10 } = req.query;
-    console.log("Getting shop reviews for user:", userId);
 
     const reviews = await vendorService.getShopReviews(userId, { page, limit });
     res.json(reviews);
@@ -148,12 +140,8 @@ const handleGetShopReviews = async (req, res) => {
 const handleGetShopRating = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    console.log("=== Getting Shop Rating ===");
-    console.log("User ID from token:", userId);
-    console.log("User info:", req.user);
 
     const ratingData = await getShopRating(userId);
-    console.log("Rating data result:", ratingData);
 
     res.json(ratingData);
   } catch (error) {
@@ -171,7 +159,6 @@ const openai = new OpenAI({
 const handleAIChat = async (req, res) => {
   try {
     const { message } = req.body;
-    console.log("Received message:", message);
 
     if (!message) {
       return res.status(400).json({ message: "Message is required" });
@@ -209,13 +196,44 @@ const handleAIChat = async (req, res) => {
 const handleGetShopProducts = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    console.log("Getting shop products for user:", userId);
 
     const products = await getShopProducts(userId);
     res.json(products);
   } catch (error) {
     console.error("Error in handleGetShopProducts:", error);
     res.status(500).json({ message: error.message });
+  }
+};
+
+// Process đơn hàng
+const handleProcessProduct = async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+    const { product_id } = req.params;
+
+    console.log("Processing product request:", {
+      userId,
+      product_id,
+      user: req.user,
+    });
+
+    // Gọi service để process sản phẩm
+    const processedProduct = await vendorService.processProduct(
+      userId,
+      product_id
+    );
+
+    res.json({
+      success: true,
+      message: "Product processed successfully",
+      data: processedProduct,
+    });
+  } catch (error) {
+    console.error("Error in handleProcessProduct:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to process product",
+    });
   }
 };
 
@@ -232,4 +250,5 @@ module.exports = {
   handleGetShopRating,
   handleAIChat,
   handleGetShopProducts,
+  handleProcessProduct,
 };
