@@ -1,6 +1,6 @@
 // BE/src/middlewares/productMiddleware.js
-const { uploadProduct } = require('../config/cloudinary');
-const { deleteImagesByUrls } = require('../utils/cloudinaryHelper');
+const { uploadProduct } = require("../config/uploadConfig");
+const { deleteImagesByUrls } = require("../utils/cloudinaryHelper");
 
 /**
  * Middleware upload ảnh và parse form-data
@@ -11,8 +11,8 @@ const parseFormAndUpload = async (req, res, next) => {
   try {
     // Cấu hình upload - parse cả text fields và file
     const upload = uploadProduct.fields([
-      { name: 'primaryImage', maxCount: 1 },
-      { name: 'additionalImages', maxCount: 10 }
+      { name: "primaryImage", maxCount: 1 },
+      { name: "additionalImages", maxCount: 10 },
     ]);
 
     // Thực hiện upload
@@ -21,7 +21,7 @@ const parseFormAndUpload = async (req, res, next) => {
         return res.status(400).json({
           success: false,
           message: "Lỗi upload ảnh",
-          error: err.message
+          error: err.message,
         });
       }
 
@@ -31,7 +31,7 @@ const parseFormAndUpload = async (req, res, next) => {
           req.uploadedImages.push(req.files.primaryImage[0].path);
         }
         if (req.files.additionalImages) {
-          req.files.additionalImages.forEach(file => {
+          req.files.additionalImages.forEach((file) => {
             req.uploadedImages.push(file.path);
           });
         }
@@ -43,7 +43,7 @@ const parseFormAndUpload = async (req, res, next) => {
     return res.status(500).json({
       success: false,
       message: "Lỗi server",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -55,17 +55,19 @@ const handleProductError = async (err, req, res, next) => {
   // Xóa ảnh đã upload nếu có lỗi
   if (req.uploadedImages && req.uploadedImages.length > 0) {
     await deleteImagesByUrls(req.uploadedImages);
-    console.log(`Đã xóa ${req.uploadedImages.length} ảnh do lỗi: ${err.message}`);
+    console.log(
+      `Đã xóa ${req.uploadedImages.length} ảnh do lỗi: ${err.message}`
+    );
   }
-  
+
   return res.status(500).json({
     success: false,
     message: "Internal Server Error",
-    error: err.message
+    error: err.message,
   });
 };
 
 module.exports = {
   parseFormAndUpload,
-  handleProductError
+  handleProductError,
 };
