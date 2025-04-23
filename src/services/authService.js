@@ -1,15 +1,13 @@
 const User = require("../models/user");
 const Role = require("../models/role");
 const UserRole = require("../models/userrole");
+const Address = require("../models/address");
 const { hashPassword, comparePassword } = require("../utils/hashPassword");
 const { generateToken, verifyToken } = require("../config/jwt");
 const {
   sendVerificationEmail,
   sendResetPasswordEmail,
 } = require("../utils/sendEmail");
-
-// Thêm BlacklistedToken model để lưu các token đã vô hiệu hóa
-const BlacklistedToken = require("../models/blacklistedToken");
 
 const registerUser = async (username, email, password) => {
   if (!username || !email || !password) {
@@ -96,6 +94,7 @@ const loginUser = async (email, password) => {
       user_id: user.user_id,
       email: user.email,
       roles: roleNames, // Trả về danh sách role thay vì 1 role
+      status: user.status,
     },
   };
 };
@@ -132,6 +131,5 @@ const resetPassword = async (token, newPassword) => {
 
   return "Password has been successfully changed";
 };
-
 
 module.exports = { registerUser, loginUser, forgotPassword, resetPassword };

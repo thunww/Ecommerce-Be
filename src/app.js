@@ -22,6 +22,10 @@ const addressRoutes = require("./routes/addressRoutes");
 const shopRoutes = require("./routes/shopRoutes");
 const couponRoutes = require("./routes/couponRoutes");
 const chatRoutes = require("./routes/chatRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
+const shipperRoutes = require('./routes/shipperRoutes');
+const { handleUploadError } = require('./middleware/upload');
+
 // Middleware
 app.use(helmet());
 app.use(compression());
@@ -32,31 +36,31 @@ app.use(express.urlencoded({ extended: true })); // Cho form-data
 
 // Log middleware để debug
 app.use((req, res, next) => {
-  console.log("Request Body:", req.body);
-  console.log("Request Headers:", req.headers);
   next();
 });
+
 // Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/", usersRoutes);
 app.use("/uploads", express.static("uploads"));
-
 app.use("/api/v1/products", productRoutes);
-
-app.use("/api/cart", cartRoutes);
-app.use("/api/wishlist", wishlistRoutes);
-app.use("/api/reviews", reviewRoutes);
-app.use("/api/payments", paymentRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/addresses", addressRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/coupons", couponRoutes);
-
-app.use("/api/chat", chatRoutes);
-
+app.use("/api/v1/cart", cartRoutes);
+app.use("/api/v1/wishlist", wishlistRoutes);
+app.use("/api/v1/reviews", reviewRoutes);
+app.use("/api/v1/payments", paymentRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
+app.use("/api/v1/addresses", addressRoutes);
+app.use("/api/v1/orders", orderRoutes);
+app.use("/api/v1/coupons", couponRoutes);
+app.use("/api/v1/categories", categoryRoutes);
+app.use("/api/v1/chat", chatRoutes);
 app.use("/api/v1/shops", shopRoutes);
 app.use("/api/v1/vendor", vendorRoutes);
+app.use('/api/v1/shippers', shipperRoutes);
 // app.use("/api/v1/admin", adminRoutes);
+
+// Upload error handling
+app.use(handleUploadError);
 
 // Xử lý lỗi 404 (Not Found)
 app.use((req, res, next) => {
@@ -77,5 +81,13 @@ sequelize
   .catch((err) => {
     console.error("Không thể kết nối database:", err);
   });
+
+// Sync database and start server
+const PORT = process.env.PORT || 3000;
+sequelize.sync().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+});
 
 module.exports = app;

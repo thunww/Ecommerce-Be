@@ -3,8 +3,6 @@ const router = express.Router();
 const orderController = require("../controllers/orderController");
 const authMiddleware = require("../middleware/authMiddleware");
 const { body } = require("express-validator");
-
-// Middleware validation
 const validateOrder = [
   body("shipping_address_id")
     .notEmpty()
@@ -18,12 +16,13 @@ const validateOrder = [
     .withMessage("Phương thức thanh toán không hợp lệ"),
 ];
 
-// Sử dụng middleware xác thực cho tất cả các routes
 router.use(authMiddleware);
 
-// Routes
+router.get("/user", orderController.getUserOrders);
+
 router.post("/create", validateOrder, orderController.createOrder);
 
+router.get("/:order_id", orderController.getOrderDetails);
 router.get("/:order_id", orderController.getOrderDetails);
 
 router.get("/user/orders", orderController.getUserOrders);

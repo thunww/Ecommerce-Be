@@ -6,7 +6,7 @@ const { validationResult } = require("express-validator");
 class OrderController {
   async createOrder(req, res) {
     try {
-      const { shipping_address_id, payment_method } = req.body;
+      const { shipping_address_id, payment_method, coupon_code } = req.body;
       const user_id = req.user.user_id;
 
       // Validate payment method
@@ -19,7 +19,8 @@ class OrderController {
       const result = await orderService.createOrder(
         user_id,
         shipping_address_id,
-        payment_method
+        payment_method,
+        coupon_code
       );
 
       // Nếu là thanh toán online, trả về URL thanh toán
@@ -66,20 +67,21 @@ class OrderController {
       });
     }
   }
-
   async getUserOrders(req, res) {
     try {
       const user_id = req.user.user_id;
+
       const orders = await orderService.getUserOrders(user_id);
 
       res.status(200).json({
         success: true,
+        message: "Lấy danh sách đơn hàng thành công",
         data: orders,
       });
     } catch (error) {
       res.status(400).json({
         success: false,
-        message: error.message,
+        message: error.message || "Lỗi khi lấy danh sách đơn hàng",
       });
     }
   }

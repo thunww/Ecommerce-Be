@@ -56,7 +56,14 @@ class CouponService {
     async getCouponByCode(code) {
         try {
             const coupon = await Coupon.findOne({
-                where: { code }
+                where: { code },
+                include: [
+                    {
+                        model: Shop,
+                        as: 'shop',
+                        attributes: ['shop_id', 'shop_name', 'logo']
+                    }
+                ]
             });
 
             if (!coupon) {
@@ -65,6 +72,7 @@ class CouponService {
 
             return coupon;
         } catch (error) {
+            console.error('Lỗi khi lấy thông tin mã giảm giá:', error);
             throw error;
         }
     }

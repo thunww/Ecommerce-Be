@@ -18,6 +18,11 @@ OrderItem.init(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    variant_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: 'ID của biến thể sản phẩm nếu có'
+    },
     quantity: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -35,11 +40,12 @@ OrderItem.init(
       allowNull: false,
       defaultValue: 0.00,
     },
-
+    variant_info: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'JSON string chứa thông tin về variant (size, color, etc.)'
+    }
   },
-
-
-
   {
     sequelize,
     modelName: 'OrderItem',

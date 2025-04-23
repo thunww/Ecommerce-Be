@@ -1,39 +1,150 @@
-const addressService = require('../services/addressService');
+const AddressService = require("../services/AddressService");
 
-exports.getAddresses = async (req, res) => {
-    try {
-        const addresses = await addressService.getAddresses(req.user.user_id);
-        res.json(addresses);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+const getAllAddressesById = async (req, res) => {
+  try {
+    const user_id = req.user?.id;
+    if (!user_id) {
+      return res.status(400).json({
+        status: "error",
+        message: "User ID is required",
+        data: null,
+      });
     }
+
+    const result = await AddressService.getAllAddressesById(user_id);
+    return res.status(result.status === "success" ? 200 : 404).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Internal server error: " + error.message,
+      data: null,
+    });
+  }
 };
 
-exports.addAddress = async (req, res) => {
-    try {
-        const { full_name, phone, address, city, district, ward, is_default } = req.body;
-        const newAddress = await addressService.addAddress(req.user.user_id, full_name, phone, address, city, district, ward, is_default);
-        res.status(201).json(newAddress);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+const createAddress = async (req, res) => {
+  try {
+    const user_id = req.user?.id;
+    if (!user_id) {
+      return res.status(400).json({
+        status: "error",
+        message: "User ID is required",
+        data: null,
+      });
     }
+
+    const result = await AddressService.createAddress(user_id, req.body);
+    return res.status(result.status === "success" ? 201 : 400).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Internal server error: " + error.message,
+      data: null,
+    });
+  }
 };
 
-exports.updateAddress = async (req, res) => {
-    try {
-        const { full_name, phone, address, city, district, ward, is_default } = req.body;
-        const updatedAddress = await addressService.updateAddress(req.params.id, full_name, phone, address, city, district, ward, is_default);
-        res.json(updatedAddress);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+const getAddressById = async (req, res) => {
+  try {
+    const user_id = req.user?.id;
+    const address_id = parseInt(req.params.address_id);
+    if (!user_id || !address_id) {
+      return res.status(400).json({
+        status: "error",
+        message: "User ID and address ID are required",
+        data: null,
+      });
     }
+
+    const result = await AddressService.getAddressById(address_id, user_id);
+    return res.status(result.status === "success" ? 200 : 404).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Internal server error: " + error.message,
+      data: null,
+    });
+  }
 };
 
-exports.deleteAddress = async (req, res) => {
-    try {
-        await addressService.deleteAddress(req.params.id);
-        res.json({ message: 'Đã xóa địa chỉ' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+const updateAddress = async (req, res) => {
+  try {
+    const user_id = req.user?.id;
+    const address_id = parseInt(req.params.address_id);
+    if (!user_id || !address_id) {
+      return res.status(400).json({
+        status: "error",
+        message: "User ID and address ID are required",
+        data: null,
+      });
     }
-}; 
+
+    const result = await AddressService.updateAddress(
+      address_id,
+      user_id,
+      req.body
+    );
+    return res.status(result.status === "success" ? 200 : 404).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Internal server error: " + error.message,
+      data: null,
+    });
+  }
+};
+
+const deleteAddress = async (req, res) => {
+  try {
+    const user_id = req.user?.id;
+    const address_id = parseInt(req.params.address_id);
+    if (!user_id || !address_id) {
+      return res.status(400).json({
+        status: "error",
+        message: "User ID and address ID are required",
+        data: null,
+      });
+    }
+
+    const result = await AddressService.deleteAddress(address_id, user_id);
+    return res.status(result.status === "success" ? 200 : 404).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Internal server error: " + error.message,
+      data: null,
+    });
+  }
+};
+
+const setDefaultAddress = async (req, res) => {
+  try {
+    const user_id = req.user?.id;
+    const address_id = parseInt(req.params.address_id);
+    if (!user_id || !address_id) {
+      return res.status(400).json({
+        status: "error",
+        message: "User ID and address ID are required",
+        data: null,
+      });
+    }
+
+    const result = await AddressService.setDefaultAddress(address_id, user_id);
+    return res.status(result.status === "success" ? 200 : 404).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Internal server error: " + error.message,
+      data: null,
+    });
+  }
+};
+
+module.exports = {
+  getAllAddressesById,
+  createAddress,
+  getAddressById,
+  updateAddress,
+  deleteAddress,
+  setDefaultAddress,
+};

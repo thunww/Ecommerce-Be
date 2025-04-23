@@ -3,7 +3,7 @@
 const { Model, DataTypes, Sequelize } = require("sequelize"); // Thêm Sequelize vào import
 const sequelize = require("../config/database");
 
-class CartItem extends Model {}
+class CartItem extends Model { }
 
 CartItem.init(
   {
@@ -16,7 +16,7 @@ CartItem.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "carts",
+        model: "Carts",
         key: "cart_id",
       },
       onUpdate: "CASCADE",
@@ -28,6 +28,16 @@ CartItem.init(
       references: {
         model: "Products",
         key: "product_id",
+      },
+      onUpdate: "CASCADE",
+      onDelete: "CASCADE",
+    },
+    product_variant_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "Product_Variants",
+        key: "variant_id",
       },
       onUpdate: "CASCADE",
       onDelete: "CASCADE",
@@ -58,6 +68,11 @@ CartItem.init(
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
+    variant_info: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'JSON string chứa thông tin về variant (size, color, etc.)'
+    },
     created_at: {
       type: DataTypes.DATE,
       defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"), // Sửa thành Sequelize.literal
@@ -70,7 +85,7 @@ CartItem.init(
   {
     sequelize,
     modelName: "CartItem",
-    tableName: "cart_items",
+    tableName: "CartItems",
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",

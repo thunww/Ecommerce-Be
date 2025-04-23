@@ -111,6 +111,20 @@ const deleteProductImage = async (req, res) => {
     });
   }
 };
+const suggestProducts = async (req, res) => {
+  try {
+    const { q = "", limit = 5 } = req.query;
+
+    const result = await productService.searchSuggest(q, limit);
+    return res.status(result.success ? 200 : 500).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      data: [],
+    });
+  }
+};
 
 const getProductById = async (req, res) => {
   try {
@@ -126,17 +140,52 @@ const getProductById = async (req, res) => {
 
 const searchProducts = async (req, res) => {
   try {
-    const { q, category_id, min_price, max_price, sort } = req.query;
-    const products = await productService.searchProducts(
-      q,
+    // Destructure query parameters with defaults
+    const {
+      q = "",
       category_id,
-      min_price,
-      max_price,
+      min_price = 0,
+      max_price = Number.MAX_SAFE_INTEGER,
+      sort = "default",
+    } = req.query;
+
+    // Input validation
+    if (min_price < 0 || max_price < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Prices cannot be negative",
+      });
+    }
+    if (min_price > max_price) {
+      return res.status(400).json({
+        success: false,
+        message: "min_price cannot be greater than max_price",
+      });
+    }
+    if (category_id && !Number.isInteger(Number(category_id))) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid category_id",
+      });
+    }
+
+    // Call product service
+    const result = await productService.searchProducts(
+      q.trim(),
+      category_id ? Number(category_id) : undefined,
+      Number(min_price),
+      Number(max_price),
       sort
     );
-    res.json(products);
+
+    // Return response
+    return res.status(200).json(result);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error in searchProducts:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };
 
@@ -249,6 +298,7 @@ module.exports = {
   handleAssignProduct,
   handleDeleteProduct,
   getProductsByCategoryId,
+  suggestProducts,
   deleteProductImage,
   createProduct, // Thêm hàm mới
 };
