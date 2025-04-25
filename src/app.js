@@ -58,7 +58,7 @@ app.use("/api/v1/shops", shopRoutes);
 app.use("/api/v1/vendor", vendorRoutes);
 app.use("/api/v1/shippers", shipperRoutes);
 // app.use("/api/v1/admin", adminRoutes);
-
+  
 // Upload error handling
 app.use(handleUploadError);
 
