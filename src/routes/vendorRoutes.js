@@ -17,22 +17,25 @@ router.get(
   categoryController.getAllCategories
 );
 
-// Lấy doanh thu shop
-router.get(
-  "/shop-revenue",
-  vendorMiddleware,
-  vendorController.handleGetShopRevenue
-);
 
 // Lấy doanh thu tổng
 router.get("/revenue", vendorMiddleware, vendorController.handleGetRevenue);
 
 // Lấy danh sách đơn hàng
 router.get("/orders", vendorMiddleware, vendorController.handleGetAllOrders);
+// Lấy danh sách đơn hàng với phân trang và filter
+router.get(
+  "/orders",
+  vendorMiddleware,
+  vendorController.handleGetOrdersWithFilter
+);
+// Route lấy danh sách đơn hàng với phân trang
+router.get('/ordersPage', vendorMiddleware, vendorController.handleGetOrdersWithFilter);
+
 
 // Lấy thống kê shop
 router.get(
-  "/shop-analytics",
+  "/order-stats",
   vendorMiddleware,
   vendorController.handleGetShopAnalytics
 );

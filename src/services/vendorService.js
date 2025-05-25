@@ -1,4 +1,5 @@
 const {
+  User,
   Shop,
   Order,
   SubOrder,
@@ -7,15 +8,24 @@ const {
   OrderItem,
   ProductVariant,
   Category,
+  Address,
 } = require("../models");
 const { sequelize } = require("../models");
 const { Op } = require("sequelize");
+const moment = require("moment-timezone");
+const Sequelize = require("sequelize");
 
 // Lấy shop theo user ID
 const getShopByUserId = async (userId) => {
   try {
     const shop = await Shop.findOne({
       where: { owner_id: userId },
+      include: [
+        {
+          model: User,
+          attributes: ["username", "email", "phone"],
+        },
+      ],
     });
     return shop;
   } catch (error) {
@@ -23,93 +33,371 @@ const getShopByUserId = async (userId) => {
   }
 };
 
-// Lấy doanh thu của shop
-const getShopRevenue = async (userId) => {
-  try {
-    // Tìm shop của user
-    const shop = await Shop.findOne({
-      where: { owner_id: userId },
-    });
-
-    if (!shop) {
-      throw new Error("Không tìm thấy shop");
-    }
-
-    // Lấy tất cả suborders của shop đã hoàn thành
-    const revenue = await SubOrder.findAll({
-      where: {
-        shop_id: shop.shop_id,
-        status: {
-          [Op.in]: ["delivered"],
-        },
-      },
-      attributes: [
-        [sequelize.fn("SUM", sequelize.col("total_price")), "totalRevenue"],
-        [sequelize.fn("COUNT", sequelize.col("sub_order_id")), "totalOrders"],
-      ],
-      raw: true,
-    });
-
-    return {
-      totalRevenue: revenue[0].totalRevenue || 0,
-      totalOrders: revenue[0].totalOrders || 0,
-    };
-  } catch (error) {
-    console.error("Error in getShopRevenue:", error);
-    throw new Error("Không thể tính doanh thu");
-  }
-};
-
-// Lấy tất cả đơn hàng của shop
 const getAllOrders = async (userId) => {
   try {
-    console.log("=== Getting All Orders ===");
-    console.log("User ID:", userId);
-
     // Tìm shop của vendor
     const shop = await Shop.findOne({
       where: { owner_id: userId },
       raw: true,
     });
 
-    console.log("Found Shop:", shop);
+    if (!shop) {
+      throw new Error("Không tìm thấy shop");
+    }
+
+    // Lấy tất cả suborders kèm theo orderItems, product, productVariant, order, user và addresses
+    const Orders = await SubOrder.findAll({
+      where: { shop_id: shop.shop_id },
+      attributes: [],
+      include: [
+        {
+          model: OrderItem,
+          as: "orderItems",
+          attributes: [],
+          include: [
+            {
+              model: Product,
+              as: "product",
+              attributes: ["product_id", "product_name", "discount"],
+            },
+            {
+              model: ProductVariant,
+              as: "productVariant",
+              attributes: ["variant_id", "image_url", "price"],
+            },
+          ],
+        },
+        {
+          model: Order,
+          as: "Order",
+          attributes: [],
+          include: [
+            {
+              model: User,
+              // Không khai báo alias, sử dụng mặc định "User"
+              attributes: ["user_id", "username", "phone", "email"],
+              include: [
+                {
+                  model: Address,
+                  as: "addresses",
+                  attributes: [
+                    "address_id",
+                    "address_line",
+                    "city",
+                    "district",
+                    "ward",
+                  ],
+                  required: false, // Cho phép trả về User ngay cả khi không có Address
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      raw: true,
+      nest: true,
+    });
+
+    // Gộp thông tin product, variant, user và address lại, xử lý an toàn
+    const mergedProducts = Orders.map((item) => ({
+      product_id: item.orderItems.product?.product_id || null,
+      product_name: item.orderItems.product?.product_name || null,
+      discount: item.orderItems.product?.discount || null,
+      variant_id: item.orderItems.productVariant?.variant_id || null,
+      image_url: item.orderItems.productVariant?.image_url || null,
+      price: item.orderItems.productVariant?.price || null,
+      user_id: item.Order?.User?.user_id || null,
+      username: item.Order?.User?.username || null,
+      phone: item.Order?.User?.phone || null,
+      email: item.Order?.User?.email || null,
+      address_id: item.Order?.User?.addresses?.address_id || null, // Truy cập trực tiếp object addresses
+      address_line: item.Order?.User?.addresses?.address_line || null,
+      city: item.Order?.User?.addresses?.city || null,
+      district: item.Order?.User?.addresses?.district || null,
+      ward: item.Order?.User?.addresses?.ward || null,
+    }));
+
+    return {
+      success: true,
+      message: Orders.length
+        ? "Lấy danh sách đơn hàng thành công"
+        : "Không có đơn hàng nào",
+      data: mergedProducts,
+    };
+  } catch (error) {
+    console.error("Error in getAllOrders:", error);
+    throw new Error(`Không thể lấy danh sách đơn hàng: ${error.message}`);
+  }
+};
+
+// Lấy danh sách đơn hàng với phân trang và filter
+
+const getOrdersWithFilter = async (
+  userId,
+  { page = 1, limit = 7, status, startDate, endDate, search } = {}
+) => {
+  try {
+    // Decode search term nếu có
+    if (search) {
+      search = decodeURIComponent(search);
+      console.log("Decoded search term:", search);
+    }
+
+    console.log("Input params:", {
+      userId,
+      page,
+      limit,
+      status,
+      startDate,
+      endDate,
+      search,
+    });
+
+    const shop = await Shop.findOne({
+      where: { owner_id: userId },
+      raw: true,
+    });
 
     if (!shop) {
       throw new Error("Không tìm thấy shop");
     }
 
-    // Lấy tất cả đơn hàng của shop với thông tin chi tiết
-    const orders = await SubOrder.findAll({
-      where: { shop_id: shop.shop_id },
-      attributes: [
-        "sub_order_id",
-        "order_id",
-        "total_price",
-        "shipping_fee",
-        "status",
-        "created_at",
-        "updated_at",
-      ],
-      include: [
-        {
-          model: Order,
-          attributes: [
-            "order_id",
-            "user_id",
-            "total_price",
-            "payment_status",
-            "note",
+    const offset = (page - 1) * limit;
+
+    const subOrderWhere = { shop_id: shop.shop_id };
+    if (status) {
+      subOrderWhere.status = status;
+    }
+
+    const orderWhere = {};
+    if (search && moment(search, "DD/MM/YYYY", true).isValid()) {
+      const searchDate = moment
+        .tz(search, "DD/MM/YYYY", "Asia/Ho_Chi_Minh")
+        .startOf("day")
+        .utc()
+        .toDate();
+      const searchDateEnd = moment
+        .tz(search, "DD/MM/YYYY", "Asia/Ho_Chi_Minh")
+        .endOf("day")
+        .utc()
+        .toDate();
+      orderWhere.created_at = {
+        [Op.between]: [searchDate, searchDateEnd],
+      };
+    } else if (startDate && endDate) {
+      if (
+        !moment(startDate, "YYYY-MM-DD", true).isValid() ||
+        !moment(endDate, "YYYY-MM-DD", true).isValid()
+      ) {
+        throw new Error(
+          "Định dạng startDate hoặc endDate không hợp lệ, yêu cầu định dạng YYYY-MM-DD"
+        );
+      }
+      const start = moment
+        .tz(startDate, "YYYY-MM-DD", "Asia/Ho_Chi_Minh")
+        .startOf("day")
+        .utc()
+        .toDate();
+      const end = moment
+        .tz(endDate, "YYYY-MM-DD", "Asia/Ho_Chi_Minh")
+        .endOf("day")
+        .utc()
+        .toDate();
+      orderWhere.created_at = {
+        [Op.between]: [start, end],
+      };
+    }
+
+    const include = [
+      {
+        model: OrderItem,
+        as: "orderItems",
+        attributes: ["order_item_id", "quantity"],
+        include: [
+          {
+            model: Product,
+            as: "product",
+            attributes: ["product_id", "product_name", "discount"],
+            ...(search && !moment(search, "DD/MM/YYYY", true).isValid()
+              ? {
+                  where: {
+                    [Op.or]: [
+                      { product_name: { [Op.like]: `%${search}%` } },
+                      {
+                        product_name: {
+                          [Op.like]: `%${search.toLowerCase()}%`,
+                        },
+                      },
+                      {
+                        product_name: {
+                          [Op.like]: `%${search.toUpperCase()}%`,
+                        },
+                      },
+                    ],
+                  },
+                }
+              : {}),
+          },
+          {
+            model: ProductVariant,
+            as: "productVariant",
+            attributes: ["variant_id", "image_url", "price"],
+          },
+        ],
+      },
+      {
+        model: Order,
+        as: "Order",
+        attributes: [
+          "order_id",
+          "user_id",
+          "shipping_address_id",
+          "total_price",
+          "payment_method",
+          "status",
+          "payment_status",
+          "created_at",
+          "note",
+        ],
+        where: orderWhere,
+        include: [
+          {
+            model: User,
+            as: "User",
+            attributes: ["user_id", "username", "phone", "email"],
+            ...(search && !moment(search, "DD/MM/YYYY", true).isValid()
+              ? {
+                  where: {
+                    [Op.or]: [
+                      { username: { [Op.like]: `%${search}%` } },
+                      { username: { [Op.like]: `%${search.toLowerCase()}%` } },
+                      { username: { [Op.like]: `%${search.toUpperCase()}%` } },
+                      { phone: { [Op.like]: `%${search}%` } },
+                      { email: { [Op.like]: `%${search}%` } },
+                    ],
+                  },
+                }
+              : {}),
+          },
+          {
+            model: Address,
+            as: "shipping_address",
+            attributes: [
+              "address_id",
+              "recipient_name",
+              "phone",
+              "address_line",
+              "city",
+              "district",
+              "ward",
+            ],
+            ...(search && !moment(search, "DD/MM/YYYY", true).isValid()
+              ? {
+                  where: {
+                    [Op.or]: [
+                      { phone: { [Op.like]: `%${search}%` } },
+                      { recipient_name: { [Op.like]: `%${search}%` } },
+                      { address_line: { [Op.like]: `%${search}%` } },
+                    ],
+                  },
+                }
+              : {}),
+          },
+        ],
+      },
+    ];
+
+    const searchWhere = search
+      ? {
+          [Op.or]: [
+            ...(isNaN(parseInt(search))
+              ? []
+              : [
+                  { sub_order_id: { [Op.eq]: parseInt(search) } },
+                  { order_id: { [Op.eq]: parseInt(search) } },
+                ]),
           ],
-        },
-      ],
-      order: [["created_at", "DESC"]],
-      raw: true,
-      nest: true,
+        }
+      : {};
+
+    console.log("Executing query with conditions:", {
+      subOrderWhere,
+      searchWhere,
+      include,
     });
 
-    return orders;
+    const { count, rows: Orders } = await SubOrder.findAndCountAll({
+      where: {
+        [Op.and]: [subOrderWhere, searchWhere],
+      },
+      attributes: ["order_id", "sub_order_id", "status", "shipping_fee"],
+      include,
+      raw: true,
+      nest: true,
+      limit,
+      offset,
+      distinct: true,
+    });
+
+    console.log("Query results count:", count);
+    console.log(
+      "First order product name:",
+      Orders[0]?.orderItems?.product?.product_name
+    );
+
+    const mergedOrders = Orders.map((item) => ({
+      order_id: item.order_id || null,
+      sub_order_id: item.sub_order_id || null,
+      order_item_id: item.orderItems?.order_item_id || null,
+      product_id: item.orderItems?.product?.product_id || null,
+      product_name: item.orderItems?.product?.product_name || null,
+      discount: item.orderItems?.product?.discount || null,
+      variant_id: item.orderItems?.productVariant?.variant_id || null,
+      image_url: item.orderItems?.productVariant?.image_url || null,
+      price: item.orderItems?.productVariant?.price || null,
+      quantity: item.orderItems?.quantity || 1,
+      user_id: item.Order?.User?.user_id || null,
+      username: item.Order?.User?.username || "Unknown",
+      phone: item.Order?.User?.phone || "N/A",
+      email: item.Order?.User?.email || "N/A",
+      address_id: item.Order?.shipping_address?.address_id || null,
+      recipient_name: item.Order?.shipping_address?.recipient_name || "N/A",
+      address_phone: item.Order?.shipping_address?.phone || "N/A",
+      address_line: item.Order?.shipping_address?.address_line || "N/A",
+      city: item.Order?.shipping_address?.city || "N/A",
+      district: item.Order?.shipping_address?.district || "N/A",
+      ward: item.Order?.shipping_address?.ward || "N/A",
+      status: item.status || "N/A",
+      payment_status: item.Order?.payment_status || "pending",
+      total_price: item.Order?.total_price || "0.00",
+      shipping_fee: item.shipping_fee || "0.00",
+      payment_method: item.Order?.payment_method || "cod",
+      order_date: item.Order?.created_at
+        ? moment(item.Order.created_at).tz("Asia/Ho_Chi_Minh").toISOString()
+        : new Date().toISOString(),
+      note: item.Order?.note || null,
+    }));
+
+    const totalItems = count;
+    const totalPages = Math.ceil(count / limit);
+
+    console.log("Final results count:", totalItems);
+
+    return {
+      success: true,
+      message: mergedOrders.length
+        ? "Lấy danh sách đơn hàng thành công"
+        : "Không có đơn hàng nào",
+      data: mergedOrders,
+      pagination: {
+        currentPage: page,
+        limit,
+        totalItems,
+        totalPages,
+      },
+    };
   } catch (error) {
-    console.error("Error in getAllOrders:", error);
+    console.error("Lỗi trong getOrdersWithFilter:", error);
     throw new Error(`Không thể lấy danh sách đơn hàng: ${error.message}`);
   }
 };
@@ -121,8 +409,6 @@ const getRevenue = async (userId) => {
       where: { owner_id: userId },
       raw: true,
     });
-
-    console.log("Found Shop:", shop);
 
     if (!shop) {
       throw new Error("Không tìm thấy shop");
@@ -203,20 +489,34 @@ const getShopAnalytics = async (userId) => {
     });
 
     // Lấy thống kê sản phẩm
-    const productStats = await Product.findAll({
-      where: { shop_id: shop.shop_id },
+    const productStats = await ProductVariant.findAll({
+      include: [
+        {
+          model: Product,
+          as: "product",
+          where: { shop_id: shop.shop_id },
+          attributes: [], // Không lấy gì từ Product
+        },
+      ],
       attributes: [
-        [sequelize.fn("COUNT", sequelize.col("product_id")), "totalProducts"],
+        [
+          sequelize.fn("COUNT", sequelize.col("Product.product_id")),
+          "totalProducts",
+        ],
         [sequelize.fn("AVG", sequelize.col("price")), "averagePrice"],
       ],
       raw: true,
     });
 
     return {
-      orderStats,
-      productStats: {
-        totalProducts: parseInt(productStats[0].totalProducts) || 0,
-        averagePrice: parseFloat(productStats[0].averagePrice) || 0,
+      success: true,
+      message: "Lấy thống kê shop thành công",
+      data: {
+        orderStats,
+        productStats: {
+          totalProducts: parseInt(productStats[0].totalProducts) || 0,
+          averagePrice: parseFloat(productStats[0].averagePrice) || 0,
+        },
       },
       views: shop.views || 0,
     };
@@ -289,7 +589,6 @@ const updateShopBanner = async (userId, bannerFile) => {
   }
 };
 
-// Lấy đánh giá shop
 const getShopReviews = async (userId, { page = 1, limit = 10 }) => {
   try {
     const shop = await Shop.findOne({
@@ -302,24 +601,48 @@ const getShopReviews = async (userId, { page = 1, limit = 10 }) => {
 
     const offset = (page - 1) * limit;
 
-    const reviews = await Review.findAndCountAll({
+    const reviews = await ShopReview.findAndCountAll({
       where: { shop_id: shop.shop_id },
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [["createdAt", "DESC"]],
-      include: [
-        {
-          model: Product,
-          attributes: ["product_name"],
-        },
-      ],
+      order: [["created_at", "DESC"]],
+      attributes: ["user_id", "rating", "comment", "created_at"],
     });
 
+    // Lấy danh sách user_id từ các review
+    const userIds = reviews.rows.map((review) => review.user_id);
+
+    // Truy vấn bảng Users để lấy username tương ứng
+    const users = await User.findAll({
+      where: {
+        user_id: userIds, // Giả sử cột khóa chính của bảng Users là user_id
+      },
+      attributes: ["user_id", "username"], // Chỉ lấy user_id và username
+    });
+
+    // Tạo một map để ánh xạ user_id sang username
+    const userMap = users.reduce((map, user) => {
+      map[user.user_id] = user.username;
+      return map;
+    }, {});
+
+    // Thay user_id bằng username trong kết quả
+    const reviewsWithUsername = reviews.rows.map((review) => ({
+      username: userMap[review.user_id] || "Unknown", // Nếu không tìm thấy username, trả về "Unknown"
+      rating: review.rating,
+      comment: review.comment,
+      created_at: review.created_at,
+    }));
+
     return {
-      reviews: reviews.rows,
-      total: reviews.count,
-      currentPage: page,
-      totalPages: Math.ceil(reviews.count / limit),
+      success: true,
+      message: "Lấy danh sách đánh giá thành công",
+      data: {
+        reviews: reviewsWithUsername,
+        total: reviews.count,
+        currentPage: page,
+        totalPages: Math.ceil(reviews.count / limit),
+      },
     };
   } catch (error) {
     console.error("Error in getShopReviews:", error);
@@ -363,24 +686,16 @@ const getOrderDetails = async (subOrderId) => {
   }
 };
 
-// Lấy rating của shop
 const getShopRating = async (userId) => {
   try {
-    console.log("=== Getting Shop Rating ===");
-    console.log("User ID:", userId);
-
     // Tìm shop của vendor
     const shop = await Shop.findOne({
       where: { owner_id: userId },
-      attributes: ["shop_id", "shop_name", "rating"],
-      raw: true,
     });
 
     if (!shop) {
       throw new Error("Không tìm thấy shop");
     }
-
-    console.log("Found Shop:", shop);
 
     // Lấy tất cả đánh giá của shop
     const reviews = await ShopReview.findAndCountAll({
@@ -389,16 +704,22 @@ const getShopRating = async (userId) => {
       raw: true,
     });
 
-    console.log("Shop Reviews:", reviews);
+    console.log("Found Reviews:", reviews);
 
-    // Trả về rating từ thông tin shop
+    // Tính trung bình rating
+    const totalReviews = reviews.count;
+    const sumRating = reviews.rows.reduce(
+      (sum, review) => sum + review.rating,
+      0
+    );
+    const averageRating =
+      totalReviews > 0 ? parseFloat((sumRating / totalReviews).toFixed(2)) : 0;
+
+    // Trả về kết quả
     const result = {
-      averageRating: parseFloat(shop.rating) || 0,
-      totalReviews: reviews.count,
+      averageRating,
+      totalReviews,
     };
-
-    console.log("Final Rating Result:", result);
-    console.log("=== End Getting Shop Rating ===\n");
 
     return result;
   } catch (error) {
@@ -709,7 +1030,6 @@ const processProduct = async (userId, productId) => {
 
 module.exports = {
   getShopByUserId,
-  getShopRevenue,
   getAllOrders,
   getRevenue,
   getShopAnalytics,
@@ -722,4 +1042,5 @@ module.exports = {
   getShopProducts,
   updateOrderStatus,
   processProduct,
+  getOrdersWithFilter,
 };

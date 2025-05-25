@@ -6,6 +6,8 @@ const {
   getShopRating,
   getShopProducts,
   processOrderItem,
+  getAllOrders,
+  getOrdersWithFilter
 } = require("../services/vendorService");
 
 // Lấy thông tin shop của vendor
@@ -25,18 +27,6 @@ const handleGetMyShop = async (req, res) => {
   }
 };
 
-// Lấy doanh thu shop
-const handleGetShopRevenue = async (req, res) => {
-  try {
-    const userId = req.user.user_id;
-
-    const revenue = await getShopRevenue(userId);
-    res.json(revenue);
-  } catch (error) {
-    console.error("Error in handleGetShopRevenue:", error);
-    res.status(500).json({ message: error.message });
-  }
-};
 
 // Lấy tất cả đơn hàng
 const handleGetAllOrders = async (req, res) => {
@@ -48,6 +38,32 @@ const handleGetAllOrders = async (req, res) => {
   } catch (error) {
     console.error("Error in handleGetAllOrders:", error);
     res.status(500).json({ message: "Lỗi khi lấy danh sách đơn hàng!" });
+  }
+};
+// Lấy danh sách đơn hàng với phân trang và filter
+const handleGetOrdersWithFilter = async (req, res) => {
+  try {
+    const userId = req.user.id; // Lấy userId từ middleware xác thực
+    const { page, limit, status, startDate, endDate, search } = req.query;
+
+    const filterParams = {
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 7,
+      status: status || undefined, // Chỉ truyền status nếu có
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
+      search: search || undefined,
+    };
+
+    const result = await getOrdersWithFilter(userId, filterParams);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Lỗi trong handleGetOrdersWithFilter:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Lỗi server khi lấy danh sách đơn hàng',
+    });
   }
 };
 
@@ -239,7 +255,6 @@ const handleProcessProduct = async (req, res) => {
 
 module.exports = {
   handleGetMyShop,
-  handleGetShopRevenue,
   handleGetAllOrders,
   handleGetRevenue,
   handleGetShopAnalytics,
@@ -251,4 +266,5 @@ module.exports = {
   handleAIChat,
   handleGetShopProducts,
   handleProcessProduct,
+  handleGetOrdersWithFilter,
 };
