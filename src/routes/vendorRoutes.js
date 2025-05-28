@@ -17,7 +17,6 @@ router.get(
   categoryController.getAllCategories
 );
 
-
 // Lấy doanh thu tổng
 router.get("/revenue", vendorMiddleware, vendorController.handleGetRevenue);
 
@@ -30,8 +29,32 @@ router.get(
   vendorController.handleGetOrdersWithFilter
 );
 // Route lấy danh sách đơn hàng với phân trang
-router.get('/ordersPage', vendorMiddleware, vendorController.handleGetOrdersWithFilter);
+router.get(
+  "/ordersPage",
+  vendorMiddleware,
+  vendorController.handleGetOrdersWithFilter
+);
 
+// Route to update status for multiple suborders to 'processing'
+router.put(
+  "/orders/bulk-status",
+  vendorMiddleware,
+  vendorController.handleUpdateSubordersStatusToProcessing
+);
+
+// Route to delete multiple suborders by their IDs
+router.delete(
+  "/orders/bulk-delete",
+  vendorMiddleware,
+  vendorController.handleDeleteSuborders
+);
+
+// Route để xuất dữ liệu đơn hàng
+router.get(
+  "/orders/export",
+  vendorMiddleware,
+  vendorController.handleExportOrders
+);
 
 // Lấy thống kê shop
 router.get(
@@ -93,6 +116,13 @@ router.post(
   "/products/:product_id/process",
   vendorMiddleware,
   vendorController.handleProcessProduct
+);
+
+// New route for paginated suborders with order items
+router.get(
+  "/suborders",
+  vendorMiddleware,
+  vendorController.handleGetSubordersWithOrderItemsPaginated
 );
 
 module.exports = router;

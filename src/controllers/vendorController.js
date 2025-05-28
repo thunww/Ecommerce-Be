@@ -7,8 +7,16 @@ const {
   getShopProducts,
   processOrderItem,
   getAllOrders,
-  getOrdersWithFilter
+  getOrdersWithFilter,
+  updateSubordersStatusToProcessing,
+  getShopAnalytics,
+  deleteSubordersByIds,
+  getOrdersForExport,
 } = require("../services/vendorService");
+const createCsvWriter = require("csv-writer").createObjectCsvWriter;
+const fs = require("fs");
+const path = require("path");
+const moment = require("moment");
 
 // Lấy thông tin shop của vendor
 const handleGetMyShop = async (req, res) => {
@@ -27,7 +35,6 @@ const handleGetMyShop = async (req, res) => {
   }
 };
 
-
 // Lấy tất cả đơn hàng
 const handleGetAllOrders = async (req, res) => {
   try {
@@ -44,11 +51,9 @@ const handleGetAllOrders = async (req, res) => {
 const handleGetOrdersWithFilter = async (req, res) => {
   try {
     const userId = req.user.id; // Lấy userId từ middleware xác thực
-    const { page, limit, status, startDate, endDate, search } = req.query;
+    const { status, startDate, endDate, search } = req.query;
 
     const filterParams = {
-      page: parseInt(page) || 1,
-      limit: parseInt(limit) || 7,
       status: status || undefined, // Chỉ truyền status nếu có
       startDate: startDate || undefined,
       endDate: endDate || undefined,
@@ -59,10 +64,10 @@ const handleGetOrdersWithFilter = async (req, res) => {
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error('Lỗi trong handleGetOrdersWithFilter:', error);
+    console.error("Lỗi trong handleGetOrdersWithFilter:", error);
     return res.status(500).json({
       success: false,
-      message: error.message || 'Lỗi server khi lấy danh sách đơn hàng',
+      message: error.message || "Lỗi server khi lấy danh sách đơn hàng",
     });
   }
 };
@@ -253,6 +258,238 @@ const handleProcessProduct = async (req, res) => {
   }
 };
 
+const handleUpdateSubordersStatusToProcessing = async (req, res) => {
+  try {
+    const { subOrderIds } = req.body; // Mong đợi mảng subOrderIds trong body
+
+    if (!Array.isArray(subOrderIds) || subOrderIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or empty subOrderIds list provided.",
+      });
+    }
+
+    const result = await updateSubordersStatusToProcessing(subOrderIds);
+
+    if (result.success) {
+      res.status(200).json({
+        success: true,
+        message: `Successfully updated status for ${result.affectedCount} suborders.`,
+        affectedCount: result.affectedCount,
+      });
+    } else {
+      // Service returned false but didn't throw, likely no matching orders found
+      res.status(404).json({
+        success: false,
+        message:
+          result.message ||
+          "No matching suborders found or status already processing.",
+      });
+    }
+  } catch (error) {
+    console.error(
+      "Error in handleUpdateSubordersStatusToProcessing controller:",
+      error
+    );
+    res.status(500).json({
+      success: false,
+      message: "Internal server error while updating suborder status.",
+    });
+  }
+};
+
+const handleDeleteSuborders = async (req, res) => {
+  try {
+    const { subOrderIds } = req.body; // Mong đợi mảng subOrderIds trong body
+
+    if (!Array.isArray(subOrderIds) || subOrderIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or empty subOrderIds list provided.",
+      });
+    }
+
+    const result = await deleteSubordersByIds(subOrderIds);
+
+    if (result.success) {
+      res.status(200).json({
+        success: true,
+        message: `Successfully deleted ${result.deletedCount} suborders.`,
+        deletedCount: result.deletedCount,
+      });
+    } else {
+      // Service returned false but didn't throw, likely no matching orders found
+      res.status(404).json({
+        success: false,
+        message: result.message || "No matching suborders found.",
+      });
+    }
+  } catch (error) {
+    console.error("Error in handleDeleteSuborders controller:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error while deleting suborders.",
+    });
+  }
+};
+
+const handleExportOrders = async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+    const { status, startDate, endDate, search } = req.query;
+
+    const orders = await vendorService.getOrdersForExport(userId, {
+      status,
+      startDate,
+      endDate,
+      search,
+    });
+
+    // Chuẩn bị dữ liệu CSV
+    const csvData = orders.map((order) => {
+      // Tính tổng tiền cho từng sản phẩm: đơn giá * số lượng * (1 - giảm giá/100)
+      const itemTotal = order.orderItems.map((item) => {
+        const price = parseFloat(item.price) || 0;
+        const quantity = parseInt(item.quantity) || 0;
+        const discount = parseFloat(item.discount) || 0;
+        return price * quantity * (1 - discount / 100);
+      });
+
+      // Tổng tiền = tổng tiền sản phẩm + phí ship
+      const totalAmount =
+        itemTotal.reduce((sum, amount) => sum + amount, 0) +
+        parseFloat(order.shipping_fee || 0);
+
+      return {
+        "Mã đơn hàng": order.sub_order_id,
+        "Mã đơn hàng gốc": order.order_id,
+        "Trạng thái": order.status,
+        "Tổng tiền": `${totalAmount.toLocaleString("vi-VN")}đ`,
+        "Phí vận chuyển": `${parseFloat(order.shipping_fee || 0).toLocaleString(
+          "vi-VN"
+        )}đ`,
+        "Ngày đặt": order.created_at
+          ? moment(order.created_at).format("DD/MM/YYYY HH:mm")
+          : "",
+        "Tên sản phẩm": order.orderItems
+          .map(
+            (item) =>
+              `${item.product_name} (${item.quantity}x)${
+                item.size ? ` - ${item.size}` : ""
+              }${item.color ? ` - ${item.color}` : ""}`
+          )
+          .join("\n"),
+        "Đơn giá": `${parseFloat(
+          order.orderItems[0]?.price || 0
+        ).toLocaleString("vi-VN")}đ`,
+        "Giảm giá": `${parseFloat(
+          order.orderItems[0]?.discount || 0
+        ).toLocaleString("vi-VN")}%`,
+        "Thành tiền": `${itemTotal[0].toLocaleString("vi-VN")}đ`,
+        "Khách hàng": `${order.customer?.username || ""} (${
+          order.customer?.phone || ""
+        })`,
+        Email: order.customer?.email || "",
+        "Người nhận": order.shipping_address?.recipient_name || "",
+        "SĐT người nhận": order.shipping_address?.phone || "",
+        "Địa chỉ": [
+          order.shipping_address?.address_line,
+          order.shipping_address?.ward,
+          order.shipping_address?.district,
+          order.shipping_address?.city,
+        ]
+          .filter(Boolean)
+          .join(", "),
+      };
+    });
+
+    // Tạo header cho CSV
+    const headers = [
+      "Mã đơn hàng",
+      "Mã đơn hàng gốc",
+      "Trạng thái",
+      "Tổng tiền",
+      "Phí vận chuyển",
+      "Ngày đặt",
+      "Tên sản phẩm",
+      "Đơn giá",
+      "Giảm giá",
+      "Thành tiền",
+      "Khách hàng",
+      "Email",
+      "Người nhận",
+      "SĐT người nhận",
+      "Địa chỉ",
+    ];
+
+    // Tạo nội dung CSV
+    const csvContent = [
+      headers.join(","),
+      ...csvData.map((row) =>
+        headers
+          .map((header) => {
+            const value = row[header] || "";
+            // Escape các ký tự đặc biệt trong CSV
+            return `"${String(value).replace(/"/g, '""')}"`;
+          })
+          .join(",")
+      ),
+    ].join("\n");
+
+    // Thiết lập header cho response
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", "attachment; filename=orders.csv");
+
+    // Gửi file CSV
+    res.send(csvContent);
+  } catch (error) {
+    console.error("Error in handleExportOrders:", error);
+    res.status(500).json({
+      success: false,
+      message: `Lỗi khi xuất dữ liệu đơn hàng: ${error.message}`,
+    });
+  }
+};
+
+// Controller to handle fetching paginated suborders with order items
+const handleGetSubordersWithOrderItemsPaginated = async (req, res) => {
+  try {
+    const userId = req.user.user_id; // Assuming user ID is attached to req.user
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+
+    // Đọc các tham số lọc từ request query
+    const status = req.query.status;
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
+    const search = req.query.search;
+
+    // Truyền tất cả các tham số (bao gồm phân trang và lọc) vào hàm service
+    const result = await vendorService.getSubordersWithOrderItemsPaginated(
+      userId,
+      {
+        page,
+        limit,
+        status, // Truyền tham số status
+        startDate, // Truyền tham số startDate
+        endDate, // Truyền tham số endDate
+        search, // Truyền tham số search
+      }
+    );
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error(
+      "Error in handleGetSubordersWithOrderItemsPaginated controller:",
+      error
+    );
+    res.status(500).json({
+      success: false,
+      message: error.message || "Lỗi khi lấy danh sách suborders",
+    });
+  }
+};
+
 module.exports = {
   handleGetMyShop,
   handleGetAllOrders,
@@ -267,4 +504,8 @@ module.exports = {
   handleGetShopProducts,
   handleProcessProduct,
   handleGetOrdersWithFilter,
+  handleUpdateSubordersStatusToProcessing,
+  handleDeleteSuborders,
+  handleExportOrders,
+  handleGetSubordersWithOrderItemsPaginated,
 };
