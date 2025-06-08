@@ -1,4 +1,10 @@
-const { Shop, User, Product, ShopReview } = require("../models");
+const {
+  Shop,
+  User,
+  Product,
+  ShopReview,
+  ProductVariant,
+} = require("../models");
 const { sequelize } = require("../models");
 
 const getAllShops = async () => {
@@ -26,10 +32,24 @@ const getShopById = async (shopId) => {
   try {
     // Lấy thông tin shop
     const shop = await Shop.findByPk(shopId, {
-      include: {
-        model: User,
-        attributes: ["username"],
-      },
+      include: [
+        {
+          model: Product,
+          as: "products",
+          where: { status: "active" },
+          required: false,
+          include: [
+            {
+              model: ProductVariant,
+              as: "variants",
+            },
+          ],
+        },
+        {
+          model: User,
+          attributes: ["username"],
+        },
+      ],
     });
 
     if (!shop) {
@@ -46,20 +66,20 @@ const getShopById = async (shopId) => {
       raw: true,
     });
 
-    // Lấy tổng số sản phẩm của shop
+    // Lấy tổng số sản phẩm (active)
     const productCount = await Product.count({
-      where: { shop_id: shopId },
+      where: { shop_id: shopId, status: "active" },
     });
 
-    // Lấy thông tin chi tiết của shop
+    // Convert to JSON
     const shopData = shop.toJSON();
 
-    // Tính toán rating từ shop_reviews
+    // Tính rating
     const rating = reviewStats[0]?.average_rating
       ? parseFloat(reviewStats[0].average_rating).toFixed(1)
       : 0;
 
-    // Thêm thông tin đánh giá và số lượng sản phẩm
+    // Thêm thống kê
     shopData.total_reviews = reviewStats[0]?.total_reviews || 0;
     shopData.total_products = productCount;
     shopData.rating = rating;

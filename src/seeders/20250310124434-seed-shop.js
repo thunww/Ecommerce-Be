@@ -6,7 +6,8 @@ module.exports = {
         shop_name: "Electronics Store",
         description: "Specializing in high-end technology products",
         logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTG4TkxkFuXifNvLsDDaCB69Khm1LzrMFJLJA&s",
-        banner: "https://example.com/images/shop1-banner.jpg",
+        banner:
+          "https://static.vecteezy.com/system/resources/previews/026/787/170/non_2x/9-9-shopping-day-banner-design-with-3d-podium-vector.jpg",
         rating: 3.0,
         followers: 1200,
         total_products: 200,
@@ -21,7 +22,8 @@ module.exports = {
         shop_name: "High-End Fashion",
         description: "Specializing in clothing, shoes, and accessories",
         logo: "https://s3-symbol-logo.tradingview.com/avt-natural-products--600.png",
-        banner: "https://example.com/images/shop2-banner.jpg",
+        banner:
+          "https://static.vecteezy.com/system/resources/previews/026/787/170/non_2x/9-9-shopping-day-banner-design-with-3d-podium-vector.jpg",
         rating: 4.8,
         followers: 2500,
         total_products: 350,
@@ -36,7 +38,8 @@ module.exports = {
         shop_name: "ABC Bookstore",
         description: "Specializing in books, stationery, and gifts",
         logo: "https://th.bing.com/th/id/OIP.4V-SOe0yjOivytzOhuqw5gHaHa?rs=1&pid=ImgDetMain",
-        banner: "https://example.com/images/shop3-banner.jpg",
+        banner:
+          "https://static.vecteezy.com/system/resources/previews/026/787/170/non_2x/9-9-shopping-day-banner-design-with-3d-podium-vector.jpg",
         rating: 4.6,
         followers: 900,
         total_products: 500,
@@ -51,7 +54,8 @@ module.exports = {
         shop_name: "Furniture Store",
         description: "Providing high-quality furniture",
         logo: "https://th.bing.com/th/id/OIP.IlTS2EpbppkgqhbJgchZ0wHaHa?w=1280&h=1280&rs=1&pid=ImgDetMain",
-        banner: "https://example.com/images/shop4-banner.jpg",
+        banner:
+          "https://static.vecteezy.com/system/resources/previews/026/787/170/non_2x/9-9-shopping-day-banner-design-with-3d-podium-vector.jpg",
         rating: 4.7,
         followers: 1800,
         total_products: 150,
@@ -66,7 +70,8 @@ module.exports = {
         shop_name: "Gourmet Delights",
         description: "Providing high-quality food and beverages",
         logo: "https://example.com/images/shop5-logo.jpg",
-        banner: "https://example.com/images/shop5-banner.jpg",
+        banner:
+          "https://static.vecteezy.com/system/resources/previews/026/787/170/non_2x/9-9-shopping-day-banner-design-with-3d-podium-vector.jpg",
         rating: 4.9,
         followers: 3200,
         total_products: 280,
@@ -81,7 +86,8 @@ module.exports = {
         shop_name: "Pet World",
         description: "Everything your pet needs: food, toys, and accessories",
         logo: "https://th.bing.com/th/id/OIP.r2L147Tk-C4ECjSGuuRPLgHaHa?rs=1&pid=ImgDetMain",
-        banner: "https://example.com/images/shop6-banner.jpg",
+        banner:
+          "https://static.vecteezy.com/system/resources/previews/026/787/170/non_2x/9-9-shopping-day-banner-design-with-3d-podium-vector.jpg",
         rating: 4.5,
         followers: 1100,
         total_products: 220,
@@ -96,7 +102,8 @@ module.exports = {
         shop_name: "Sports & Fitness Gear",
         description: "Premium quality sports and fitness equipment",
         logo: "https://th.bing.com/th?id=OIF.0UYA%2baJfSzPNP%2bIe7O3FKA&rs=1&pid=ImgDetMain",
-        banner: "https://example.com/images/shop7-banner.jpg",
+        banner:
+          "https://static.vecteezy.com/system/resources/previews/026/787/170/non_2x/9-9-shopping-day-banner-design-with-3d-podium-vector.jpg",
         rating: 4.6,
         followers: 1600,
         total_products: 310,
@@ -111,7 +118,8 @@ module.exports = {
         shop_name: "Luxury Jewelry",
         description: "Fine jewelry and watches from top brands",
         logo: "https://m.media-amazon.com/images/I/51q9f8GJkWL.jpg",
-        banner: "https://example.com/images/shop8-banner.jpg",
+        banner:
+          "https://static.vecteezy.com/system/resources/previews/026/787/170/non_2x/9-9-shopping-day-banner-design-with-3d-podium-vector.jpg",
         rating: 4.9,
         followers: 4300,
         total_products: 125,
@@ -126,7 +134,8 @@ module.exports = {
         shop_name: "Auto Parts & Accessories",
         description: "Car and motorcycle accessories for every model",
         logo: "https://example.com/images/shop9-logo.jpg",
-        banner: "https://example.com/images/shop9-banner.jpg",
+        banner:
+          "https://static.vecteezy.com/system/resources/previews/026/787/170/non_2x/9-9-shopping-day-banner-design-with-3d-podium-vector.jpg",
         rating: 4.3,
         followers: 1400,
         total_products: 270,
