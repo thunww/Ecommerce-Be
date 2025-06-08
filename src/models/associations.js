@@ -22,6 +22,7 @@ module.exports = (db) => {
     ProductVariant,
     Cart,
     CartItem,
+    ChatMessage,
   } = db;
 
   // Quan hệ User - Role (N-N)
@@ -377,4 +378,9 @@ module.exports = (db) => {
     foreignKey: "user_id",
     as: "shipper",
   });
+  ChatMessage.belongsTo(User, { foreignKey: 'sender_id', as: 'senderUser', constraints: false });
+  ChatMessage.belongsTo(Shop, { foreignKey: 'sender_id', as: 'senderShop', constraints: false });
+
+
+
 };

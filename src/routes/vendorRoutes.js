@@ -80,10 +80,16 @@ router.post(
   "/ai-chat",
   vendorMiddleware,
   (req, res, next) => {
-    console.log("AI Chat Route - Request Body:", req.body);
     next();
   },
   handleAIChat
+);
+
+// Process sản phẩm
+router.post(
+  "/products/:product_id/process",
+  vendorMiddleware,
+  vendorController.handleProcessProduct
 );
 
 module.exports = router;

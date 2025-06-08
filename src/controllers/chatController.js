@@ -1,15 +1,12 @@
 const chatService = require('../services/chatService');
+const { hasAccessToChat } = require('../utils/chatUtils');
 
 class ChatController {
-    constructor() {
-        // Bind các phương thức để đảm bảo this trỏ đến instance của ChatController
-        this.hasAccessToChat = this.hasAccessToChat.bind(this);
-    }
+    // Không cần constructor nếu không bind gì thêm
+    // constructor() {}
 
-    // Lấy danh sách cuộc trò chuyện của người dùng
     async getUserChats(req, res) {
         try {
-            console.log('User object:', req.user);
             if (!req.user || !req.user.id) {
                 return res.status(400).json({
                     status: 'error',
@@ -18,8 +15,6 @@ class ChatController {
             }
 
             const userId = req.user.id;
-            console.log('Fetching chats for user ID:', userId);
-
             const chats = await chatService.getUserChats(userId);
 
             return res.status(200).json({
@@ -35,7 +30,6 @@ class ChatController {
         }
     }
 
-    // Lấy danh sách cuộc trò chuyện của shop
     async getShopChats(req, res) {
         try {
             if (!req.shop || !req.shop.id) {
@@ -61,10 +55,10 @@ class ChatController {
         }
     }
 
-    // Lấy tin nhắn của một cuộc trò chuyện
     async getChatMessages(req, res) {
         try {
             const { chat_id } = req.params;
+            console.log('Fetching messages for chat_id:', chat_id);
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 20;
 
@@ -75,9 +69,7 @@ class ChatController {
                 });
             }
 
-            // Kiểm tra quyền truy cập
-            const hasAccess = this.hasAccessToChat(req, chat_id);
-            if (!hasAccess) {
+            if (!hasAccessToChat(req, chat_id)) {
                 return res.status(403).json({
                     status: 'error',
                     message: 'Bạn không có quyền truy cập cuộc trò chuyện này'
@@ -99,7 +91,6 @@ class ChatController {
         }
     }
 
-    // Đánh dấu tin nhắn là đã đọc
     async markMessagesAsRead(req, res) {
         try {
             const { chat_id } = req.params;
@@ -111,9 +102,7 @@ class ChatController {
                 });
             }
 
-            // Kiểm tra quyền truy cập
-            const hasAccess = this.hasAccessToChat(req, chat_id);
-            if (!hasAccess) {
+            if (!hasAccessToChat(req, chat_id)) {
                 return res.status(403).json({
                     status: 'error',
                     message: 'Bạn không có quyền truy cập cuộc trò chuyện này'
@@ -144,7 +133,6 @@ class ChatController {
         }
     }
 
-    // Đếm số tin nhắn chưa đọc
     async countUnreadMessages(req, res) {
         try {
             let userId, userType;
@@ -177,7 +165,6 @@ class ChatController {
         }
     }
 
-    // Gửi tin nhắn mới
     async sendMessage(req, res) {
         try {
             const { receiver_id, message } = req.body;
@@ -227,40 +214,6 @@ class ChatController {
             });
         }
     }
-
-    // Kiểm tra quyền truy cập vào một cuộc trò chuyện
-    hasAccessToChat(req, chatId) {
-        if (!chatId || typeof chatId !== 'string') {
-            return false;
-        }
-
-        const parts = chatId.split('-');
-        if (parts.length !== 2) {
-            return false;
-        }
-
-        try {
-            const userId = parseInt(parts[0]);
-            const shopId = parseInt(parts[1]);
-
-            if (isNaN(userId) || isNaN(shopId)) {
-                return false;
-            }
-
-            if (req.user && req.user.id === userId) {
-                return true;
-            }
-
-            if (req.shop && req.shop.id === shopId) {
-                return true;
-            }
-
-            return false;
-        } catch (error) {
-            console.error('Error in hasAccessToChat:', error);
-            return false;
-        }
-    }
 }
 
-module.exports = new ChatController(); 
+module.exports = new ChatController();
