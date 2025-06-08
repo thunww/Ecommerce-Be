@@ -1,7 +1,7 @@
 const { Order, SubOrder, OrderItem, Cart, CartItem, Product, Shop, Payment, ProductVariant, Coupon, Address } = require('../models');
 const couponService = require('./couponService');
 const { Op } = require('sequelize');
-
+const paymentService = require('./paymentService');
 class OrderService {
   async createOrder(orderData) {
     console.log('🔥 Dữ liệu đơn hàng nhận được:', JSON.stringify(orderData, null, 2));
@@ -135,7 +135,20 @@ class OrderService {
       }
 
       console.log('✅ Đã tạo xong các SubOrder và OrderItem đầy đủ');
-      return order;
+      let paymentResult = null;
+      if (payment_method === 'vnpay') {
+        console.log('🚀 Gọi processVNPayPayment với order_id:', order.order_id);
+        paymentResult = await paymentService.processVNPayPayment(order.order_id);
+        console.log('🔗 Kết quả processVNPayPayment:', paymentResult);
+        // Gắn link vào đơn hàng trả về
+
+      }
+      return {
+        message: "Đặt hàng thành công",
+        order,
+        payment_url: paymentResult.payment_url
+      };
+
     } catch (error) {
       console.error('❌ Lỗi khi tạo đơn hàng:', error);
       throw error;
