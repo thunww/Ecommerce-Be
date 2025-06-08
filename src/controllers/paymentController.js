@@ -33,13 +33,14 @@ class PaymentController {
 
     async processVNPayPayment(req, res) {
         try {
-            const { order_id, sub_order_id } = req.params;
-            const result = await paymentService.processVNPayPayment(order_id, sub_order_id);
-            res.json(result);
+            const { order_id } = req.params;
+            const result = await paymentService.processVNPayPayment(order_id);
+            return res.status(201).json(result);
         } catch (error) {
-            res.status(500).json({ message: error.message });
+            return res.status(500).json({ message: error.message });
         }
     }
+
 
     async handleMomoCallback(req, res) {
         try {
