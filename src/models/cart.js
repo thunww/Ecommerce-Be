@@ -1,4 +1,5 @@
 "use strict";
+
 const { Model, DataTypes, Sequelize } = require("sequelize"); // Thêm Sequelize vào import
 const sequelize = require("../config/database");
 
@@ -38,7 +39,7 @@ Cart.init(
   {
     sequelize,
     modelName: "Cart",
-    tableName: "carts",
+    tableName: "Carts",
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",

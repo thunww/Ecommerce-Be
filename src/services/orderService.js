@@ -17,7 +17,7 @@ const paymentService = require("./paymentService");
 class OrderService {
   async createOrder(orderData) {
     console.log(
-      "🔥 Dữ liệu đơn hàng nhận được:",
+      "Dữ liệu đơn hàng nhận được:",
       JSON.stringify(orderData, null, 2)
     );
 
@@ -170,7 +170,7 @@ class OrderService {
       return {
         message: "Đặt hàng thành công",
         order,
-        payment_url: paymentResult.payment_url,
+        payment_url: paymentResult ? paymentResult.payment_url : null,
       };
     } catch (error) {
       console.error("❌ Lỗi khi tạo đơn hàng:", error);
@@ -339,6 +339,42 @@ class OrderService {
         Address,
       ],
     });
+  }
+
+  async cancelOrder(order_id, user_id) {
+    try {
+      const order = await Order.findOne({
+        where: {
+          order_id,
+          user_id,
+        },
+        include: [{ model: SubOrder, as: "subOrders" }],
+      });
+
+      if (!order) {
+        throw new Error("Đơn hàng không tồn tại hoặc không thuộc về bạn");
+      }
+
+      if (order.status !== "pending") {
+        throw new Error("Chỉ có thể huỷ đơn hàng khi đang chờ xử lý (pending)");
+      }
+
+      // Cập nhật trạng thái huỷ
+      await order.update({ status: "cancelled" });
+
+      // Cập nhật trạng thái huỷ cho các subOrder liên quan
+      await Promise.all(
+        order.subOrders.map((sub) => sub.update({ status: "cancelled" }))
+      );
+
+      return {
+        message: "Huỷ đơn hàng thành công",
+        order_id: order.order_id,
+      };
+    } catch (err) {
+      console.error("Lỗi huỷ đơn:", err.message);
+      throw err;
+    }
   }
 }
 
