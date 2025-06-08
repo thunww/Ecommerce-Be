@@ -14,8 +14,9 @@ class CartController {
             }
 
             const cartData = await cartService.addToCart(user_id, product_id, quantity, variant_id);
-
+            console.log('Thêm vào giỏ hàng thành công:', cartData);
             return res.status(200).json(cartData);
+
         } catch (error) {
             console.error('Lỗi khi thêm vào giỏ hàng:', error);
             return res.status(400).json({
