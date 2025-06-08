@@ -146,7 +146,7 @@ class OrderService {
       return {
         message: "Đặt hàng thành công",
         order,
-        payment_url: paymentResult.payment_url
+        payment_url: paymentResult ? paymentResult.payment_url : null
       };
 
     } catch (error) {
