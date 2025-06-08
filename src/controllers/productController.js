@@ -47,28 +47,40 @@ const getProductById = async (req, res) => {
 
 const searchProducts = async (req, res) => {
   try {
-    // Destructure query parameters with defaults
     const {
       q = "",
       category_id,
-      min_price = 0,
-      max_price = Number.MAX_SAFE_INTEGER,
+      min_price: minPriceRaw = "0",
+      max_price: maxPriceRaw = String(Number.MAX_SAFE_INTEGER),
       sort = "default",
+      min_rating: minRatingRaw = "0", // thêm tham số này
     } = req.query;
 
-    // Input validation
-    if (min_price < 0 || max_price < 0) {
+    const min_price = Number(minPriceRaw);
+    const max_price = Number(maxPriceRaw);
+    const min_rating = Number(minRatingRaw);
+
+    if (isNaN(min_price) || isNaN(max_price) || isNaN(min_rating)) {
       return res.status(400).json({
         success: false,
-        message: "Prices cannot be negative",
+        message: "Invalid numeric value",
       });
     }
+
+    if (min_price < 0 || max_price < 0 || min_rating < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Prices and rating cannot be negative",
+      });
+    }
+
     if (min_price > max_price) {
       return res.status(400).json({
         success: false,
         message: "min_price cannot be greater than max_price",
       });
     }
+
     if (category_id && !Number.isInteger(Number(category_id))) {
       return res.status(400).json({
         success: false,
@@ -76,16 +88,22 @@ const searchProducts = async (req, res) => {
       });
     }
 
-    // Call product service
+    if (min_rating > 5) {
+      return res.status(400).json({
+        success: false,
+        message: "min_rating cannot be greater than 5",
+      });
+    }
+
     const result = await productService.searchProducts(
       q.trim(),
       category_id ? Number(category_id) : undefined,
-      Number(min_price),
-      Number(max_price),
-      sort
+      min_price,
+      max_price,
+      sort,
+      min_rating // truyền tham số rating mới
     );
 
-    // Return response
     return res.status(200).json(result);
   } catch (error) {
     console.error("Error in searchProducts:", error);
