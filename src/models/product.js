@@ -1,6 +1,7 @@
 const { Model, DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
 
+
 class Product extends Model {}
 
 Product.init(
@@ -10,6 +11,12 @@ Product.init(
       autoIncrement: true,
       primaryKey: true,
     },
+    // product_code: {
+    //   type: DataTypes.STRING(50),
+    //   allowNull: true, // Cho phép null ban đầu để hỗ trợ dữ liệu cũ
+    //   unique: true, // Đảm bảo mã đơn hàng là duy nhất
+    //   comment: 'Mã sản phẩm dạng chuỗi (ví dụ: ORD-20250527-001)'
+    // },
     product_name: {
       type: DataTypes.STRING(255),
       allowNull: false,

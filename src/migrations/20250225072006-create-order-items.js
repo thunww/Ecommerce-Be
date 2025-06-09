@@ -8,6 +8,11 @@ module.exports = {
         primaryKey: true,
         allowNull: false,
       },
+      // order_item_code: {
+      //   type: Sequelize.STRING(50),
+      //   allowNull: true, // Cho phép null ban đầu để hỗ trợ dữ liệu cũ
+      //   unique: true, // Đảm bảo mã đơn hàng là duy nhất
+      // },
       sub_order_id: {
         type: Sequelize.INTEGER,
         allowNull: false,

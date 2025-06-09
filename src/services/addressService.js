@@ -149,6 +149,46 @@ class AddressService {
       };
     }
   }
+  // Lấy địa chỉ mặc định của user
+async getDefaultAddress(user_id) {
+    try {
+      if (!user_id || isNaN(user_id)) {
+        return {
+          status: "error",
+          message: "Invalid user ID",
+          data: null,
+        };
+      }
+  
+      const defaultAddress = await Address.findOne({
+        where: {
+          user_id,
+          is_default: true,
+        },
+      });
+  
+      if (!defaultAddress) {
+        return {
+          status: "error",
+          message: "Default address not found",
+          data: null,
+        };
+      }
+  
+      return {
+        status: "success",
+        message: "Default address retrieved successfully",
+        data: defaultAddress,
+      };
+    } catch (error) {
+      return {
+        status: "error",
+        message: "Failed to retrieve default address: " + error.message,
+        data: null,
+      };
+    }
+  }
+  
 
   // Cập nhật địa chỉ
   async updateAddress(address_id, user_id, updateData) {

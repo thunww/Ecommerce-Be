@@ -46,7 +46,11 @@ router.get("/related/:related_id", productController.getProductsByCategoryId);
 
 router.get("/search", productController.searchProducts);
 router.get("/suggest", productController.suggestProducts);
-
+router.get(
+  "/detailProducts",
+  authMiddleware,
+  productController.getProductDetails
+);
 router.get("/:product_id", productController.getProductById);
 
 router.get("/featured", productController.getFeaturedProducts);
