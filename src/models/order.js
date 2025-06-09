@@ -35,7 +35,7 @@ Order.init(
     shipping_fee: {
       type: DataTypes.DECIMAL(15, 2),
       allowNull: false,
-      defaultValue: 0,
+      defaultValue: 10000,
     },
     payment_method: {
       type: DataTypes.ENUM("cod", "momo", "vnpay", "bank_transfer"),

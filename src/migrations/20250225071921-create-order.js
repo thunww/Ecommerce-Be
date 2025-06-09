@@ -42,7 +42,7 @@ module.exports = {
       },
       shipping_fee: {
         type: Sequelize.DECIMAL(15, 2),
-        defaultValue: 0.00,
+        defaultValue: 10000.00,
       },
       note: {
         type: Sequelize.STRING(255),
