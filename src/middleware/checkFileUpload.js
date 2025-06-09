@@ -3,19 +3,14 @@ const { uploadProduct } = require("../config/uploadConfig");
 const { deleteImagesByUrls } = require("../utils/cloudinaryHelper");
 
 /**
- * Middleware upload ảnh và parse form-data
+ * Middleware upload ảnh cho các variant (không nhận ảnh product)
  */
 const parseFormAndUpload = async (req, res, next) => {
-  req.uploadedImages = []; // Khởi tạo mảng chứa đường dẫn ảnh
+  req.uploadedImages = []; // [{ fieldname, path }]
 
   try {
-    // Cấu hình upload - parse cả text fields và file
-    const upload = uploadProduct.fields([
-      { name: "primaryImage", maxCount: 1 },
-      { name: "additionalImages", maxCount: 10 },
-    ]);
+    const upload = uploadProduct.any();
 
-    // Thực hiện upload
     upload(req, res, (err) => {
       if (err) {
         return res.status(400).json({
@@ -25,16 +20,16 @@ const parseFormAndUpload = async (req, res, next) => {
         });
       }
 
-      // Lưu lại URLs của ảnh đã upload
+      // Chỉ lưu các file có fieldname bắt đầu bằng 'variantImage_'
       if (req.files) {
-        if (req.files.primaryImage && req.files.primaryImage[0]) {
-          req.uploadedImages.push(req.files.primaryImage[0].path);
-        }
-        if (req.files.additionalImages) {
-          req.files.additionalImages.forEach((file) => {
-            req.uploadedImages.push(file.path);
-          });
-        }
+        req.files.forEach((file) => {
+          if (file.fieldname.startsWith("variantImage_")) {
+            req.uploadedImages.push({
+              fieldname: file.fieldname,
+              path: file.path,
+            });
+          }
+        });
       }
 
       next();
@@ -54,7 +49,7 @@ const parseFormAndUpload = async (req, res, next) => {
 const handleProductError = async (err, req, res, next) => {
   // Xóa ảnh đã upload nếu có lỗi
   if (req.uploadedImages && req.uploadedImages.length > 0) {
-    await deleteImagesByUrls(req.uploadedImages);
+    await deleteImagesByUrls(req.uploadedImages.map((img) => img.path));
     console.log(
       `Đã xóa ${req.uploadedImages.length} ảnh do lỗi: ${err.message}`
     );

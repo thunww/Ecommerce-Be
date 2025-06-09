@@ -398,12 +398,27 @@ const handleAssignProduct = async (req, res) => {
 const handleDeleteProduct = async (req, res) => {
   try {
     const { product_id } = req.params;
-    const result = await productService.deleteProduct(product_id);
+
+    // Chuyển đổi product_id thành mảng
+    const product_ids = product_id.split(",").map((id) => parseInt(id.trim()));
+
+    // Kiểm tra nếu có ID không hợp lệ
+    if (product_ids.some(isNaN)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID format",
+      });
+    }
+
+    const result = await productService.deleteProduct(product_ids);
 
     res.status(200).json(result);
   } catch (error) {
-    if (error.message === "Product not found") {
+    if (error.message === "No products found") {
       return res.status(404).json({ success: false, message: error.message });
+    }
+    if (error.message === "Invalid product IDs array") {
+      return res.status(400).json({ success: false, message: error.message });
     }
     console.error("Error in handleDeleteProduct:", error);
     res.status(500).json({ success: false, message: "Internal Server Error" });

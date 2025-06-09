@@ -12,6 +12,7 @@ const {
   getShopAnalytics,
   deleteSubordersByIds,
   getOrdersForExport,
+  filterShopProducts,
 } = require("../services/vendorService");
 const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 const fs = require("fs");
@@ -217,8 +218,19 @@ const handleAIChat = async (req, res) => {
 const handleGetShopProducts = async (req, res) => {
   try {
     const userId = req.user.user_id;
+    const page = parseInt(req.query.page) || 1; // Mặc định trang 1
+    const limit = parseInt(req.query.limit) || 9; // Mặc định 9 sản phẩm mỗi trang
+    const search = req.query.search || ""; // Tìm kiếm theo tên
+    const categoryId = req.query.categoryId || null; // Lọc theo category
+    const sortBy = req.query.sortBy || "name"; // Sắp xếp theo tiêu chí
 
-    const products = await getShopProducts(userId);
+    const products = await getShopProducts(userId, {
+      page,
+      limit,
+      search,
+      categoryId,
+      sortBy,
+    });
     res.json(products);
   } catch (error) {
     console.error("Error in handleGetShopProducts:", error);
@@ -490,6 +502,200 @@ const handleGetSubordersWithOrderItemsPaginated = async (req, res) => {
   }
 };
 
+const handleUpdateProduct = async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+    const { product_id } = req.params;
+    let {
+      product_name,
+      description,
+      discount,
+      dimensions,
+      weight,
+      variants,
+      category,
+      stock,
+    } = req.body;
+
+    
+
+    // Parse variants nếu là string
+    if (typeof variants === "string") {
+      try {
+        variants = JSON.parse(variants);
+      } catch (e) {
+        variants = [];
+      }
+    }
+
+    // Lấy thông tin ảnh đã upload từ middleware
+    const uploadedImages = req.uploadedImages || [];
+
+    // Tạo object chứa dữ liệu cập nhật cho sản phẩm
+    const productUpdateData = {
+      product_name,
+      description,
+      discount,
+      dimensions,
+      weight,
+      category,
+      stock,
+    };
+
+    // Xử lý ảnh cho từng variant
+    if (variants && Array.isArray(variants)) {
+      variants.forEach((variant) => {
+        const variantImage = uploadedImages.find(
+          (img) => img.fieldname === `variantImage_${variant.variant_id}`
+        );
+        if (variantImage) {
+          variant.image_url = variantImage.path;
+        }
+      });
+    }
+
+    // Gọi service để cập nhật sản phẩm và các variant
+    const updatedProduct = await vendorService.updateProduct(
+      userId,
+      product_id,
+      productUpdateData,
+      variants
+    );
+
+    // Trả về kết quả thành công
+    res.status(200).json({
+      success: true,
+      message: "Sản phẩm và các biến thể đã được cập nhật thành công",
+      data: updatedProduct,
+    });
+  } catch (error) {
+    console.error("Error in handleUpdateProduct:", error);
+
+    // Xử lý các loại lỗi cụ thể
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: "Dữ liệu không hợp lệ",
+        errors: error.errors,
+      });
+    }
+
+    if (error.name === "NotFoundError") {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy sản phẩm hoặc biến thể",
+      });
+    }
+
+    // Trả về lỗi mặc định
+    res.status(500).json({
+      success: false,
+      message: error.message || "Lỗi khi cập nhật sản phẩm",
+    });
+  }
+};
+
+// Xóa một variant của sản phẩm
+const handleDeleteVariant = async (req, res) => {
+  try {
+    const userId = req.user.user_id; // Lấy user ID từ token
+    const { product_id, variant_id } = req.params;
+
+    await vendorService.deleteVariant(userId, product_id, variant_id);
+
+    res.status(200).json({ message: "Variant đã được xóa thành công." });
+  } catch (error) {
+    console.error("Lỗi trong handleDeleteVariant:", error);
+    res.status(500).json({
+      message: error.message || "Lỗi server khi xóa variant",
+    });
+  }
+};
+
+const handleCreateProduct = async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+    let {
+      product_name,
+      description,
+      discount,
+      dimensions,
+      weight,
+      variants,
+      stock,
+      category,
+    } = req.body;
+
+    console.log("Stock received in controller (req.body.stock):", stock);
+
+    // Parse variants nếu là string
+    if (typeof variants === "string") {
+      try {
+        variants = JSON.parse(variants);
+      } catch (e) {
+        variants = [];
+      }
+    }
+
+    // Lấy thông tin ảnh đã upload từ middleware
+    const uploadedImages = req.uploadedImages || [];
+
+    // Tạo object chứa dữ liệu cho sản phẩm mới
+    const productData = {
+      product_name,
+      description,
+      discount,
+      dimensions,
+      weight,
+      stock,
+      category,
+    };
+
+    // Xử lý ảnh cho từng variant
+    if (variants && Array.isArray(variants)) {
+      variants.forEach((variant, index) => {
+        const variantImage = uploadedImages.find(
+          (img) => img.fieldname === `variantImage_${index}`
+        );
+        if (variantImage) {
+          variant.image_url = variantImage.path;
+        }
+      });
+    }
+
+    // Gọi service để tạo sản phẩm và các variant
+    const newProduct = await vendorService.createProduct(
+      userId,
+      productData,
+      variants
+    );
+
+    // Trả về kết quả thành công
+    res.status(201).json({
+      success: true,
+      message: "Sản phẩm và các biến thể đã được tạo thành công",
+      data: newProduct,
+    });
+  } catch (error) {
+    console.error("Error in handleCreateProduct:", error);
+
+    // Xử lý các loại lỗi cụ thể
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: "Dữ liệu không hợp lệ",
+        errors: error.errors,
+      });
+    }
+
+    // Trả về lỗi mặc định
+    res.status(500).json({
+      success: false,
+      message: error.message || "Lỗi khi tạo sản phẩm",
+    });
+  }
+};
+
 module.exports = {
   handleGetMyShop,
   handleGetAllOrders,
@@ -508,4 +714,7 @@ module.exports = {
   handleDeleteSuborders,
   handleExportOrders,
   handleGetSubordersWithOrderItemsPaginated,
+  handleUpdateProduct,
+  handleDeleteVariant,
+  handleCreateProduct,
 };

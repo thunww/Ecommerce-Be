@@ -9,6 +9,8 @@ const {
   ProductVariant,
   Category,
   Address,
+  ProductReview,
+  ProductImage,
 } = require("../models");
 const { sequelize } = require("../models");
 const { Op } = require("sequelize");
@@ -854,96 +856,559 @@ const getShopRating = async (userId) => {
     throw new Error(`Không thể lấy đánh giá shop: ${error.message}`);
   }
 };
-
-// Lấy danh sách sản phẩm của shop
-const getShopProducts = async (userId) => {
+// lay san pham tu shop
+const getShopProducts = async (
+  userId,
+  { page = 1, limit = 9, search = "", categoryId = null, sortBy = "name" } = {}
+) => {
   try {
-    console.log("=== Getting Shop Products ===");
-    console.log("User ID:", userId);
+    // Input validation
+    if (!Number.isInteger(page) || page < 1) page = 1;
+    if (!Number.isInteger(limit) || limit < 1) limit = 9;
+    const validSortOptions = [
+      "name",
+      "price_asc",
+      "price_desc",
+      "bestselling",
+      "stock_level",
+      "highest_discount",
+    ];
+    if (!validSortOptions.includes(sortBy)) sortBy = "name";
 
-    // Tìm shop của vendor
+    // Find shop
     const shop = await Shop.findOne({
       where: { owner_id: userId },
       attributes: ["shop_id", "shop_name"],
       raw: true,
     });
+    if (!shop) throw new Error("Shop not found");
 
-    if (!shop) {
-      throw new Error("Không tìm thấy shop");
+    // Pagination offset
+    const offset = (page - 1) * limit;
+
+    // Build search condition
+    const searchCondition = { shop_id: shop.shop_id };
+    if (search) {
+      searchCondition.product_name = { [Op.like]: `%${search}%` };
+    }
+    if (categoryId) {
+      searchCondition.category_id = categoryId;
     }
 
-    console.log("Found Shop:", shop);
+    // Define order condition
+    let orderCondition = [];
+    switch (sortBy) {
+      case "name":
+        orderCondition = [
+          [Sequelize.fn("LOWER", Sequelize.col("product_name")), "ASC"],
+        ];
+        break;
+      case "price_asc":
+        orderCondition = [
+          [
+            Sequelize.literal(
+              "(SELECT MIN(price) FROM product_variants WHERE product_variants.product_id = product.product_id)"
+            ),
+            "ASC",
+          ],
+          ["product_name", "ASC"],
+        ];
+        break;
+      case "price_desc":
+        orderCondition = [
+          [
+            Sequelize.literal(
+              "(SELECT MIN(price) FROM product_variants WHERE product_variants.product_id = product.product_id)"
+            ),
+            "DESC",
+          ],
+          ["product_name", "ASC"],
+        ];
+        break;
+      case "bestselling":
+        orderCondition = [
+          ["sold", "DESC"],
+          ["product_name", "ASC"],
+        ];
+        break;
+      case "stock_level":
+        orderCondition = [
+          [
+            Sequelize.literal(
+              "(SELECT MIN(stock) FROM product_variants WHERE product_variants.product_id = product.product_id)"
+            ),
+            "ASC",
+          ],
+          ["product_name", "ASC"],
+        ];
+        break;
+      case "highest_discount":
+        orderCondition = [
+          ["discount", "DESC"],
+          ["product_name", "ASC"],
+        ];
+        break;
+      default:
+        orderCondition = [
+          [Sequelize.fn("LOWER", Sequelize.col("product_name")), "ASC"],
+        ];
+    }
 
-    // Lấy danh sách sản phẩm của shop kèm theo giá từ variants
-    const products = await Product.findAll({
+    // Get total products count
+    const totalProducts = await Product.count({
+      where: searchCondition,
+      distinct: true,
+      col: "product_id",
+    });
+
+    // Get best seller product
+    const bestSellerProduct = await Product.findOne({
       where: { shop_id: shop.shop_id },
+      attributes: ["product_id", "product_name", "sold"],
       include: [
+        { model: ProductVariant, as: "variants" },
         {
-          model: ProductVariant,
-          as: "variants",
-          attributes: ["image_url", "variant_id", "price"],
+          model: ProductReview,
+          as: "reviews",
+          include: [
+            {
+              model: User,
+              as: "user",
+              attributes: ["username", "profile_picture"],
+            },
+          ],
         },
+      ],
+      order: [["sold", "DESC"]],
+      raw: true,
+      nest: true,
+    });
+
+    // Get low stock variants
+    const lowStockVariants = await ProductVariant.findAll({
+      where: { stock: { [Op.lte]: 2 } },
+      include: [
+        { model: Product, as: "product", where: { shop_id: shop.shop_id } },
+      ],
+      raw: true,
+      nest: true,
+    });
+
+    // Get all products for reviews
+    const allShopProducts = await Product.findAll({
+      where: { shop_id: shop.shop_id },
+      attributes: {
+        exclude: ["stock", "average_rating", "review_count", "updated_at"],
+      },
+      include: [
+        { model: ProductVariant, as: "variants" },
         {
           model: Category,
           as: "Category",
           attributes: ["category_id", "category_name"],
         },
+        {
+          model: ProductReview,
+          as: "reviews",
+          include: [
+            {
+              model: User,
+              as: "user",
+              attributes: ["username", "profile_picture"],
+            },
+          ],
+        },
       ],
-      order: [["created_at", "DESC"]],
       raw: true,
       nest: true,
     });
 
-    console.log(`Found ${products.length} products`);
+    // Get products for current page
+    const products = await Product.findAll({
+      where: searchCondition,
+      attributes: {
+        exclude: ["stock", "average_rating", "review_count", "updated_at"],
+      },
+      include: [
+        { model: ProductVariant, as: "variants" },
+        {
+          model: Category,
+          as: "Category",
+          attributes: ["category_id", "category_name"],
+        },
+        {
+          model: ProductReview,
+          as: "reviews",
+          include: [
+            {
+              model: User,
+              as: "user",
+              attributes: ["username", "profile_picture"],
+            },
+          ],
+        },
+      ],
+      order: orderCondition,
+      limit: limit,
+      offset: offset,
+      raw: true,
+      nest: true,
+    });
 
-    // Xử lý dữ liệu trùng lặp và format dữ liệu sản phẩm
-    const uniqueProducts = {};
-
-    products.forEach((product) => {
+    // Build product reviews map
+    const productReviewsMap = {};
+    allShopProducts.forEach((product) => {
       const productId = product.product_id;
+      if (!productReviewsMap[productId]) {
+        productReviewsMap[productId] = [];
+      }
+      if (
+        product.reviews &&
+        product.reviews.review_id &&
+        !productReviewsMap[productId].some(
+          (r) => r.id === product.reviews.review_id
+        )
+      ) {
+        productReviewsMap[productId].push({
+          id: product.reviews.review_id,
+          rating: product.reviews.rating,
+          comment: product.reviews.comment,
+          createdAt: product.reviews.created_at,
+          user: product.reviews.user
+            ? {
+                username: product.reviews.user.username,
+                profile_picture: product.reviews.user.profile_picture,
+              }
+            : null,
+          productId: productId,
+          productName: product.product_name,
+        });
+      }
+    });
 
-      if (!uniqueProducts[productId]) {
-        // Nếu sản phẩm chưa tồn tại, tạo mới
-        const variants = Array.isArray(product.variants)
-          ? product.variants
-          : [product.variants].filter(Boolean);
+    // Create ALLReview array
+    const ALLReview = Object.values(productReviewsMap).flat();
 
-        // Lấy giá từ variant đầu tiên (hoặc giá thấp nhất nếu có nhiều variants)
-        const price = variants.length > 0 ? variants[0].price : 0;
-
-        uniqueProducts[productId] = {
-          ...product,
-          price: price,
-          main_image: variants.length > 0 ? variants[0].image_url : null,
-          images: variants.map((img) => ({
-            url: img.image_url,
-            variant_id: img.variant_id,
-            price: img.price,
-          })),
+    // Group all products for stats
+    const allGroupedProducts = {};
+    allShopProducts.forEach((product) => {
+      const productId = product.product_id;
+      if (!allGroupedProducts[productId]) {
+        allGroupedProducts[productId] = {
+          id: productId,
+          name: product.product_name,
+          description: product.description,
+          discount: product.discount || 0,
+          weight: product.weight,
+          dimension: product.dimensions,
+          sold: product.sold,
           category: product.Category
             ? {
                 id: product.Category.category_id,
                 name: product.Category.category_name,
               }
             : null,
+          variants: [],
+          images: {
+            main: null,
+            additional: [],
+          },
+          reviews: productReviewsMap[productId] || [],
+          stats: {
+            totalVariants: 0,
+            totalStock: 0,
+            priceRange: { min: Infinity, max: -Infinity },
+            isBestSeller: false,
+            hasLowStock: false,
+            lowStockVariants: [],
+            averageRating: 0,
+            totalReviews: productReviewsMap[productId]?.length || 0,
+          },
         };
-      } else {
-        // Nếu sản phẩm đã tồn tại, thêm variant mới vào mảng images
-        const newVariant = product.variants;
-        if (newVariant && newVariant.image_url) {
-          uniqueProducts[productId].images.push({
-            url: newVariant.image_url,
-            variant_id: newVariant.variant_id,
-            price: newVariant.price,
-          });
+        if (productReviewsMap[productId]?.length > 0) {
+          const totalRating = productReviewsMap[productId].reduce(
+            (sum, review) => sum + review.rating,
+            0
+          );
+          allGroupedProducts[productId].stats.averageRating =
+            totalRating / productReviewsMap[productId].length;
         }
+      }
+      if (product.variants && product.variants.variant_id) {
+        const existingVariant = allGroupedProducts[productId].variants.find(
+          (v) => v.id === product.variants.variant_id
+        );
+        if (!existingVariant) {
+          allGroupedProducts[productId].variants.push({
+            id: product.variants.variant_id,
+            size: product.variants.size,
+            color: product.variants.color,
+            material: product.variants.material,
+            storage: product.variants.storage,
+            ram: product.variants.ram,
+            processor: product.variants.processor,
+            price: product.variants.price,
+            stock: product.variants.stock,
+            image: product.variants.image_url,
+          });
+          if (!allGroupedProducts[productId].images.main) {
+            allGroupedProducts[productId].images.main =
+              product.variants.image_url;
+          }
+          const existingImage = allGroupedProducts[
+            productId
+          ].images.additional.find(
+            (img) => img.url === product.variants.image_url
+          );
+          if (!existingImage && product.variants.image_url) {
+            allGroupedProducts[productId].images.additional.push({
+              url: product.variants.image_url,
+              variantId: product.variants.variant_id,
+              price: product.variants.price,
+            });
+          }
+        }
+        allGroupedProducts[productId].stats.totalVariants++;
+        allGroupedProducts[productId].stats.totalStock +=
+          product.variants.stock || 0;
+        allGroupedProducts[productId].stats.priceRange.min = Math.min(
+          allGroupedProducts[productId].stats.priceRange.min,
+          product.variants.price || 0
+        );
+        allGroupedProducts[productId].stats.priceRange.max = Math.max(
+          allGroupedProducts[productId].stats.priceRange.max,
+          product.variants.price || 0
+        );
       }
     });
 
-    return Object.values(uniqueProducts);
+    // Set best seller
+    let bestSeller = null;
+    if (bestSellerProduct) {
+      const productId = bestSellerProduct.product_id;
+      const uniqueReviews = [];
+      const reviewIds = new Set();
+      allGroupedProducts[productId].reviews.forEach((review) => {
+        if (!reviewIds.has(review.id)) {
+          reviewIds.add(review.id);
+          uniqueReviews.push(review);
+        }
+      });
+      const totalRating = uniqueReviews.reduce(
+        (sum, review) => sum + review.rating,
+        0
+      );
+      const averageRating =
+        uniqueReviews.length > 0 ? totalRating / uniqueReviews.length : 0;
+      bestSeller = {
+        id: productId,
+        name: bestSellerProduct.product_name,
+        sold: bestSellerProduct.sold,
+        image: allGroupedProducts[productId].images.main,
+        variants: allGroupedProducts[productId].variants,
+        reviews: uniqueReviews,
+        stats: {
+          totalVariants: allGroupedProducts[productId].stats.totalVariants,
+          totalStock: allGroupedProducts[productId].stats.totalStock,
+          priceRange: allGroupedProducts[productId].stats.priceRange,
+          averageRating: averageRating,
+          totalReviews: uniqueReviews.length,
+        },
+      };
+      allGroupedProducts[productId].stats.isBestSeller = true;
+    }
+
+    // Set low stock products
+    const lowStockProducts = Object.values(allGroupedProducts)
+      .filter((product) => {
+        const hasLowStockVariant = product.variants.some(
+          (variant) => variant.stock <= 2
+        );
+        if (hasLowStockVariant) {
+          product.stats.lowStockVariants = product.variants
+            .filter((variant) => variant.stock <= 2)
+            .map((variant) => ({
+              variantId: variant.id,
+              stock: variant.stock,
+              size: variant.size,
+              color: variant.color,
+              material: variant.material,
+              ram: variant.ram,
+              processor: variant.processor,
+              price: variant.price,
+              image: variant.image,
+            }));
+          product.stats.hasLowStock = true;
+          return true;
+        }
+        return false;
+      })
+      .map((product) => ({
+        id: product.id,
+        name: product.name,
+        lowStockVariants: product.stats.lowStockVariants,
+        image: product.images.main,
+        reviews: product.reviews,
+        stats: {
+          averageRating: product.stats.averageRating,
+          totalReviews: product.stats.totalReviews,
+        },
+      }));
+
+    // Group products for current page
+    const groupedProducts = {};
+    products.forEach((product) => {
+      const productId = product.product_id;
+      if (!groupedProducts[productId]) {
+        groupedProducts[productId] = {
+          id: productId,
+          name: product.product_name,
+          description: product.description,
+          discount: product.discount || 0,
+          weight: product.weight,
+          dimension: product.dimensions,
+          sold: product.sold,
+          category: product.Category
+            ? {
+                id: product.Category.category_id,
+                name: product.Category.category_name,
+              }
+            : null,
+          variants: [],
+          images: {
+            main: null,
+            additional: [],
+          },
+          reviews: productReviewsMap[productId] || [],
+          stats: {
+            totalVariants: 0,
+            totalStock: 0,
+            priceRange: { min: Infinity, max: -Infinity },
+            isBestSeller:
+              allGroupedProducts[productId]?.stats.isBestSeller || false,
+            hasLowStock:
+              allGroupedProducts[productId]?.stats.hasLowStock || false,
+            lowStockVariants:
+              allGroupedProducts[productId]?.stats.lowStockVariants || [],
+            averageRating:
+              allGroupedProducts[productId]?.stats.averageRating || 0,
+            totalReviews: productReviewsMap[productId]?.length || 0,
+          },
+        };
+      }
+      if (product.variants && product.variants.variant_id) {
+        const existingVariant = groupedProducts[productId].variants.find(
+          (v) => v.id === product.variants.variant_id
+        );
+        if (!existingVariant) {
+          groupedProducts[productId].variants.push({
+            id: product.variants.variant_id,
+            size: product.variants.size,
+            color: product.variants.color,
+            material: product.variants.material,
+            storage: product.variants.storage,
+            ram: product.variants.ram,
+            processor: product.variants.processor,
+            price: product.variants.price,
+            stock: product.variants.stock,
+            image: product.variants.image_url,
+          });
+          if (!groupedProducts[productId].images.main) {
+            groupedProducts[productId].images.main = product.variants.image_url;
+          }
+          const existingImage = groupedProducts[
+            productId
+          ].images.additional.find(
+            (img) => img.url === product.variants.image_url
+          );
+          if (!existingImage && product.variants.image_url) {
+            groupedProducts[productId].images.additional.push({
+              url: product.variants.image_url,
+              variantId: product.variants.variant_id,
+              price: product.variants.price,
+            });
+          }
+        }
+        groupedProducts[productId].stats.totalVariants++;
+        groupedProducts[productId].stats.totalStock +=
+          product.variants.stock || 0;
+        groupedProducts[productId].stats.priceRange.min = Math.min(
+          groupedProducts[productId].stats.priceRange.min,
+          product.variants.price || 0
+        );
+        groupedProducts[productId].stats.priceRange.max = Math.max(
+          groupedProducts[productId].stats.priceRange.max,
+          product.variants.price || 0
+        );
+      }
+    });
+
+    // Format products with proper sorting
+    const formattedProducts = Object.values(groupedProducts)
+      .map((product) => ({
+        ...product,
+        stats: {
+          ...product.stats,
+          priceRange: {
+            min:
+              product.stats.priceRange.min === Infinity
+                ? 0
+                : product.stats.priceRange.min,
+            max:
+              product.stats.priceRange.max === -Infinity
+                ? 0
+                : product.stats.priceRange.max,
+          },
+        },
+      }))
+      .sort((a, b) => {
+        if (sortBy === "price_asc") {
+          return a.stats.priceRange.min - b.stats.priceRange.min;
+        } else if (sortBy === "price_desc") {
+          return b.stats.priceRange.min - a.stats.priceRange.min;
+        } else if (sortBy === "bestselling") {
+          return b.sold - a.sold || a.name.localeCompare(b.name);
+        } else if (sortBy === "highest_discount") {
+          return (
+            Number(b.discount) - Number(a.discount) ||
+            a.name.localeCompare(b.name)
+          );
+        } else if (sortBy === "stock_level") {
+          const aMinStock = a.variants.reduce(
+            (min, v) => Math.min(min, Number(v.stock) || 0),
+            Infinity
+          );
+          const bMinStock = b.variants.reduce(
+            (min, v) => Math.min(min, Number(v.stock) || 0),
+            Infinity
+          );
+          return aMinStock - bMinStock || a.name.localeCompare(b.name);
+        }
+        return a.name.localeCompare(b.name);
+      });
+
+    return {
+      success: true,
+      data: formattedProducts,
+      bestSeller,
+      lowStockProducts,
+      ALLReview,
+      pagination: {
+        total: totalProducts,
+        page: page,
+        limit: limit,
+        totalPages: Math.ceil(totalProducts / limit),
+        currentCount: formattedProducts.length,
+      },
+      message: "Products retrieved successfully",
+    };
   } catch (error) {
-    console.error("Error in getShopProducts:", error);
-    throw error;
+    console.error("Error in getShopProducts:", error.stack);
+    return {
+      success: false,
+      data: null,
+      message: error.message || "An error occurred while retrieving products",
+    };
   }
 };
 
@@ -1241,7 +1706,7 @@ const getOrdersForExport = async (userId, filters) => {
       {
         model: OrderItem,
         as: "orderItems",
-        
+
         include: [
           {
             model: Product,
@@ -1584,9 +2049,375 @@ const getSubordersWithOrderItemsPaginated = async (
   }
 };
 
+const updateProduct = async (
+  userId,
+  productId,
+  productUpdateData,
+  variants
+) => {
+  try {
+    // Bước 1: Tìm sản phẩm và kiểm tra quyền sở hữu
+    const product = await Product.findOne({
+      where: { product_id: productId },
+      include: [
+        {
+          model: Shop,
+          as: "Shop",
+          where: { owner_id: userId },
+          attributes: [],
+        },
+      ],
+    });
+
+    if (!product) {
+      throw new Error(
+        "Không tìm thấy sản phẩm hoặc bạn không có quyền chỉnh sửa"
+      );
+    }
+
+    let affectedCount = 0;
+
+    // Xử lý category nếu có trong productUpdateData
+    if (productUpdateData.category !== undefined) {
+      let category_id = null;
+      const { category } = productUpdateData;
+
+      if (category) {
+        if (typeof category === "string") {
+          // Tìm kiếm theo tên (không phân biệt hoa thường)
+          let existingCategory = await Category.findOne({
+            where: {
+              category_name: { [Op.like]: category },
+            },
+          });
+
+          if (!existingCategory) {
+            // Nếu không tìm thấy, tạo mới
+            existingCategory = await Category.create({
+              category_name: category,
+              created_at: new Date(),
+              updated_at: new Date(),
+            });
+            console.log(`Đã tạo danh mục mới khi cập nhật: ${category}`);
+          }
+          category_id = existingCategory.category_id;
+        } else if (typeof category === "number" || !isNaN(parseInt(category))) {
+          // Tìm kiếm theo ID
+          const parsedCategoryId = parseInt(category);
+          const existingCategory = await Category.findByPk(parsedCategoryId);
+
+          if (existingCategory) {
+            category_id = existingCategory.category_id;
+          } else {
+            throw new Error(
+              `Danh mục với ID ${parsedCategoryId} không tồn tại khi cập nhật.`
+            );
+          }
+        } else {
+          throw new Error("Định dạng category không hợp lệ khi cập nhật.");
+        }
+      }
+      // Cập nhật category_id vào productUpdateData và xóa trường category ban đầu
+      productUpdateData.category_id = category_id;
+      delete productUpdateData.category;
+    }
+
+    // Bước 2: Cập nhật thông tin sản phẩm nếu có
+    if (productUpdateData && Object.keys(productUpdateData).length > 0) {
+      const [count] = await Product.update(productUpdateData, {
+        where: { product_id: productId },
+      });
+      if (count > 0) {
+        affectedCount++;
+        console.log(`Đã cập nhật thông tin chung sản phẩm ${productId}`);
+      }
+    }
+
+    // Bước 3: Cập nhật các variant
+    if (variants && Array.isArray(variants) && variants.length > 0) {
+      for (const variantData of variants) {
+        const { variant_id, ...updateData } = variantData;
+
+        if (!variant_id) {
+          console.warn("Bỏ qua variant không có variant_id");
+          continue;
+        }
+
+        // Kiểm tra variant tồn tại và thuộc về sản phẩm
+        const variant = await ProductVariant.findOne({
+          where: {
+            variant_id: variant_id,
+            product_id: productId,
+          },
+        });
+
+        if (!variant) {
+          console.warn(`Không tìm thấy variant ${variant_id}`);
+          continue;
+        }
+
+        // Tạo object chứa dữ liệu cập nhật cho variant
+        const variantUpdateData = {};
+
+        // Xử lý các trường string
+        if (updateData.size !== undefined)
+          variantUpdateData.size = updateData.size;
+        if (updateData.color !== undefined)
+          variantUpdateData.color = updateData.color;
+        if (updateData.material !== undefined)
+          variantUpdateData.material = updateData.material;
+        if (updateData.processor !== undefined)
+          variantUpdateData.processor = updateData.processor;
+        if (updateData.price !== undefined)
+          variantUpdateData.price = updateData.price;
+        if (updateData.stock !== undefined)
+          variantUpdateData.stock = updateData.stock;
+        if (updateData.image_url !== undefined)
+          variantUpdateData.image_url = updateData.image_url;
+        if (updateData.weight !== undefined)
+          variantUpdateData.weight = updateData.weight;
+
+        // Xử lý các trường integer
+        if (updateData.storage !== undefined) {
+          variantUpdateData.storage =
+            updateData.storage === "" || updateData.storage === null
+              ? null
+              : parseInt(updateData.storage);
+        }
+        if (updateData.ram !== undefined) {
+          variantUpdateData.ram =
+            updateData.ram === "" || updateData.ram === null
+              ? null
+              : parseInt(updateData.ram);
+        }
+
+        // Cập nhật variant nếu có dữ liệu
+        if (Object.keys(variantUpdateData).length > 0) {
+          const [count] = await ProductVariant.update(variantUpdateData, {
+            where: { variant_id: variant_id },
+          });
+          if (count > 0) {
+            affectedCount++;
+            console.log(`Đã cập nhật variant ${variant_id}`);
+          } else {
+            console.log(
+              `Không có trường nào thay đổi cho variant ${variant_id}`
+            );
+          }
+        } else {
+          console.log(`Không có dữ liệu cập nhật cho variant ${variant_id}`);
+        }
+      }
+    }
+
+    return {
+      success: true,
+      message: "Cập nhật thành công",
+      affectedCount,
+    };
+  } catch (error) {
+    console.error("Error in vendorService.updateProduct:", error);
+    throw error;
+  }
+};
+
+const deleteVariant = async (userId, productId, variantId) => {
+  const transaction = await sequelize.transaction();
+  try {
+    // 1. Tìm shop của vendor
+    const shop = await Shop.findOne({
+      where: { owner_id: userId },
+      transaction,
+    });
+
+    if (!shop) {
+      throw new Error("Shop không tồn tại hoặc không thuộc về người dùng này.");
+    }
+
+    // 2. Kiểm tra xem sản phẩm có thuộc về shop của vendor không
+    const product = await Product.findOne({
+      where: {
+        product_id: productId,
+        shop_id: shop.shop_id,
+      },
+      transaction,
+    });
+
+    if (!product) {
+      throw new Error(
+        "Sản phẩm không tồn tại hoặc không thuộc về shop của bạn."
+      );
+    }
+
+    // 3. Tìm variant và xóa nó
+    const variant = await ProductVariant.findOne({
+      where: {
+        variant_id: variantId,
+        product_id: productId, // Đảm bảo variant thuộc về sản phẩm này
+      },
+      transaction,
+    });
+
+    if (!variant) {
+      throw new Error(
+        "Variant không tồn tại hoặc không thuộc về sản phẩm này."
+      );
+    }
+
+    await variant.destroy({ transaction });
+
+    await transaction.commit();
+    return { success: true, message: "Variant đã được xóa thành công." };
+  } catch (error) {
+    await transaction.rollback();
+    console.error("Lỗi trong deleteVariant service:", error);
+    throw new Error(`Không thể xóa variant: ${error.message}`);
+  }
+};
+
+const createProduct = async (userId, productData, variants) => {
+  try {
+    // Bước 1: Kiểm tra quyền sở hữu shop
+    const shop = await Shop.findOne({
+      where: {
+        owner_id: userId,
+      },
+    });
+
+    
+    if (shop) {
+      console.log("Shop ID from shop object:", shop.shop_id); // Log the shop_id
+    }
+
+    if (!shop) {
+      throw new Error(
+        "Không tìm thấy shop liên kết với tài khoản của bạn hoặc bạn không có quyền thêm sản phẩm."
+      );
+    }
+
+    // Đảm bảo gán shop_id lấy được vào productData ngay sau khi tìm thấy shop
+    productData.shop_id = shop.shop_id;
+
+    // Bước 2: Xử lý category
+    let category_id = null;
+    const { category } = productData;
+
+    if (category) {
+      if (typeof category === "string") {
+        // Tìm kiếm theo tên (không phân biệt hoa thường)
+        let existingCategory = await Category.findOne({
+          where: {
+            category_name: { [Op.like]: category },
+          },
+        });
+
+        if (!existingCategory) {
+          // Nếu không tìm thấy, tạo mới
+          existingCategory = await Category.create({
+            category_name: category,
+            created_at: new Date(),
+            updated_at: new Date(),
+          });
+          console.log(`Đã tạo danh mục mới: ${category}`);
+        }
+        category_id = existingCategory.category_id;
+      } else if (typeof category === "number" || !isNaN(parseInt(category))) {
+        // Tìm kiếm theo ID
+        const parsedCategoryId = parseInt(category);
+        const existingCategory = await Category.findByPk(parsedCategoryId);
+
+        if (existingCategory) {
+          category_id = existingCategory.category_id;
+        } else {
+          throw new Error(`Danh mục với ID ${parsedCategoryId} không tồn tại.`);
+        }
+      } else {
+        throw new Error("Định dạng category không hợp lệ.");
+      }
+    }
+
+    // Thêm category_id vào productData
+    productData.category_id = category_id;
+
+    console.log("Product data before creating product:", productData); // Thêm log này
+
+    // Kiểm tra sản phẩm đã tồn tại trong shop chưa
+    const existingProduct = await Product.findOne({
+      where: {
+        product_name: productData.product_name,
+        shop_id: productData.shop_id, // Sử dụng shop_id đã được gán
+      },
+    });
+
+    if (existingProduct) {
+      throw new Error(
+        `Sản phẩm có tên "${productData.product_name}" đã tồn tại trong shop của bạn. Vui lòng chọn tên khác.`
+      );
+    }
+
+    // Bước 3: Tạo sản phẩm mới
+    const newProduct = await Product.create({
+      ...productData,
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
+
+    // Bước 4: Tạo các variant cho sản phẩm
+    if (variants && Array.isArray(variants) && variants.length > 0) {
+      const variantPromises = variants.map((variantData) => {
+        const variantToCreate = {
+          ...variantData,
+          product_id: newProduct.product_id,
+          created_at: new Date(),
+          updated_at: new Date(),
+        };
+
+        // Xử lý các trường integer
+        if (variantToCreate.storage !== undefined) {
+          variantToCreate.storage =
+            variantToCreate.storage === "" || variantToCreate.storage === null
+              ? null
+              : parseInt(variantToCreate.storage);
+        }
+        if (variantToCreate.ram !== undefined) {
+          variantToCreate.ram =
+            variantToCreate.ram === "" || variantToCreate.ram === null
+              ? null
+              : parseInt(variantToCreate.ram);
+        }
+
+        return ProductVariant.create(variantToCreate);
+      });
+
+      await Promise.all(variantPromises);
+    }
+
+    // Bước 5: Lấy thông tin sản phẩm đã tạo kèm các variant
+    const createdProduct = await Product.findOne({
+      where: { product_id: newProduct.product_id },
+      include: [
+        {
+          model: ProductVariant,
+          as: "variants",
+        },
+      ],
+    });
+
+    return {
+      success: true,
+      message: "Tạo sản phẩm thành công",
+      data: createdProduct,
+    };
+  } catch (error) {
+    console.error("Error in vendorService.createProduct:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   getShopByUserId,
   getAllOrders,
+  getOrdersWithFilter,
   getRevenue,
   getShopAnalytics,
   updateShop,
@@ -1598,9 +2429,11 @@ module.exports = {
   getShopProducts,
   updateOrderStatus,
   processProduct,
-  getOrdersWithFilter,
   updateSubordersStatusToProcessing,
   deleteSubordersByIds,
   getOrdersForExport,
   getSubordersWithOrderItemsPaginated,
+  updateProduct,
+  deleteVariant,
+  createProduct,
 };

@@ -951,18 +951,41 @@ class ProductService {
       throw new Error(error.message || "Internal Server Error");
     }
   }
-  async deleteProduct(product_id) {
+  async deleteProduct(product_ids) {
     try {
-      const product = await Product.findByPk(product_id);
-      if (!product) {
-        throw new Error("Product not found");
+      // Kiểm tra nếu product_ids là một mảng
+      if (!Array.isArray(product_ids)) {
+        throw new Error("Invalid product IDs array");
       }
 
-      await product.destroy();
+      // Tìm tất cả sản phẩm cần xóa
+      const products = await Product.findAll({
+        where: {
+          product_id: {
+            [Op.in]: product_ids,
+          },
+        },
+      });
 
-      return { success: true, message: "Product deleted successfully" };
+      if (products.length === 0) {
+        throw new Error("No products found");
+      }
+
+      // Xóa tất cả sản phẩm tìm thấy
+      await Product.destroy({
+        where: {
+          product_id: {
+            [Op.in]: product_ids,
+          },
+        },
+      });
+
+      return {
+        success: true,
+        message: `Successfully deleted ${products.length} products`,
+        deletedCount: products.length,
+      };
     } catch (error) {
-      // console.error("Error in deleteProduct:", error);
       throw error;
     }
   }

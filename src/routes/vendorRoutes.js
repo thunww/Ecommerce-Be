@@ -5,6 +5,13 @@ const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
 const { handleAIChat } = require("../controllers/vendorController");
 const categoryController = require("../controllers/categoryController");
+const productController = require("../controllers/productController");
+const {
+  parseFormAndUpload,
+  handleProductError,
+} = require("../middleware/checkFileUpload");
+const { handleFilterShopProducts } = require("../controllers/vendorController");
+const { upload } = require("../middleware/uploadMiddleware");
 
 // Middleware cho vendor routes
 const vendorMiddleware = [authMiddleware, roleMiddleware(["vendor"], true)];
@@ -123,6 +130,38 @@ router.get(
   "/suborders",
   vendorMiddleware,
   vendorController.handleGetSubordersWithOrderItemsPaginated
+);
+// update product of vendor
+router.put(
+  "/product/update/:product_id/:variant_id",
+  vendorMiddleware,
+  parseFormAndUpload,
+  vendorController.handleUpdateProduct,
+  handleProductError
+);
+// update product variant of vendor
+router.put(
+  "/product/update/:product_id",
+  vendorMiddleware,
+  parseFormAndUpload,
+  vendorController.handleUpdateProduct,
+  handleProductError
+);
+
+// Route để xóa một variant của sản phẩm
+router.delete(
+  "/product/:product_id/variant/:variant_id",
+  vendorMiddleware,
+  vendorController.handleDeleteVariant
+);
+
+// create new product
+router.post(
+  "/product/create",
+  vendorMiddleware,
+  parseFormAndUpload,
+  vendorController.handleCreateProduct,
+  handleProductError
 );
 
 module.exports = router;
