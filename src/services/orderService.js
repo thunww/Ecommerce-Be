@@ -14,6 +14,8 @@ const {
 const couponService = require("./couponService");
 const { Op } = require("sequelize");
 const paymentService = require("./paymentService");
+const shippingService = require("./shippingService");
+
 class OrderService {
   async createOrder(orderData) {
     console.log(
@@ -120,6 +122,9 @@ class OrderService {
       }
 
       // Tạo từng SubOrder và các OrderItem chi tiết
+      let totalCalculatedShippingFee = 0;
+      let totalCalculatedPrice = 0;
+      
       for (const [shopId, items] of Object.entries(subOrderGroups)) {
         const subTotal = items.reduce((sum, item) => {
           const price = parseFloat(item.price);
@@ -140,10 +145,13 @@ class OrderService {
         const subOrder = await SubOrder.create({
           order_id: order.order_id,
           shop_id: parseInt(shopId),
-          total_price: subTotal,
-          shipping_fee: 0,
+          total_price: subTotal + shipping_fee,
+          shipping_fee: shipping_fee,
           status: "pending",
         });
+
+        totalCalculatedShippingFee += shipping_fee;
+        totalCalculatedPrice += subTotal;
 
         const subOrderItems = items.map((item) => {
           const quantity = item.quantity;
@@ -166,6 +174,12 @@ class OrderService {
 
         await OrderItem.bulkCreate(subOrderItems);
       }
+
+      // Cập nhật Order chính với tổng phí ship và tổng giá đã tính
+      await order.update({
+        total_price: totalCalculatedPrice + totalCalculatedShippingFee,
+        shipping_fee: totalCalculatedShippingFee
+      });
 
       console.log("✅ Đã tạo xong các SubOrder và OrderItem đầy đủ");
       let paymentResult = null;
