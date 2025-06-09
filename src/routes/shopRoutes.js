@@ -7,6 +7,7 @@ const {
   handleAssignStatusToShop,
   handleGetShopById,
   handleGetShopProducts,
+  handleGetMyShop,
 } = require("../controllers/shopController");
 
 const router = express.Router();
@@ -34,5 +35,6 @@ router.post(
   roleMiddleware(["admin"]),
   handleAssignStatusToShop
 );
+
 
 module.exports = router;

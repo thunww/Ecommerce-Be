@@ -3,6 +3,7 @@ const {
   assingStatusToShop,
   getShopById,
   getShopProducts,
+  getMyShop,
 } = require("../services/shopService");
 
 const orderService = require("../services/orderService");
@@ -93,10 +94,42 @@ const getOrderedProducts = async (req, res) => {
   }
 };
 
+const handleGetMyShop = async (req, res) => {
+  try {
+    const userId = req.user.user_id; // Lấy userId từ middleware
+console.log(userId);
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: User not authenticated",
+      });
+    }
+
+    const result = await getMyShop(userId);
+
+    if (!result.success) {
+      return res.status(404).json({
+        success: false,
+        message: result.message || "Shop not found",
+      });
+    }
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching my shop:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   handleGetAllShops,
   handleAssignStatusToShop,
   handleGetShopById,
   handleGetShopProducts,
   getOrderedProducts,
+  handleGetMyShop,
 };

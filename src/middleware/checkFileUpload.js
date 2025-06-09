@@ -20,15 +20,13 @@ const parseFormAndUpload = async (req, res, next) => {
         });
       }
 
-      // Chỉ lưu các file có fieldname bắt đầu bằng 'variantImage_'
+      // Lưu tất cả các file đã upload
       if (req.files) {
         req.files.forEach((file) => {
-          if (file.fieldname.startsWith("variantImage_")) {
-            req.uploadedImages.push({
-              fieldname: file.fieldname,
-              path: file.path,
-            });
-          }
+          req.uploadedImages.push({
+            fieldname: file.fieldname,
+            path: file.path,
+          });
         });
       }
 

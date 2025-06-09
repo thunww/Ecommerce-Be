@@ -23,7 +23,7 @@ module.exports = {
       status: {
         type: Sequelize.STRING(20),
         allowNull: false,
-        defaultValue: "active",
+        defaultValue: "suspended",
         validate: {
           isIn: [["active", "inactive", "suspended"]],
         },

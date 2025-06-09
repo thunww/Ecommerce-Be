@@ -53,7 +53,7 @@ Shop.init(
     },
     status: {
       type: DataTypes.ENUM("active", "inactive", "suspended"),
-      defaultValue: "active",
+      defaultValue: "suspended",
     },
   },
   {
