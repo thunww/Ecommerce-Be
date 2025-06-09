@@ -1,4 +1,4 @@
-const { Cart, CartItem, Product, Shop, User, ProductVariant } = require('../models');
+const { Cart, CartItem, Product, Shop, User, ProductVariant, UserCoupon, Coupon } = require('../models');
 const { Op } = require('sequelize');
 
 class CartService {
@@ -139,12 +139,24 @@ class CartService {
             ]
         });
 
-        if (!cart) return { items: [], total_price: 0, shippingFee: 0, discount: 0, subtotal: 0, total: 0 };
+        if (!cart) {
+            return {
+                items: [],
+                total_price: 0,
+                shippingFee: 0,
+                discount: 0,
+                subtotal: 0,
+                total: 0,
+                coupon: null
+            };
+        }
 
+        // Format items
         const formattedItems = cart.items.map((item) => {
-            const variant = item.variant;
             let variantInfo = null;
-            try { if (item.variant_info) variantInfo = JSON.parse(item.variant_info); } catch (e) { }
+            try {
+                if (item.variant_info) variantInfo = JSON.parse(item.variant_info);
+            } catch (e) { }
 
             return {
                 cart_item_id: item.cart_item_id,
@@ -153,28 +165,66 @@ class CartService {
                     product_name: item.product.product_name,
                     shop: item.product.Shop
                 },
-                variant: variant ? {
-                    variant_id: variant.variant_id,
-                    name: variant.name,
-                    image_url: variant.image_url,
-                    attributes: variantInfo,
-                    stock: variant.stock,
-                    price: variant.price,
-                    original_price: variant.original_price
-                } : null,
+                variant: item.variant
+                    ? {
+                        variant_id: item.variant.variant_id,
+                        name: item.variant.name,
+                        image_url: item.variant.image_url,
+                        attributes: variantInfo,
+                        stock: item.variant.stock,
+                        price: item.variant.price,
+                        original_price: item.variant.original_price
+                    }
+                    : null,
                 quantity: item.quantity,
                 price: item.price,
                 total_price: item.total_price
             };
         });
 
+        const total_price = parseFloat(cart.total_price || 0);
+        const shippingFee = parseFloat(cart.shipping_fee || 0);
+
+        // ✅ Truy vấn mã giảm giá đã dùng
+        const userCoupon = await UserCoupon.findOne({
+            where: {
+                user_id,
+                used_at: { [Op.not]: null }
+            },
+            include: [{ model: Coupon }],
+            order: [['used_at', 'DESC']]
+        });
+
+        let discount = 0;
+        let couponData = null;
+
+        if (userCoupon && userCoupon.Coupon) {
+            const coupon = userCoupon.Coupon;
+
+            discount = (total_price * coupon.discount_percent) / 100;
+            if (coupon.max_discount_amount && discount > coupon.max_discount_amount) {
+                discount = coupon.max_discount_amount;
+            }
+
+            couponData = {
+                code: coupon.code,
+                discount_type: 'percentage',
+                discount_value: parseFloat(coupon.discount_percent),
+                max_discount: coupon.max_discount_amount
+            };
+        }
+
+        const subtotal = total_price - discount;
+        const total = subtotal + shippingFee;
+
         return {
             items: formattedItems,
-            total_price: cart.total_price,
-            shippingFee: cart.shipping_fee || 0,
-            discount: cart.discount || 0,
-            subtotal: cart.total_price - (cart.discount || 0),
-            total: cart.total_price - (cart.discount || 0) + (cart.shipping_fee || 0)
+            total_price,
+            shippingFee,
+            discount,
+            subtotal,
+            total,
+            coupon: couponData
         };
     }
 

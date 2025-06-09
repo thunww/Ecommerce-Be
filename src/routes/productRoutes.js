@@ -1,15 +1,33 @@
 const express = require("express");
 const router = express.Router();
-const upload = require("../middleware/uploadMiddleware");
 const productController = require("../controllers/productController");
 const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
-
-// router.post("/upload", upload.single("image"), handleUploadProductImage);
-// router.get("/:product_id/images", handleGetProductImages);
-// router.delete("/image/:image_id", handleDeleteProductImage);
+const upload = require("../middleware/uploadMiddleware");
+const { uploadProduct } = require("../config/uploadConfig");
+const {
+  parseFormAndUpload,
+  handleProductError,
+} = require("../middleware/checkFileUpload");
 
 router.get("/", productController.getAllProducts);
+
+router.post(
+  "/create",
+  authMiddleware,
+  roleMiddleware(["vendor"]),
+  parseFormAndUpload, // Upload ảnh & parse form data
+  productController.createProduct, // Controller kiểm tra tên + tạo sản phẩm
+  handleProductError // Xử lý lỗi và xóa ảnh
+);
+
+// Route xóa hình ảnh sản phẩm
+router.delete(
+  "/image/:image_id",
+  authMiddleware,
+  roleMiddleware(["admin", "vendor"]),
+  productController.deleteProductImage
+);
 
 router.put(
   "/assign-product",
@@ -28,7 +46,11 @@ router.get("/related/:related_id", productController.getProductsByCategoryId);
 
 router.get("/search", productController.searchProducts);
 router.get("/suggest", productController.suggestProducts);
-
+router.get(
+  "/detailProducts",
+  authMiddleware,
+  productController.getProductDetails
+);
 router.get("/:product_id", productController.getProductById);
 
 router.get("/featured", productController.getFeaturedProducts);

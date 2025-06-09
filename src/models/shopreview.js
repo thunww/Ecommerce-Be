@@ -1,5 +1,5 @@
-const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { Model, DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
 
 class ShopReview extends Model {}
 
@@ -33,9 +33,11 @@ ShopReview.init(
   },
   {
     sequelize,
-    modelName: 'ShopReview',
-    tableName: 'Shop_Reviews',
+    modelName: "ShopReview",
+    tableName: "Shop_Reviews",
     timestamps: true,
+    createdAt: "created_at", // Ánh xạ cột createdAt thành created_at
+    updatedAt: "updated_at", // Ánh xạ cột updatedAt thành updated_at
   }
 );
 
