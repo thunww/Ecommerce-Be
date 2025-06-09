@@ -629,7 +629,14 @@ class ProductService {
     }
   }
 
-  async searchProducts(q, category_id, min_price, max_price, sort) {
+  async searchProducts(
+    q,
+    category_id,
+    min_price,
+    max_price,
+    sort,
+    min_rating = 0
+  ) {
     try {
       const where = { status: "active" };
 
@@ -643,43 +650,57 @@ class ProductService {
         where.category_id = Number(category_id);
       }
 
-      // Price conditions for variants
-      const priceConditions = {};
-      if (min_price) priceConditions[Op.gte] = Number(min_price);
-      if (max_price) priceConditions[Op.lte] = Number(max_price);
-      if (Object.keys(priceConditions).length > 0) {
-        where["$variants.price$"] = priceConditions;
+      // Filter by min_rating
+      if (min_rating && !isNaN(min_rating)) {
+        where.average_rating = { [Op.gte]: Number(min_rating) };
       }
 
-      // Sorting conditions
+      // Xử lý lọc giá trong include
+      const includeVariants = {
+        model: ProductVariant,
+        as: "variants",
+        required: true, // Bắt buộc phải có variant để lọc theo giá
+        attributes: ["variant_id", "image_url", "stock", "price"],
+        where: {}, // Thêm điều kiện giá ở đây
+      };
+
+      if (min_price) {
+        includeVariants.where.price = { [Op.gte]: Number(min_price) };
+      }
+
+      if (max_price) {
+        includeVariants.where.price = {
+          ...includeVariants.where.price,
+          [Op.lte]: Number(max_price),
+        };
+      }
+
+      // Xử lý sắp xếp
       const order = [];
       if (sort === "price_asc") {
-        order.push([Sequelize.col("variants.price"), "ASC"]);
+        order.push([col("variants.price"), "ASC"]);
       } else if (sort === "price_desc") {
-        order.push([Sequelize.col("variants.price"), "DESC"]);
+        order.push([col("variants.price"), "DESC"]);
       } else {
         order.push(["created_at", "DESC"]);
       }
 
-      // Query products with includes
+      // Query products
       const products = await Product.findAll({
         where,
         order,
+        subQuery: false,
         include: [
           {
             model: Category,
             as: "Category",
             attributes: ["category_id", "category_name"],
           },
-          {
-            model: ProductVariant,
-            as: "variants",
-            attributes: ["variant_id", "image_url", "stock", "price"],
-          },
+          includeVariants,
         ],
       });
 
-      // Calculate total stock for each product
+      // Tổng stock các variant
       const updatedProducts = products.map((product) => {
         const totalStock = product.variants.reduce(
           (sum, variant) => sum + (variant.stock || 0),
@@ -700,6 +721,7 @@ class ProductService {
         data: updatedProducts,
       };
     } catch (error) {
+      console.error("searchProducts error:", error);
       return {
         success: false,
         message: "Failed to retrieve products",

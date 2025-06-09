@@ -1,7 +1,6 @@
 const User = require("../models/user");
 const Role = require("../models/role");
 const UserRole = require("../models/userrole");
-const Address = require("../models/address");
 const { hashPassword, comparePassword } = require("../utils/hashPassword");
 const { generateToken, verifyToken } = require("../config/jwt");
 const {
@@ -49,7 +48,6 @@ const registerUser = async (username, email, password) => {
     role: customerRole.role_name,
   };
 };
-
 
 const loginUser = async (email, password) => {
   const user = await User.findOne({ where: { email } });

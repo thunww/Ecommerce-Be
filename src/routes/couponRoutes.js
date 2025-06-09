@@ -31,6 +31,8 @@ router.post('/apply', authMiddleware, couponController.applyCoupon);
 // Lấy danh sách mã giảm giá hợp lệ cho giỏ hàng
 router.get('/valid-for-cart', authMiddleware, couponController.getValidCouponsForCart);
 
+router.post('/remove', authMiddleware, couponController.removeCoupon);
+
 // ===================== ADMIN ROUTES =====================
 // Tạo mã giảm giá mới (admin)
 router.post('/admin', authMiddleware, roleMiddleware(["admin"]), couponController.createCoupon);

@@ -1,74 +1,121 @@
 const { ChatMessage, User, Shop } = require('../models');
-const { Op } = require('sequelize');
+const { Op, Sequelize } = require('sequelize');
 
 class ChatService {
-    // Lấy danh sách cuộc trò chuyện của người dùng
     async getUserChats(userId) {
         try {
-            const messages = await ChatMessage.findAll({
+            const chats = await ChatMessage.findAll({
                 where: {
                     [Op.or]: [
                         { sender_id: userId, sender_type: 'user' },
                         { receiver_id: userId, receiver_type: 'user' }
                     ]
                 },
-                include: [
-                    {
-                        model: Shop,
-                        as: 'shop',
-                        attributes: ['id', 'name', 'avatar']
-                    }
+                attributes: [
+                    'chat_id',
+                    [Sequelize.fn('MAX', Sequelize.col('created_at')), 'last_time']
                 ],
-                order: [['created_at', 'DESC']],
-                group: ['shop_id']
+                group: ['chat_id'],
             });
 
-            return messages.map(msg => ({
-                chat_id: `${userId}-${msg.shop.id}`,
-                shop: msg.shop,
-                last_message: msg.message,
-                last_message_time: msg.created_at,
-                unread_count: 0 // Sẽ được cập nhật sau
-            }));
+            const chatIds = chats.map(c => c.chat_id);
+            const lastTimes = chats.map(c => c.get('last_time'));
+
+            const lastMessages = await ChatMessage.findAll({
+                where: {
+                    chat_id: chatIds,
+                    created_at: lastTimes,
+                },
+                order: [['created_at', 'DESC']],
+            });
+
+            const results = [];
+
+            for (const msg of lastMessages) {
+                if (!msg.chat_id.startsWith(`${userId}-`)) continue; // 💡 userId phải đứng đầu
+
+                const [, shopId] = msg.chat_id.split('-').map(Number);
+
+                const shop = await Shop.findByPk(shopId, {
+                    attributes: ['shop_id', 'shop_name', 'logo'],
+                });
+
+                results.push({
+                    chat_id: msg.chat_id,
+                    shop,
+                    last_message: msg.message,
+                    last_message_time: msg.created_at,
+                    unread_count: 0, // có thể tính thêm
+                });
+            }
+
+            return results;
         } catch (error) {
             console.error('Error in getUserChats:', error);
             throw error;
         }
     }
 
-    // Lấy danh sách cuộc trò chuyện của shop
+
+
+    // Lấy danh sách chat của shop (shopId)
     async getShopChats(shopId) {
         try {
-            const messages = await ChatMessage.findAll({
+            // Lấy chat_id và thời gian tin nhắn cuối cùng shop tham gia
+            const chats = await ChatMessage.findAll({
                 where: {
                     [Op.or]: [
                         { sender_id: shopId, sender_type: 'shop' },
                         { receiver_id: shopId, receiver_type: 'shop' }
                     ]
                 },
-                include: [
-                    {
-                        model: User,
-                        as: 'user',
-                        attributes: ['id', 'username', 'avatar']
-                    }
+                attributes: [
+                    'chat_id',
+                    [Sequelize.fn('MAX', Sequelize.col('created_at')), 'last_time']
                 ],
-                order: [['created_at', 'DESC']],
-                group: ['user_id']
+                group: ['chat_id'],
             });
 
-            return messages.map(msg => ({
-                chat_id: `${msg.user.id}-${shopId}`,
-                user: msg.user,
-                last_message: msg.message,
-                last_message_time: msg.created_at,
-                unread_count: 0 // Sẽ được cập nhật sau
-            }));
+            const chatIds = chats.map(c => c.chat_id);
+            const lastTimes = chats.map(c => c.get('last_time'));
+
+            // Lấy tin nhắn cuối cùng của mỗi chat_id
+            const lastMessages = await ChatMessage.findAll({
+                where: {
+                    chat_id: chatIds,
+                    created_at: lastTimes,
+                },
+                order: [['created_at', 'DESC']],
+            });
+
+            const results = [];
+
+            for (const msg of lastMessages) {
+                // chat_id định dạng userId-shopId
+                const [userId, shopIdFromChat] = msg.chat_id.split('-').map(Number);
+
+                // Lấy thông tin user đối tác
+                const user = await User.findByPk(userId, {
+                    attributes: ['user_id', 'username', 'profile_picture'],
+                });
+
+                results.push({
+                    chat_id: msg.chat_id,
+                    user,
+                    last_message: msg.message,
+                    last_message_time: msg.created_at,
+                    unread_count: 0, // Cập nhật nếu cần
+                });
+            }
+
+            return results;
         } catch (error) {
             console.error('Error in getShopChats:', error);
             throw error;
         }
     }
+
+
 
     // Lấy chi tiết một cuộc trò chuyện
     async getChatDetails(chatId) {
