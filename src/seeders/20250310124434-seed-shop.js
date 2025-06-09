@@ -5,7 +5,7 @@ module.exports = {
         owner_id: 6, // Vendor
         shop_name: "Electronics Store",
         description: "Specializing in high-end technology products",
-        logo: "https://haycafe.vn/wp-content/uploads/2023/04/Hinh-anh-avatar-cute-TikTok.jpg",
+        logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTG4TkxkFuXifNvLsDDaCB69Khm1LzrMFJLJA&s",
         banner: "https://example.com/images/shop1-banner.jpg",
         rating: 3.0,
         followers: 1200,

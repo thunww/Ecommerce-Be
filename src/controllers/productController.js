@@ -1,4 +1,7 @@
 const productService = require("../services/productService");
+const { Shop } = require("../models");
+const Product = require('../models/product');
+const { deleteImagesByUrls } = require("../utils/cloudinaryHelper");
 
 const getAllProducts = async (req, res) => {
   try {
@@ -10,10 +13,212 @@ const getAllProducts = async (req, res) => {
       data: products,
     });
   } catch (error) {
-    console.error("Error fetching products:", error);
     return res.status(500).json({
       success: false,
       message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+// ham tao san pham
+// BE/src/controllers/productController.js
+// BE/src/controllers/productController.js
+
+
+const checkDuplicateProductName = async (req, res, next) => {
+  try {
+    // Lấy userId từ token xác thực
+    if (!req.user || !req.user.user_id) {
+      return res.status(401).json({
+        success: false,
+        message: "Không có quyền truy cập hoặc token không hợp lệ",
+      });
+    }
+    
+    const userId = req.user.user_id;
+    const { productName } = req.body;
+    
+    if (!productName) {
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu tên sản phẩm",
+      });
+    }
+    
+    // Tìm shop dựa vào userId
+    const shop = await Shop.findOne({ where: { owner_id: userId } });
+    if (!shop) {
+      return res.status(400).json({
+        success: false,
+        message: "Không tìm thấy thông tin shop",
+      });
+    }
+    
+    // Kiểm tra tên sản phẩm đã tồn tại chưa
+    const existingProduct = await Product.findOne({
+      where: {
+        product_name: productName,
+        shop_id: shop.shop_id
+      }
+    });
+    
+    if (existingProduct) {
+      return res.status(400).json({
+        success: false,
+        message: `Sản phẩm có tên "${productName}" đã tồn tại trong shop của bạn. Vui lòng chọn tên khác.`,
+      });
+    }
+    
+    // Lưu shop_id vào req để sử dụng sau
+    req.shop_id = shop.shop_id;
+    next();
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi khi kiểm tra tên sản phẩm",
+      error: error.message,
+    });
+  }
+};
+
+// Hàm xử lý tạo sản phẩm
+const createProduct = async (req, res, next) => {
+  try {
+    // Lấy userId từ token xác thực
+    if (!req.user || !req.user.user_id) {
+      if (req.uploadedImages && req.uploadedImages.length > 0) {
+        await deleteImagesByUrls(req.uploadedImages);
+      }
+      return res.status(401).json({
+        success: false,
+        message: "Không có quyền truy cập"
+      });
+    }
+    
+    const userId = req.user.user_id;
+    
+    // Kiểm tra các trường bắt buộc
+    const { productName, price, stock, category } = req.body;
+    if (!productName || !price || !stock || !category) {
+      if (req.uploadedImages && req.uploadedImages.length > 0) {
+        await deleteImagesByUrls(req.uploadedImages);
+      }
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu thông tin bắt buộc"
+      });
+    }
+    
+    // Tìm shop của user
+    const shop = await Shop.findOne({ where: { owner_id: userId } });
+    if (!shop) {
+      if (req.uploadedImages && req.uploadedImages.length > 0) {
+        await deleteImagesByUrls(req.uploadedImages);
+      }
+      return res.status(400).json({
+        success: false,
+        message: "Không tìm thấy shop"
+      });
+    }
+    
+    // KIỂM TRA TÊN TRÙNG TỪ req.body
+    const existingProduct = await Product.findOne({
+      where: { product_name: productName, shop_id: shop.shop_id }
+    });
+
+    if (existingProduct) {
+      // Nếu tên trùng, xóa ảnh đã upload
+      if (req.uploadedImages && req.uploadedImages.length > 0) {
+        await deleteImagesByUrls(req.uploadedImages);
+      }
+      return res.status(400).json({
+        success: false,
+        message: `Sản phẩm có tên "${productName}" đã tồn tại trong shop của bạn. Vui lòng chọn tên khác.`
+      });
+    }
+    
+    // Xử lý các trường JSON
+    let parsedVariations = [];
+    if (req.body.variations) {
+      try {
+        parsedVariations = typeof req.body.variations === 'string' 
+          ? JSON.parse(req.body.variations) 
+          : req.body.variations;
+          
+        if (!Array.isArray(parsedVariations)) {
+          parsedVariations = [];
+        }
+      } catch (e) {
+        console.error("Lỗi parse variations:", e);
+        parsedVariations = [];
+      }
+    }
+
+    let parsedParcelSize = null;
+    if (req.body.parcelSize) {
+      try {
+        parsedParcelSize = typeof req.body.parcelSize === 'string' 
+          ? JSON.parse(req.body.parcelSize) 
+          : req.body.parcelSize;
+      } catch (e) {
+        console.error("Lỗi parse parcelSize:", e);
+        parsedParcelSize = { width: 20, height: 10, length: 5 };
+      }
+    }
+
+    // Xử lý dữ liệu ảnh
+    let cloudinaryImages = req.uploadedImages || [];
+    let primaryImageUrl = null;
+    
+    if (req.files && req.files.primaryImage && req.files.primaryImage[0]) {
+      primaryImageUrl = req.files.primaryImage[0].path;
+    } else if (cloudinaryImages.length > 0) {
+      primaryImageUrl = cloudinaryImages[0];
+    }
+
+    // Gọi service để tạo sản phẩm
+    const result = await productService.createProduct({
+      productName,
+      description: req.body.description,
+      price,
+      stock,
+      category,
+      userId,
+      shop_id: shop.shop_id,
+      primaryImageUrl,
+      images: cloudinaryImages,
+      variations: parsedVariations,
+      parcelSize: parsedParcelSize,
+      weight: req.body.weight
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Tạo sản phẩm thành công",
+      data: result
+    });
+  } catch (error) {
+    // Chuyển lỗi cho middleware handleProductError xử lý
+    next(error);
+  }
+};
+const deleteProductImage = async (req, res) => {
+  try {
+    const { image_id } = req.params;
+    const userId = req.user.id;
+
+    const result = await productService.deleteProductImage(image_id, userId);
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    return res.status(200).json(result);
+  } catch (error) {
+    // console.error("Error deleting product image:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Đã xảy ra lỗi khi xóa hình ảnh sản phẩm",
       error: error.message,
     });
   }
@@ -206,4 +411,7 @@ module.exports = {
   handleDeleteProduct,
   getProductsByCategoryId,
   suggestProducts,
+  deleteProductImage,
+  createProduct, // Thêm hàm mới
+  checkDuplicateProductName,
 };

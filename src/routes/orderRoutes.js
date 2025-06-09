@@ -57,4 +57,6 @@ router.post("/create", validateOrder, orderController.createOrder);
 
 router.get("/:order_id", orderController.getOrderDetails);
 
+router.get("/user/orders", orderController.getUserOrders);
+
 module.exports = router;

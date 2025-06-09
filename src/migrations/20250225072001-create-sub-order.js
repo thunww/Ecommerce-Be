@@ -32,7 +32,7 @@ module.exports = {
       },
       shipping_fee: {
         type: Sequelize.DECIMAL(10, 2),
-        defaultValue: 0.00,
+        defaultValue: 10000.00,
       },
       status: {
         type: Sequelize.ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled'),
