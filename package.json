@@ -36,6 +36,7 @@
     "openai": "^4.88.0",
     "sequelize": "^6.37.5",
     "sequelize-cli": "^6.6.2",
+    "socket.io": "^4.8.1",
     "vnpay": "^2.2.0",
     "ws": "^8.18.1"
   },
