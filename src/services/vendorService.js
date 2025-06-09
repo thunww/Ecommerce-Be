@@ -629,7 +629,7 @@ const getShopAnalytics = async (userId) => {
       ],
       attributes: [
         [
-          sequelize.fn("COUNT", sequelize.col("Product.product_id")),
+          sequelize.fn("COUNT", sequelize.col("product.product_id")),
           "totalProducts",
         ],
         [sequelize.fn("AVG", sequelize.col("price")), "averagePrice"],
@@ -2284,7 +2284,6 @@ const createProduct = async (userId, productData, variants) => {
       },
     });
 
-    
     if (shop) {
       console.log("Shop ID from shop object:", shop.shop_id); // Log the shop_id
     }
