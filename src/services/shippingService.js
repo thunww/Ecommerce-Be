@@ -17,7 +17,9 @@ class ShippingService {
       if (totalWeight < 100) weightMultiplier = 0.72;
       else if (totalWeight < 300) weightMultiplier = 0.98;
       else if (totalWeight < 1000) weightMultiplier = 1.6;
-      else weightMultiplier = 2.3;
+      else if (totalWeight <= 5000) weightMultiplier = 2.3;
+      else if (totalWeight <= 10000) weightMultiplier = 7.1;
+      else weightMultiplier = 13.2;
 
       // Tính phí ship
       const shippingFee = 5000 + 5000 * weightMultiplier;
