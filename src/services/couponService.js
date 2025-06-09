@@ -50,7 +50,7 @@ class CouponService {
     }
 
     async createCoupon(data) {
-        const exists = await Coupon.findOne({ where: { code: data.code } });
+        co nst exists = await Coupon.findOne({ where: { code: data.code } });
         if (exists) throw new Error('Mã giảm giá đã tồn tại');
 
         if (data.status && !['active', 'inactive'].includes(data.status)) {
