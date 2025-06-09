@@ -114,11 +114,13 @@ class OrderController {
     }
   }
 
-  async cancelOrder(req, res) {
+  async cancelSubOrder(req, res) {
     try {
-      const { order_id } = req.params;
+      const { sub_order_id } = req.params;
       const user_id = req.user.user_id;
-      const result = await orderService.cancelOrder(order_id, user_id);
+
+      const result = await orderService.cancelSubOrder(sub_order_id, user_id);
+
       return res.status(200).json(result);
     } catch (err) {
       return res.status(400).json({ error: err.message });
