@@ -150,7 +150,7 @@ class AddressService {
     }
   }
   // Lấy địa chỉ mặc định của user
-async getDefaultAddress(user_id) {
+  async getDefaultAddress(user_id) {
     try {
       if (!user_id || isNaN(user_id)) {
         return {
@@ -159,14 +159,14 @@ async getDefaultAddress(user_id) {
           data: null,
         };
       }
-  
+
       const defaultAddress = await Address.findOne({
         where: {
           user_id,
           is_default: true,
         },
       });
-  
+
       if (!defaultAddress) {
         return {
           status: "error",
@@ -174,7 +174,7 @@ async getDefaultAddress(user_id) {
           data: null,
         };
       }
-  
+
       return {
         status: "success",
         message: "Default address retrieved successfully",
@@ -188,7 +188,6 @@ async getDefaultAddress(user_id) {
       };
     }
   }
-  
 
   // Cập nhật địa chỉ
   async updateAddress(address_id, user_id, updateData) {
@@ -280,10 +279,23 @@ async getDefaultAddress(user_id) {
 
       await address.destroy();
 
+      // Kiểm tra xem user còn bao nhiêu địa chỉ
+      const remainingAddresses = await Address.findAll({
+        where: { user_id },
+      });
+
+      if (remainingAddresses.length === 0) {
+        return {
+          status: "success",
+          message: "Address deleted. No addresses left for this user",
+          data: [],
+        };
+      }
+
       return {
         status: "success",
         message: "Address deleted successfully",
-        data: null,
+        data: remainingAddresses,
       };
     } catch (error) {
       return {
