@@ -1,6 +1,6 @@
 const productService = require("../services/productService");
 const { Shop } = require("../models");
-const Product = require('../models/product');
+const Product = require("../models/product");
 const { deleteImagesByUrls } = require("../utils/cloudinaryHelper");
 
 const getAllProducts = async (req, res) => {
@@ -24,7 +24,6 @@ const getAllProducts = async (req, res) => {
 // BE/src/controllers/productController.js
 // BE/src/controllers/productController.js
 
-
 const checkDuplicateProductName = async (req, res, next) => {
   try {
     // Lấy userId từ token xác thực
@@ -34,17 +33,17 @@ const checkDuplicateProductName = async (req, res, next) => {
         message: "Không có quyền truy cập hoặc token không hợp lệ",
       });
     }
-    
+
     const userId = req.user.user_id;
     const { productName } = req.body;
-    
+
     if (!productName) {
       return res.status(400).json({
         success: false,
         message: "Thiếu tên sản phẩm",
       });
     }
-    
+
     // Tìm shop dựa vào userId
     const shop = await Shop.findOne({ where: { owner_id: userId } });
     if (!shop) {
@@ -53,22 +52,22 @@ const checkDuplicateProductName = async (req, res, next) => {
         message: "Không tìm thấy thông tin shop",
       });
     }
-    
+
     // Kiểm tra tên sản phẩm đã tồn tại chưa
     const existingProduct = await Product.findOne({
       where: {
         product_name: productName,
-        shop_id: shop.shop_id
-      }
+        shop_id: shop.shop_id,
+      },
     });
-    
+
     if (existingProduct) {
       return res.status(400).json({
         success: false,
         message: `Sản phẩm có tên "${productName}" đã tồn tại trong shop của bạn. Vui lòng chọn tên khác.`,
       });
     }
-    
+
     // Lưu shop_id vào req để sử dụng sau
     req.shop_id = shop.shop_id;
     next();
@@ -91,12 +90,12 @@ const createProduct = async (req, res, next) => {
       }
       return res.status(401).json({
         success: false,
-        message: "Không có quyền truy cập"
+        message: "Không có quyền truy cập",
       });
     }
-    
+
     const userId = req.user.user_id;
-    
+
     // Kiểm tra các trường bắt buộc
     const { productName, price, stock, category } = req.body;
     if (!productName || !price || !stock || !category) {
@@ -105,10 +104,10 @@ const createProduct = async (req, res, next) => {
       }
       return res.status(400).json({
         success: false,
-        message: "Thiếu thông tin bắt buộc"
+        message: "Thiếu thông tin bắt buộc",
       });
     }
-    
+
     // Tìm shop của user
     const shop = await Shop.findOne({ where: { owner_id: userId } });
     if (!shop) {
@@ -117,13 +116,13 @@ const createProduct = async (req, res, next) => {
       }
       return res.status(400).json({
         success: false,
-        message: "Không tìm thấy shop"
+        message: "Không tìm thấy shop",
       });
     }
-    
+
     // KIỂM TRA TÊN TRÙNG TỪ req.body
     const existingProduct = await Product.findOne({
-      where: { product_name: productName, shop_id: shop.shop_id }
+      where: { product_name: productName, shop_id: shop.shop_id },
     });
 
     if (existingProduct) {
@@ -133,18 +132,19 @@ const createProduct = async (req, res, next) => {
       }
       return res.status(400).json({
         success: false,
-        message: `Sản phẩm có tên "${productName}" đã tồn tại trong shop của bạn. Vui lòng chọn tên khác.`
+        message: `Sản phẩm có tên "${productName}" đã tồn tại trong shop của bạn. Vui lòng chọn tên khác.`,
       });
     }
-    
+
     // Xử lý các trường JSON
     let parsedVariations = [];
     if (req.body.variations) {
       try {
-        parsedVariations = typeof req.body.variations === 'string' 
-          ? JSON.parse(req.body.variations) 
-          : req.body.variations;
-          
+        parsedVariations =
+          typeof req.body.variations === "string"
+            ? JSON.parse(req.body.variations)
+            : req.body.variations;
+
         if (!Array.isArray(parsedVariations)) {
           parsedVariations = [];
         }
@@ -157,9 +157,10 @@ const createProduct = async (req, res, next) => {
     let parsedParcelSize = null;
     if (req.body.parcelSize) {
       try {
-        parsedParcelSize = typeof req.body.parcelSize === 'string' 
-          ? JSON.parse(req.body.parcelSize) 
-          : req.body.parcelSize;
+        parsedParcelSize =
+          typeof req.body.parcelSize === "string"
+            ? JSON.parse(req.body.parcelSize)
+            : req.body.parcelSize;
       } catch (e) {
         console.error("Lỗi parse parcelSize:", e);
         parsedParcelSize = { width: 20, height: 10, length: 5 };
@@ -169,7 +170,7 @@ const createProduct = async (req, res, next) => {
     // Xử lý dữ liệu ảnh
     let cloudinaryImages = req.uploadedImages || [];
     let primaryImageUrl = null;
-    
+
     if (req.files && req.files.primaryImage && req.files.primaryImage[0]) {
       primaryImageUrl = req.files.primaryImage[0].path;
     } else if (cloudinaryImages.length > 0) {
@@ -189,13 +190,13 @@ const createProduct = async (req, res, next) => {
       images: cloudinaryImages,
       variations: parsedVariations,
       parcelSize: parsedParcelSize,
-      weight: req.body.weight
+      weight: req.body.weight,
     });
 
     return res.status(201).json({
       success: true,
       message: "Tạo sản phẩm thành công",
-      data: result
+      data: result,
     });
   } catch (error) {
     // Chuyển lỗi cho middleware handleProductError xử lý
@@ -252,28 +253,40 @@ const getProductById = async (req, res) => {
 
 const searchProducts = async (req, res) => {
   try {
-    // Destructure query parameters with defaults
     const {
       q = "",
       category_id,
-      min_price = 0,
-      max_price = Number.MAX_SAFE_INTEGER,
+      min_price: minPriceRaw = "0",
+      max_price: maxPriceRaw = String(Number.MAX_SAFE_INTEGER),
       sort = "default",
+      min_rating: minRatingRaw = "0",
     } = req.query;
 
-    // Input validation
-    if (min_price < 0 || max_price < 0) {
+    const min_price = Number(minPriceRaw);
+    const max_price = Number(maxPriceRaw);
+    const min_rating = Number(minRatingRaw);
+
+    if (isNaN(min_price) || isNaN(max_price) || isNaN(min_rating)) {
       return res.status(400).json({
         success: false,
-        message: "Prices cannot be negative",
+        message: "Invalid numeric value",
       });
     }
+
+    if (min_price < 0 || max_price < 0 || min_rating < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Prices and rating cannot be negative",
+      });
+    }
+
     if (min_price > max_price) {
       return res.status(400).json({
         success: false,
         message: "min_price cannot be greater than max_price",
       });
     }
+
     if (category_id && !Number.isInteger(Number(category_id))) {
       return res.status(400).json({
         success: false,
@@ -281,16 +294,22 @@ const searchProducts = async (req, res) => {
       });
     }
 
-    // Call product service
+    if (min_rating > 5) {
+      return res.status(400).json({
+        success: false,
+        message: "min_rating cannot be greater than 5",
+      });
+    }
+
     const result = await productService.searchProducts(
       q.trim(),
       category_id ? Number(category_id) : undefined,
-      Number(min_price),
-      Number(max_price),
-      sort
+      min_price,
+      max_price,
+      sort,
+      min_rating
     );
 
-    // Return response
     return res.status(200).json(result);
   } catch (error) {
     console.error("Error in searchProducts:", error);
@@ -412,6 +431,6 @@ module.exports = {
   getProductsByCategoryId,
   suggestProducts,
   deleteProductImage,
-  createProduct, // Thêm hàm mới
+  createProduct,
   checkDuplicateProductName,
 };

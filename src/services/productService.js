@@ -27,7 +27,7 @@ class ProductService {
   // tạo sản phẩm
   async createProduct(productData) {
     let transaction;
-  
+
     try {
       // Thử tạo transaction với try-catch để bắt lỗi
       try {
@@ -35,7 +35,7 @@ class ProductService {
       } catch (err) {
         transaction = null;
       }
-  
+
       const {
         productName,
         description,
@@ -50,39 +50,45 @@ class ProductService {
         weight,
         status = "pending",
       } = productData;
-  
+
       // Đảm bảo userId tồn tại
       if (!userId) {
-        throw new Error("Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.");
+        throw new Error(
+          "Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại."
+        );
       }
-  
+
       // Tìm shop dựa vào userId từ token
       let shop = null;
       let shop_id = null;
-  
+
       // Tìm shop dựa trên owner_id = userId
       shop = await Shop.findOne({
         where: { owner_id: userId },
       });
-      
+
       if (shop) {
         shop_id = shop.shop_id;
       } else {
-        throw new Error(`Không tìm thấy shop nào thuộc người dùng với ID ${userId}. Vui lòng tạo shop trước khi thêm sản phẩm.`);
+        throw new Error(
+          `Không tìm thấy shop nào thuộc người dùng với ID ${userId}. Vui lòng tạo shop trước khi thêm sản phẩm.`
+        );
       }
-  
+
       // Kiểm tra tên sản phẩm đã tồn tại trong shop chưa
       const existingProduct = await Product.findOne({
         where: {
           product_name: productName,
-          shop_id: shop_id
-        }
+          shop_id: shop_id,
+        },
       });
-  
+
       if (existingProduct) {
-        throw new Error(`Sản phẩm có tên "${productName}" đã tồn tại trong shop của bạn. Vui lòng chọn tên khác.`);
+        throw new Error(
+          `Sản phẩm có tên "${productName}" đã tồn tại trong shop của bạn. Vui lòng chọn tên khác.`
+        );
       }
-  
+
       // Xác minh danh mục
       let category_id = null; // Mặc định null để tránh gán giá trị không hợp lệ
       try {
@@ -93,7 +99,7 @@ class ProductService {
               category_name: category,
             },
           });
-  
+
           if (categoryByName) {
             category_id = categoryByName.category_id;
           } else {
@@ -105,33 +111,39 @@ class ProductService {
                 },
               },
             });
-  
+
             if (categoryByLikeName) {
               category_id = categoryByLikeName.category_id;
             } else {
               // Báo lỗi nếu không tìm thấy danh mục
-              throw new Error(`Không tìm thấy danh mục "${category}". Vui lòng chọn danh mục khác.`);
+              throw new Error(
+                `Không tìm thấy danh mục "${category}". Vui lòng chọn danh mục khác.`
+              );
             }
           }
         } else {
           // Tìm kiếm theo ID
           const categoryId = parseInt(category) || 0;
-  
+
           if (categoryId > 0) {
             const categoryObj = await Category.findByPk(categoryId);
             if (categoryObj) {
               category_id = categoryObj.category_id;
             } else {
-              throw new Error(`Danh mục với ID ${categoryId} không tồn tại. Vui lòng chọn danh mục khác.`);
+              throw new Error(
+                `Danh mục với ID ${categoryId} không tồn tại. Vui lòng chọn danh mục khác.`
+              );
             }
           } else {
-            throw new Error(`ID danh mục không hợp lệ: ${category}. Vui lòng chọn danh mục hợp lệ.`);
+            throw new Error(
+              `ID danh mục không hợp lệ: ${category}. Vui lòng chọn danh mục hợp lệ.`
+            );
           }
         }
       } catch (error) {
         throw new Error(`Lỗi khi kiểm tra danh mục: ${error.message}`);
       }
-  
+
       // Parse JSON strings if needed
       let parsedParcelSize = parcelSize;
       if (typeof parcelSize === "string") {
@@ -141,7 +153,7 @@ class ProductService {
           throw new Error(`Lỗi định dạng parcelSize: ${e.message}`);
         }
       }
-  
+
       // Xử lý ảnh chính
       let mainImageUrl = null;
       try {
@@ -155,10 +167,10 @@ class ProductService {
       } catch (error) {
         throw new Error(`Lỗi khi xử lý ảnh sản phẩm: ${error.message}`);
       }
-  
+
       // Chuẩn bị dữ liệu theo cấu trúc bảng thực tế
       const weight_safe = parseFloat(weight) || 0.3;
-  
+
       // Chuyển đổi parcelSize từ object sang chuỗi định dạng
       let dimensions_safe = null;
       if (parsedParcelSize) {
@@ -169,10 +181,10 @@ class ProductService {
       } else {
         dimensions_safe = "20 x 10 x 5 cm";
       }
-  
+
       // Tạo sản phẩm sử dụng Sequelize model
       const options = transaction ? { transaction } : {};
-  
+
       const newProduct = await Product.create(
         {
           product_name: productName || "Sản phẩm mới",
@@ -187,26 +199,26 @@ class ProductService {
           review_count: 0,
           shop_id: shop_id,
           category_id: category_id,
-          image_url: mainImageUrl // Thêm URL ảnh chính
+          image_url: mainImageUrl, // Thêm URL ảnh chính
         },
         options
       );
-  
+
       // Xử lý biến thể nếu có
       try {
         // Đảm bảo variations là một mảng
         const variationsArray = Array.isArray(variations) ? variations : [];
-        
+
         if (variationsArray.length > 0) {
           // Xóa tất cả biến thể cũ của sản phẩm trước khi tạo mới
           const deleteExistingVariantsSQL = `
             DELETE FROM product_variants 
             WHERE product_id = ${newProduct.product_id}
           `;
-  
+
           const queryOptionsDelete = transaction ? { transaction } : {};
           await sequelize.query(deleteExistingVariantsSQL, queryOptionsDelete);
-  
+
           // Lọc variations hợp lệ trước khi thêm vào database
           const validVariations = variationsArray.filter((variant) => {
             // Kiểm tra giá và stock có hợp lệ không
@@ -218,14 +230,16 @@ class ProductService {
               variant.stock && !isNaN(parseInt(variant.stock, 10));
             return hasValidPrice && hasValidStock;
           });
-  
-          console.log(`Số lượng biến thể hợp lệ: ${validVariations.length}/${variationsArray.length}`);
-  
+
+          console.log(
+            `Số lượng biến thể hợp lệ: ${validVariations.length}/${variationsArray.length}`
+          );
+
           // Dùng validVariations thay vì variations
           for (const variant of validVariations) {
             // Sử dụng ảnh từ variant nếu có, nếu không dùng ảnh chính của sản phẩm
             let variantImageUrl = variant.image_url || mainImageUrl;
-            
+
             // Chuẩn bị dữ liệu an toàn cho biến thể
             const variantSize = variant.size
               ? variant.size.replace(/'/g, "''")
@@ -255,7 +269,7 @@ class ProductService {
             const variantImageUrl_safe = variantImageUrl
               ? variantImageUrl.replace(/'/g, "''")
               : null;
-  
+
             // Sử dụng SQL trực tiếp để tạo biến thể
             let insertVariantSQL = `
               INSERT INTO product_variants (
@@ -275,7 +289,7 @@ class ProductService {
                 ${variantImageUrl_safe ? `'${variantImageUrl_safe}'` : "NULL"}
               )
             `;
-  
+
             const queryOptions = transaction ? { transaction } : {};
             await sequelize.query(insertVariantSQL, queryOptions);
           }
@@ -286,14 +300,14 @@ class ProductService {
             DELETE FROM product_variants 
             WHERE product_id = ${newProduct.product_id}
           `;
-  
+
           const queryOptionsDelete = transaction ? { transaction } : {};
           await sequelize.query(deleteExistingVariantsSQL, queryOptionsDelete);
-  
+
           const defaultImageUrl_safe = mainImageUrl
             ? mainImageUrl.replace(/'/g, "''")
             : null;
-  
+
           // Sử dụng SQL trực tiếp để tạo biến thể mặc định
           let insertDefaultVariantSQL = `
             INSERT INTO product_variants (
@@ -305,7 +319,7 @@ class ProductService {
               ${defaultImageUrl_safe ? `'${defaultImageUrl_safe}'` : "NULL"}
             )
           `;
-  
+
           const queryOptions = transaction ? { transaction } : {};
           await sequelize.query(insertDefaultVariantSQL, queryOptions);
         }
@@ -313,10 +327,10 @@ class ProductService {
         console.error("Lỗi chi tiết khi xử lý biến thể:", error);
         throw new Error(`Lỗi khi xử lý biến thể sản phẩm: ${error.message}`);
       }
-  
+
       // Commit transaction nếu tồn tại
       if (transaction) await transaction.commit();
-  
+
       // Trả về sản phẩm đã tạo
       return {
         success: true,
@@ -324,7 +338,7 @@ class ProductService {
         data: {
           product_id: newProduct.product_id,
           product_name: newProduct.product_name,
-          image_url: mainImageUrl
+          image_url: mainImageUrl,
         },
       };
     } catch (error) {
@@ -615,7 +629,14 @@ class ProductService {
     }
   }
 
-  async searchProducts(q, category_id, min_price, max_price, sort) {
+  async searchProducts(
+    q,
+    category_id,
+    min_price,
+    max_price,
+    sort,
+    min_rating = 0
+  ) {
     try {
       const where = { status: "active" };
 
@@ -629,43 +650,57 @@ class ProductService {
         where.category_id = Number(category_id);
       }
 
-      // Price conditions for variants
-      const priceConditions = {};
-      if (min_price) priceConditions[Op.gte] = Number(min_price);
-      if (max_price) priceConditions[Op.lte] = Number(max_price);
-      if (Object.keys(priceConditions).length > 0) {
-        where["$variants.price$"] = priceConditions;
+      // Filter by min_rating
+      if (min_rating && !isNaN(min_rating)) {
+        where.average_rating = { [Op.gte]: Number(min_rating) };
       }
 
-      // Sorting conditions
+      // Xử lý lọc giá trong include
+      const includeVariants = {
+        model: ProductVariant,
+        as: "variants",
+        required: true, // Bắt buộc phải có variant để lọc theo giá
+        attributes: ["variant_id", "image_url", "stock", "price"],
+        where: {}, // Thêm điều kiện giá ở đây
+      };
+
+      if (min_price) {
+        includeVariants.where.price = { [Op.gte]: Number(min_price) };
+      }
+
+      if (max_price) {
+        includeVariants.where.price = {
+          ...includeVariants.where.price,
+          [Op.lte]: Number(max_price),
+        };
+      }
+
+      // Xử lý sắp xếp
       const order = [];
       if (sort === "price_asc") {
-        order.push([Sequelize.col("variants.price"), "ASC"]);
+        order.push([col("variants.price"), "ASC"]);
       } else if (sort === "price_desc") {
-        order.push([Sequelize.col("variants.price"), "DESC"]);
+        order.push([col("variants.price"), "DESC"]);
       } else {
         order.push(["created_at", "DESC"]);
       }
 
-      // Query products with includes
+      // Query products
       const products = await Product.findAll({
         where,
         order,
+        subQuery: false,
         include: [
           {
             model: Category,
             as: "Category",
             attributes: ["category_id", "category_name"],
           },
-          {
-            model: ProductVariant,
-            as: "variants",
-            attributes: ["variant_id", "image_url", "stock", "price"],
-          },
+          includeVariants,
         ],
       });
 
-      // Calculate total stock for each product
+      // Tổng stock các variant
       const updatedProducts = products.map((product) => {
         const totalStock = product.variants.reduce(
           (sum, variant) => sum + (variant.stock || 0),
@@ -686,6 +721,7 @@ class ProductService {
         data: updatedProducts,
       };
     } catch (error) {
+      console.error("searchProducts error:", error);
       return {
         success: false,
         message: "Failed to retrieve products",
