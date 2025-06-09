@@ -170,7 +170,7 @@ class OrderService {
       return {
         message: "Đặt hàng thành công",
         order,
-        payment_url: paymentResult ? paymentResult.payment_url : null,
+        payment_url: paymentResult ? paymentResult.payment_url : null
       };
     } catch (error) {
       console.error("❌ Lỗi khi tạo đơn hàng:", error);
