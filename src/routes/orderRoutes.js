@@ -54,6 +54,6 @@ router.get("/:order_id", orderController.getOrderDetails);
 
 router.get("/user/orders", orderController.getUserOrders);
 
-router.patch("/cancel/:order_id", orderController.cancelOrder);
+router.patch("/cancel-suborder/:sub_order_id", orderController.cancelSubOrder);
 
 module.exports = router;
