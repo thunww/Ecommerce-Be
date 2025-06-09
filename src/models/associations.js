@@ -118,7 +118,6 @@ module.exports = (db) => {
     as: "subOrders",
   });
   SubOrder.belongsTo(Order, {
-    as: "order",
     foreignKey: "order_id",
     onDelete: "CASCADE",
   });
