@@ -1,5 +1,5 @@
 const express = require("express");
-const cors = require("cors");
+
 const morgan = require("morgan");
 const helmet = require("helmet");
 const compression = require("compression");
@@ -25,7 +25,10 @@ const chatRoutes = require("./routes/chatRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const shipperRoutes = require("./routes/shipperRoutes");
 const { handleUploadError } = require("./middleware/upload");
-
+const { setupSocketServer } = require("./websocket/chatSocket");
+const http = require("http");
+const cors = require('cors');
+app.use(cors()); // Cho phép mọi domain – có thể cấu hình kỹ hơn sau
 // Middleware
 app.use(helmet());
 app.use(compression());
@@ -82,12 +85,14 @@ sequelize
     console.error("Không thể kết nối database:", err);
   });
 
-// Sync database and start server
 const PORT = process.env.PORT || 3000;
+const server = http.createServer(app);
+setupSocketServer(server);
 sequelize.sync().then(() => {
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
 });
 
-module.exports = app;
+
+module.exports = app; 

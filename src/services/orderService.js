@@ -180,7 +180,7 @@ class OrderService {
       return {
         message: "Đặt hàng thành công",
         order,
-        payment_url: paymentResult ? paymentResult.payment_url : null
+        payment_url: paymentResult ? paymentResult.payment_url : null,
       };
     } catch (error) {
       console.error("❌ Lỗi khi tạo đơn hàng:", error);
@@ -351,38 +351,48 @@ class OrderService {
     });
   }
 
-  async cancelOrder(order_id, user_id) {
+  async cancelSubOrder(sub_order_id, user_id) {
     try {
-      const order = await Order.findOne({
-        where: {
-          order_id,
-          user_id,
-        },
-        include: [{ model: SubOrder, as: "subOrders" }],
+      // Lấy subOrder theo ID và kiểm tra quyền user
+      const subOrder = await SubOrder.findOne({
+        where: { sub_order_id },
+        include: [
+          {
+            model: Order,
+            as: "order",
+            where: { user_id },
+          },
+        ],
       });
 
-      if (!order) {
-        throw new Error("Đơn hàng không tồn tại hoặc không thuộc về bạn");
+      if (!subOrder) {
+        throw new Error("SubOrder không tồn tại hoặc không thuộc về bạn");
       }
 
-      if (order.status !== "pending") {
-        throw new Error("Chỉ có thể huỷ đơn hàng khi đang chờ xử lý (pending)");
+      if (subOrder.status !== "pending") {
+        throw new Error("Chỉ có thể huỷ subOrder khi đang chờ xử lý");
       }
 
-      // Cập nhật trạng thái huỷ
-      await order.update({ status: "cancelled" });
+      // Huỷ subOrder
+      await subOrder.update({ status: "cancelled" });
 
-      // Cập nhật trạng thái huỷ cho các subOrder liên quan
-      await Promise.all(
-        order.subOrders.map((sub) => sub.update({ status: "cancelled" }))
-      );
+      // Kiểm tra tất cả subOrder còn lại của đơn hàng
+      const allSubOrders = await SubOrder.findAll({
+        where: { order_id: subOrder.order_id },
+      });
+
+      const allCancelled = allSubOrders.every((s) => s.status === "cancelled");
+
+      if (allCancelled) {
+        await subOrder.order.update({ status: "cancelled" });
+      }
 
       return {
-        message: "Huỷ đơn hàng thành công",
-        order_id: order.order_id,
+        message: "Huỷ subOrder thành công",
+        sub_order_id: subOrder.sub_order_id,
       };
     } catch (err) {
-      console.error("Lỗi huỷ đơn:", err.message);
+      console.error("Lỗi huỷ subOrder:", err.message);
       throw err;
     }
   }

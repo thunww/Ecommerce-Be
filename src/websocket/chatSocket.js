@@ -1,156 +1,114 @@
-// const WebSocket = require('ws');
-// const chatService = require('../services/chatService');
-// const jwt = require('../config/jwt');
+const { Server } = require('socket.io');
+const jwt = require('jsonwebtoken');
+const chatService = require('../services/chatService');
 
-// // Lưu trữ kết nối WebSocket của người dùng và shop
-// const userConnections = new Map(); // user_id -> ws
-// const shopConnections = new Map(); // shop_id -> ws
 
-// const setupWebSocket = (server) => {
-//     // Tạo WebSocket server
-//     const wss = new WebSocket.Server({ server });
+function setupSocketServer(server) {
+    const io = new Server(server, {
+        cors: {
+            origin: '*',
+            methods: ['GET', 'POST'],
+        },
+    });
 
-//     wss.on('connection', async (ws, req) => {
-//         let userId = null;
-//         let shopId = null;
-//         let tokenType = null; // 'user' hoặc 'shop'
+    io.use((socket, next) => {
+        const token = socket.handshake.auth.token;
+        if (!token) {
+            return next(new Error('Không có token xác thực'));
+        }
 
-//         // Xử lý khi nhận được tin nhắn từ client
-//         ws.on('message', async (message) => {
-//             try {
-//                 const data = JSON.parse(message);
+        try {
+            const userDecoded = jwt.verify(token, process.env.JWT_SECRET);
+            if (userDecoded) {
+                socket.user = { id: userDecoded.user_id || userDecoded.id, type: 'user' };
+                return next();
+            }
 
-//                 // Xử lý authentication khi kết nối
-//                 if (data.type === 'auth') {
-//                     const decoded = verifyToken(data.token);
-//                     if (!decoded) {
-//                         ws.send(JSON.stringify({
-//                             type: 'error',
-//                             message: 'Xác thực không hợp lệ'
-//                         }));
-//                         return;
-//                     }
+            const shopDecoded = jwt.verify(token, process.env.JWT_SHOP_SECRET || process.env.JWT_SECRET);
+            if (shopDecoded) {
+                socket.user = { id: shopDecoded.shop_id || shopDecoded.id, type: 'shop' };
+                return next();
+            }
 
-//                     // Xác định loại token (user hoặc shop)
-//                     if (decoded.role === 'user') {
-//                         userId = decoded.id;
-//                         tokenType = 'user';
-//                         userConnections.set(userId, ws);
-//                         console.log(`Người dùng ${userId} đã kết nối`);
-//                     } else if (decoded.role === 'shop') {
-//                         shopId = decoded.id;
-//                         tokenType = 'shop';
-//                         shopConnections.set(shopId, ws);
-//                         console.log(`Shop ${shopId} đã kết nối`);
-//                     }
+            return next(new Error('Token không hợp lệ'));
+        } catch (error) {
+            console.error('Lỗi xác thực socket:', error);
+            return next(new Error('Token không hợp lệ hoặc hết hạn'));
+        }
+    });
 
-//                     // Thông báo kết nối thành công
-//                     ws.send(JSON.stringify({
-//                         type: 'auth_success',
-//                         data: {
-//                             id: tokenType === 'user' ? userId : shopId,
-//                             role: tokenType
-//                         }
-//                     }));
-//                     return;
-//                 }
+    io.on('connection', (socket) => {
+        console.log(`Socket kết nối: ${socket.id}`);
 
-//                 // Kiểm tra xác thực trước khi xử lý các loại tin nhắn khác
-//                 if (!userId && !shopId) {
-//                     ws.send(JSON.stringify({
-//                         type: 'error',
-//                         message: 'Vui lòng xác thực trước khi gửi tin nhắn'
-//                     }));
-//                     return;
-//                 }
+        socket.on('auth', (token) => {
+            try {
+                const userDecoded = jwt.verify(token, process.env.JWT_SECRET);
+                if (userDecoded) {
+                    socket.user = { id: userDecoded.user_id || userDecoded.id, type: 'user' };
+                    socket.emit('auth_success', { message: 'Xác thực thành công', userId: socket.user.id });
+                    return;
+                }
 
-//                 // Xử lý gửi tin nhắn
-//                 if (data.type === 'message') {
-//                     const { receiver_id, message: content } = data;
+                const shopDecoded = jwt.verify(token, process.env.JWT_SHOP_SECRET || process.env.JWT_SECRET);
+                if (shopDecoded) {
+                    socket.user = { id: shopDecoded.shop_id || shopDecoded.id, type: 'shop' };
+                    socket.emit('auth_success', { message: 'Xác thực thành công', userId: socket.user.id });
+                    return;
+                }
 
-//                     if (!receiver_id || !content) {
-//                         ws.send(JSON.stringify({
-//                             type: 'error',
-//                             message: 'Thiếu thông tin người nhận hoặc nội dung tin nhắn'
-//                         }));
-//                         return;
-//                     }
+                socket.emit('auth_error', 'Token không hợp lệ');
+            } catch (error) {
+                console.error('Lỗi xác thực socket:', error);
+                socket.emit('auth_error', 'Lỗi xác thực');
+            }
+        });
 
-//                     let senderId, senderType, receiverId, receiverType;
+        socket.on('send_message', async (data) => {
+            try {
+                const { receiver_id, message } = data;
+                if (!receiver_id || !message) {
+                    socket.emit('error', 'Thiếu thông tin người nhận hoặc nội dung tin nhắn');
+                    return;
+                }
 
-//                     if (tokenType === 'user') {
-//                         senderId = userId;
-//                         senderType = 'user';
-//                         receiverId = receiver_id;
-//                         receiverType = 'shop';
-//                     } else {
-//                         senderId = shopId;
-//                         senderType = 'shop';
-//                         receiverId = receiver_id;
-//                         receiverType = 'user';
-//                     }
+                const senderId = socket.user.id;
+                const senderType = socket.user.type;
+                const receiverType = senderType === 'user' ? 'shop' : 'user';
 
-//                     // Lưu tin nhắn vào database
-//                     const newMessage = await chatService.createMessage(
-//                         senderId,
-//                         senderType,
-//                         receiverId,
-//                         receiverType,
-//                         content
-//                     );
+                const chatId = senderType === 'user' ? `${senderId}-${receiver_id}` : `${receiver_id}-${senderId}`;
 
-//                     // Gửi tin nhắn đến người nhận nếu họ đang online
-//                     const receiverWs = receiverType === 'user'
-//                         ? userConnections.get(parseInt(receiverId))
-//                         : shopConnections.get(parseInt(receiverId));
+                console.log(`Tạo tin nhắn với chatId: ${chatId}`);
+                const newMessage = await chatService.createMessage({
+                    chat_id: chatId,
+                    sender_id: senderId,
+                    sender_type: senderType,
+                    receiver_id,
+                    receiver_type: receiverType,
+                    message,
+                });
 
-//                     if (receiverWs) {
-//                         receiverWs.send(JSON.stringify({
-//                             type: 'new_message',
-//                             data: newMessage
-//                         }));
-//                     }
 
-//                     // Xác nhận gửi tin nhắn thành công
-//                     ws.send(JSON.stringify({
-//                         type: 'message_sent',
-//                         data: newMessage
-//                     }));
-//                 }
-//             } catch (error) {
-//                 console.error('Lỗi xử lý tin nhắn WebSocket:', error);
-//                 ws.send(JSON.stringify({
-//                     type: 'error',
-//                     message: 'Lỗi xử lý tin nhắn'
-//                 }));
-//             }
-//         });
+                socket.emit('message_sent', newMessage);
 
-//         // Xử lý khi client ngắt kết nối
-//         ws.on('close', () => {
-//             if (userId) {
-//                 userConnections.delete(userId);
-//                 console.log(`Người dùng ${userId} đã ngắt kết nối`);
-//             } else if (shopId) {
-//                 shopConnections.delete(shopId);
-//                 console.log(`Shop ${shopId} đã ngắt kết nối`);
-//             }
-//         });
-//     });
+                const receiverSocket = Array.from(io.sockets.sockets.values()).find(
+                    (s) => s.user && s.user.id === receiver_id && s.user.type === receiverType
+                );
 
-//     return wss;
-// };
+                if (receiverSocket) {
+                    receiverSocket.emit('new_message', newMessage);
+                }
+            } catch (error) {
+                console.error('Lỗi gửi tin nhắn:', error);
+                socket.emit('error', error.message || 'Lỗi gửi tin nhắn');
+            }
+        });
 
-// // Xác thực token
-// const verifyToken = (token) => {
-//     // Thử xác thực như người dùng
-//     const userDecoded = jwt.verifyToken(token);
-//     if (userDecoded) {
-//         return { ...userDecoded, role: 'user' };
-//     }
+        socket.on('disconnect', () => {
+            console.log(`Socket ngắt kết nối: ${socket.id}`);
+        });
+    });
 
-//     // Nếu không phải token người dùng, không làm gì cả vì không cần hỗ trợ shop
-//     return null;
-// };
+    return io;
+}
 
-// module.exports = { setupWebSocket }; 
+module.exports = { setupSocketServer };

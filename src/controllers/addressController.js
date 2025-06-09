@@ -91,7 +91,7 @@ const getDefaultAddress = async (req, res) => {
 
 const updateAddress = async (req, res) => {
   try {
-    const user_id = req.user?.id;
+    const user_id = req.user.user_id;
     const address_id = parseInt(req.params.address_id);
     if (!user_id || !address_id) {
       return res.status(400).json({
@@ -118,7 +118,7 @@ const updateAddress = async (req, res) => {
 
 const deleteAddress = async (req, res) => {
   try {
-    const user_id = req.user?.id;
+    const user_id = req.user.user_id;
     const address_id = parseInt(req.params.address_id);
     if (!user_id || !address_id) {
       return res.status(400).json({
