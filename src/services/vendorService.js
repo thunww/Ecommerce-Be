@@ -11,6 +11,7 @@ const {
   Address,
   ProductReview,
   ProductImage,
+  UserRole,
 } = require("../models");
 const { sequelize } = require("../models");
 const { Op } = require("sequelize");
@@ -571,8 +572,8 @@ const getRevenue = async (userId) => {
     // Tính tổng giá trị đơn hàng (total_price + shipping_fee)
     const totalValue = allOrders.reduce((sum, order) => {
       const orderTotal = parseFloat(order.total_price) || 0;
-      const shippingFee = parseFloat(order.shipping_fee) || 0;
-      return sum + orderTotal + shippingFee;
+      // const shippingFee = parseFloat(order.shipping_fee) || 0;
+      return sum + orderTotal;
     }, 0);
 
     console.log("Total value (including shipping):", totalValue);
@@ -1624,35 +1625,102 @@ const processProduct = async (userId, productId) => {
 const updateSubordersStatusToProcessing = async (subOrderIds) => {
   try {
     if (!Array.isArray(subOrderIds) || subOrderIds.length === 0) {
-      // Handle case where input is not an array or is empty
       console.warn(
         "Invalid or empty subOrderIds array provided to updateSubordersStatusToProcessing"
       );
       return { success: false, message: "Invalid or empty subOrderIds list" };
     }
 
-    // Update the status of SubOrders where the sub_order_id is in the provided list
-    const [affectedRowsCount] = await SubOrder.update(
-      { status: "processing" },
-      {
-        where: {
-          sub_order_id: subOrderIds,
+    // Lấy thông tin chi tiết của các suborder và order items
+    const subOrders = await SubOrder.findAll({
+      where: {
+        sub_order_id: subOrderIds,
+      },
+      include: [
+        {
+          model: OrderItem,
+          as: "orderItems", // Alias là "orderItems"
+          include: [
+            {
+              model: ProductVariant,
+              as: "productVariant", // Alias là "productVariant"
+              attributes: ["variant_id", "stock"],
+            },
+          ],
         },
-      }
-    );
+      ],
+    });
 
-    if (affectedRowsCount > 0) {
-      console.log(
-        `Successfully updated status to 'processing' for ${affectedRowsCount} suborders.`
+    // Kiểm tra stock trước khi cập nhật
+    for (const subOrder of subOrders) {
+      for (const orderItem of subOrder.orderItems) {
+        // Sửa từ OrderItems thành orderItems
+        const variant = orderItem.productVariant; // Sửa từ ProductVariant thành productVariant
+        if (variant.stock < orderItem.quantity) {
+          return {
+            success: false,
+            message: `Không đủ hàng cho sản phẩm ${orderItem.product_name} (${
+              variant.color || ""
+            } ${variant.size || ""})`,
+          };
+        }
+      }
+    }
+
+    // Bắt đầu transaction để đảm bảo tính toàn vẹn dữ liệu
+    const result = await sequelize.transaction(async (t) => {
+      // Cập nhật trạng thái suborder
+      const [affectedRowsCount] = await SubOrder.update(
+        { status: "processing" },
+        {
+          where: {
+            sub_order_id: subOrderIds,
+          },
+          transaction: t,
+        }
       );
-      return { success: true, affectedCount: affectedRowsCount };
+
+      // Trừ stock cho từng variant
+      for (const subOrder of subOrders) {
+        for (const orderItem of subOrder.orderItems) {
+          // Sửa từ OrderItems thành orderItems
+          const variant = orderItem.productVariant; // Sửa từ ProductVariant thành productVariant
+          await ProductVariant.update(
+            {
+              stock: variant.stock - orderItem.quantity,
+            },
+            {
+              where: {
+                variant_id: variant.variant_id,
+              },
+              transaction: t,
+            }
+          );
+        }
+      }
+
+      return affectedRowsCount;
+    });
+
+    if (result > 0) {
+      console.log(
+        `Successfully updated status to 'processing' for ${result} suborders and updated stock.`
+      );
+      return {
+        success: true,
+        affectedCount: result,
+        message: "Cập nhật trạng thái và stock thành công",
+      };
     } else {
       console.warn(`No suborders found with provided IDs to update status.`);
-      return { success: false, message: "No matching suborders found" };
+      return {
+        success: false,
+        message: "Không tìm thấy đơn hàng để cập nhật",
+      };
     }
   } catch (error) {
     console.error("Error in updateSubordersStatusToProcessing service:", error);
-    throw new Error("Failed to update suborder status");
+    throw new Error("Failed to update suborder status and stock");
   }
 };
 
@@ -2413,6 +2481,66 @@ const createProduct = async (userId, productData, variants) => {
   }
 };
 
+// Đăng ký trở thành vendor
+const registerVendor = async (userId, shopData, uploadedImages) => {
+  try {
+    // Kiểm tra xem user đã có shop chưa
+    const existingShop = await Shop.findOne({
+      where: { owner_id: userId },
+    });
+
+    if (existingShop) {
+      throw new Error("Bạn đã đăng ký shop trước đó");
+    }
+
+    // Kiểm tra xem tên shop đã tồn tại chưa
+    const shopNameExists = await Shop.findOne({
+      where: { shop_name: shopData.shopName },
+    });
+
+    if (shopNameExists) {
+      throw new Error("Tên shop đã tồn tại");
+    }
+
+    // Xử lý đường dẫn ảnh
+    const logoImage = uploadedImages.find((img) => img.fieldname === "logo");
+    const bannerImage = uploadedImages.find(
+      (img) => img.fieldname === "banner"
+    );
+
+    // Tạo shop mới
+    const newShop = await Shop.create({
+      owner_id: userId,
+      shop_name: shopData.shopName,
+      description: shopData.description,
+      address: shopData.address,
+      logo: logoImage ? logoImage.path : null,
+      banner: bannerImage ? bannerImage.path : null,
+    });
+
+    // Update role từ customer lên vendor_pending
+    await UserRole.update(
+      { role_id: 4 }, // ID của role vendor_pending
+      {
+        where: {
+          user_id: userId,
+          
+        },
+      }
+    );
+
+    return {
+      shop_id: newShop.shop_id,
+      shop_name: newShop.shop_name,
+      logo: newShop.logo,
+      banner: newShop.banner,
+    };
+  } catch (error) {
+    console.error("Error in registerVendor service:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   getShopByUserId,
   getAllOrders,
@@ -2435,4 +2563,5 @@ module.exports = {
   updateProduct,
   deleteVariant,
   createProduct,
+  registerVendor,
 };
