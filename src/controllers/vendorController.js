@@ -517,8 +517,6 @@ const handleUpdateProduct = async (req, res) => {
       stock,
     } = req.body;
 
-    
-
     // Parse variants nếu là string
     if (typeof variants === "string") {
       try {
@@ -696,6 +694,52 @@ const handleCreateProduct = async (req, res) => {
   }
 };
 
+// Đăng ký trở thành vendor
+const handleRegisterVendor = async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+    const {
+      
+      shopName,
+      description,
+      address,
+    } = req.body;
+
+    // Kiểm tra các trường bắt buộc
+    if (!shopName || !address ) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng điền đầy đủ thông tin bắt buộc",
+      });
+    }
+
+    // Gọi service để đăng ký vendor
+    const result = await vendorService.registerVendor(
+      userId,
+      {
+       
+        shopName,
+        description,
+        address,
+        
+      },
+      req.uploadedImages
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Đăng ký thành công! Vui lòng chờ xét duyệt.",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error in handleRegisterVendor:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Đăng ký thất bại. Vui lòng thử lại!",
+    });
+  }
+};
+
 module.exports = {
   handleGetMyShop,
   handleGetAllOrders,
@@ -717,4 +761,5 @@ module.exports = {
   handleUpdateProduct,
   handleDeleteVariant,
   handleCreateProduct,
+  handleRegisterVendor,
 };
