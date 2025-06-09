@@ -2,6 +2,7 @@ const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const chatService = require('../services/chatService');
 
+
 function setupSocketServer(server) {
     const io = new Server(server, {
         cors: {
@@ -77,13 +78,15 @@ function setupSocketServer(server) {
                 const chatId = senderType === 'user' ? `${senderId}-${receiver_id}` : `${receiver_id}-${senderId}`;
 
                 console.log(`Tạo tin nhắn với chatId: ${chatId}`);
-                const newMessage = await chatService.createMessage(
-                    senderId,
-                    senderType,
+                const newMessage = await chatService.createMessage({
+                    chat_id: chatId,
+                    sender_id: senderId,
+                    sender_type: senderType,
                     receiver_id,
-                    receiverType,
-                    message
-                );
+                    receiver_type: receiverType,
+                    message,
+                });
+
 
                 socket.emit('message_sent', newMessage);
 

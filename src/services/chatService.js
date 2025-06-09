@@ -127,7 +127,24 @@ class ChatService {
             throw new Error(`Lỗi truy vấn tin nhắn: ${error.message}`);
         }
     }
+    async createMessage({ chat_id, sender_id, sender_type, receiver_id, receiver_type, message }) {
+        try {
 
+            const newMessage = await ChatMessage.create({
+                chat_id,
+                sender_id,
+                sender_type,
+                receiver_id,
+                receiver_type,
+                message,
+                is_read: false,
+            });
+            return newMessage;
+        } catch (error) {
+            console.error('Lỗi trong createMessage:', error);
+            throw new Error(`Lỗi tạo tin nhắn: ${error.message}`);
+        }
+    }
     async markMessagesAsRead(chatId, userId, userType) {
         try {
             console.log(`Đánh dấu tin nhắn đã đọc cho chatId: ${chatId}, ${userType}Id: ${userId}`);

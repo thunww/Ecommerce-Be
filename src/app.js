@@ -1,5 +1,5 @@
 const express = require("express");
-const cors = require("cors");
+
 const morgan = require("morgan");
 const helmet = require("helmet");
 const compression = require("compression");
@@ -27,6 +27,8 @@ const shipperRoutes = require("./routes/shipperRoutes");
 const { handleUploadError } = require("./middleware/upload");
 const { setupSocketServer } = require("./websocket/chatSocket");
 const http = require("http");
+const cors = require('cors');
+app.use(cors()); // Cho phép mọi domain – có thể cấu hình kỹ hơn sau
 // Middleware
 app.use(helmet());
 app.use(compression());
