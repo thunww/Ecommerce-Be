@@ -2524,7 +2524,6 @@ const registerVendor = async (userId, shopData, uploadedImages) => {
       {
         where: {
           user_id: userId,
-          
         },
       }
     );

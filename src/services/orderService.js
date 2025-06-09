@@ -124,7 +124,7 @@ class OrderService {
       // Tạo từng SubOrder và các OrderItem chi tiết
       let totalCalculatedShippingFee = 0;
       let totalCalculatedPrice = 0;
-      
+
       for (const [shopId, items] of Object.entries(subOrderGroups)) {
         const subTotal = items.reduce((sum, item) => {
           const price = parseFloat(item.price);
@@ -134,12 +134,16 @@ class OrderService {
 
         // Tính phí ship động cho từng subOrder
         // Lấy thông tin sản phẩm cho từng item
-        const itemsWithProduct = await Promise.all(items.map(async (item) => {
-          // Lấy thông tin sản phẩm (bao gồm trọng lượng)
-          const product = await Product.findByPk(item.product_id);
-          return { ...item, product };
-        }));
-        const shippingResult = await shippingService.calculateShippingFee({ order_items: itemsWithProduct });
+        const itemsWithProduct = await Promise.all(
+          items.map(async (item) => {
+            // Lấy thông tin sản phẩm (bao gồm trọng lượng)
+            const product = await Product.findByPk(item.product_id);
+            return { ...item, product };
+          })
+        );
+        const shippingResult = await shippingService.calculateShippingFee({
+          order_items: itemsWithProduct,
+        });
         const shipping_fee = shippingResult.shippingFee;
 
         const subOrder = await SubOrder.create({
@@ -178,7 +182,7 @@ class OrderService {
       // Cập nhật Order chính với tổng phí ship và tổng giá đã tính
       await order.update({
         total_price: totalCalculatedPrice + totalCalculatedShippingFee,
-        shipping_fee: totalCalculatedShippingFee
+        shipping_fee: totalCalculatedShippingFee,
       });
 
       console.log("✅ Đã tạo xong các SubOrder và OrderItem đầy đủ");
@@ -373,7 +377,6 @@ class OrderService {
         include: [
           {
             model: Order,
-            as: "order",
             where: { user_id },
           },
         ],
@@ -398,7 +401,11 @@ class OrderService {
       const allCancelled = allSubOrders.every((s) => s.status === "cancelled");
 
       if (allCancelled) {
-        await subOrder.order.update({ status: "cancelled" });
+        // Cập nhật trạng thái của order (nếu tất cả subOrders đều bị huỷ)
+        await Order.update(
+          { status: "cancelled" },
+          { where: { order_id: subOrder.order_id } }
+        );
       }
 
       return {
@@ -407,7 +414,7 @@ class OrderService {
       };
     } catch (err) {
       console.error("Lỗi huỷ subOrder:", err.message);
-      throw err;
+      throw new Error(`Không thể huỷ subOrder: ${err.message}`);
     }
   }
 }
