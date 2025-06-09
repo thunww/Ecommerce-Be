@@ -3,7 +3,7 @@
 const { Model, DataTypes, Sequelize } = require("sequelize"); // Thêm Sequelize vào import
 const sequelize = require("../config/database");
 
-class Cart extends Model { }
+class Cart extends Model {}
 
 Cart.init(
   {

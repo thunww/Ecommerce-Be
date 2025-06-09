@@ -1,13 +1,27 @@
-const { Order, SubOrder, OrderItem, Cart, CartItem, Product, Shop, Payment, ProductVariant, Coupon, Address } = require('../models');
-const couponService = require('./couponService');
-const { Op } = require('sequelize');
-const shippingService = require('./shippingService');
-
+const {
+  Order,
+  SubOrder,
+  OrderItem,
+  Cart,
+  CartItem,
+  Product,
+  Shop,
+  Payment,
+  ProductVariant,
+  Coupon,
+  Address,
+} = require("../models");
+const couponService = require("./couponService");
+const { Op } = require("sequelize");
+const paymentService = require("./paymentService");
 class OrderService {
   async createOrder(orderData) {
-    console.log('🔥 Dữ liệu đơn hàng nhận được:', JSON.stringify(orderData, null, 2));
+    console.log(
+      "Dữ liệu đơn hàng nhận được:",
+      JSON.stringify(orderData, null, 2)
+    );
 
-    if (!orderData) throw new Error('Thiếu dữ liệu đơn hàng');
+    if (!orderData) throw new Error("Thiếu dữ liệu đơn hàng");
 
     const {
       user_id,
@@ -15,13 +29,17 @@ class OrderService {
       shipping_address,
       total_amount,
       shipping_fee,
-      payment_method
+      payment_method,
     } = orderData;
 
-    if (!user_id) throw new Error('Thiếu thông tin user_id');
-    if (!shipping_address) throw new Error('Thiếu thông tin địa chỉ giao hàng');
-    if (!order_items || !Array.isArray(order_items) || order_items.length === 0) {
-      throw new Error('Thiếu thông tin sản phẩm đặt hàng');
+    if (!user_id) throw new Error("Thiếu thông tin user_id");
+    if (!shipping_address) throw new Error("Thiếu thông tin địa chỉ giao hàng");
+    if (
+      !order_items ||
+      !Array.isArray(order_items) ||
+      order_items.length === 0
+    ) {
+      throw new Error("Thiếu thông tin sản phẩm đặt hàng");
     }
 
     try {
@@ -30,15 +48,17 @@ class OrderService {
       if (shipping_address.address_id) {
         // Dùng địa chỉ đã có nếu gửi lên address_id
         const existingAddress = await Address.findOne({
-          where: { address_id: shipping_address.address_id, user_id }
+          where: { address_id: shipping_address.address_id, user_id },
         });
 
         if (!existingAddress) {
-          throw new Error("Địa chỉ không tồn tại hoặc không thuộc về người dùng");
+          throw new Error(
+            "Địa chỉ không tồn tại hoặc không thuộc về người dùng"
+          );
         }
 
         address_id = existingAddress.address_id;
-        console.log('✅ Dùng địa chỉ đã có:', address_id);
+        console.log("✅ Dùng địa chỉ đã có:", address_id);
       } else {
         // Tạo địa chỉ mới nếu không có address_id
         const address = await Address.create({
@@ -49,10 +69,10 @@ class OrderService {
           ward: shipping_address.ward,
           district: shipping_address.district,
           city: shipping_address.city,
-          is_default: false
+          is_default: false,
         });
 
-        console.log('✅ Địa chỉ mới được tạo:', address.address_id);
+        console.log("✅ Địa chỉ mới được tạo:", address.address_id);
         address_id = address.address_id;
       }
 
@@ -60,30 +80,32 @@ class OrderService {
       const order = await Order.create({
         user_id,
         shipping_address_id: address_id,
-        status: 'pending',
+        status: "pending",
         total_price: total_amount,
         shipping_fee,
-        payment_method
+        payment_method,
       });
 
-      console.log('✅ Đơn hàng chính được tạo:', order);
+      console.log("✅ Đơn hàng chính được tạo:", order);
 
       // Lấy product_id duy nhất
-      const productIds = [...new Set(order_items.map(item => item.product_id))];
+      const productIds = [
+        ...new Set(order_items.map((item) => item.product_id)),
+      ];
 
       // Truy vấn sản phẩm để lấy shop_id
       const products = await Product.findAll({
-        where: { product_id: { [Op.in]: productIds } }
+        where: { product_id: { [Op.in]: productIds } },
       });
 
       if (products.length !== productIds.length) {
-        const existingIds = products.map(p => p.product_id);
-        const missingIds = productIds.filter(id => !existingIds.includes(id));
-        throw new Error(`Sản phẩm không tồn tại: ${missingIds.join(', ')}`);
+        const existingIds = products.map((p) => p.product_id);
+        const missingIds = productIds.filter((id) => !existingIds.includes(id));
+        throw new Error(`Sản phẩm không tồn tại: ${missingIds.join(", ")}`);
       }
 
       const productMap = {};
-      products.forEach(p => {
+      products.forEach((p) => {
         productMap[p.product_id] = p.shop_id;
       });
 
@@ -119,11 +141,11 @@ class OrderService {
           order_id: order.order_id,
           shop_id: parseInt(shopId),
           total_price: subTotal,
-          shipping_fee,
-          status: 'pending',
+          shipping_fee: 0,
+          status: "pending",
         });
 
-        const subOrderItems = items.map(item => {
+        const subOrderItems = items.map((item) => {
           const quantity = item.quantity;
           const price = parseFloat(item.price);
           const discount = parseFloat(item.discount || 0);
@@ -138,17 +160,30 @@ class OrderService {
             price,
             discount,
             total,
-            variant_info: item.variant_info || null
+            variant_info: item.variant_info || null,
           };
         });
 
         await OrderItem.bulkCreate(subOrderItems);
       }
 
-      console.log('✅ Đã tạo xong các SubOrder và OrderItem đầy đủ');
-      return order;
+      console.log("✅ Đã tạo xong các SubOrder và OrderItem đầy đủ");
+      let paymentResult = null;
+      if (payment_method === "vnpay") {
+        console.log("🚀 Gọi processVNPayPayment với order_id:", order.order_id);
+        paymentResult = await paymentService.processVNPayPayment(
+          order.order_id
+        );
+        console.log("🔗 Kết quả processVNPayPayment:", paymentResult);
+        // Gắn link vào đơn hàng trả về
+      }
+      return {
+        message: "Đặt hàng thành công",
+        order,
+        payment_url: paymentResult ? paymentResult.payment_url : null
+      };
     } catch (error) {
-      console.error('❌ Lỗi khi tạo đơn hàng:', error);
+      console.error("❌ Lỗi khi tạo đơn hàng:", error);
       throw error;
     }
   }
@@ -298,7 +333,9 @@ class OrderService {
 
       return Array.from(productMap.values());
     } catch (error) {
-      throw new Error(`Lỗi khi lấy danh sách sản phẩm đã bán: ${error.message}`);
+      throw new Error(
+        `Lỗi khi lấy danh sách sản phẩm đã bán: ${error.message}`
+      );
     }
   }
 
@@ -312,6 +349,42 @@ class OrderService {
         Address,
       ],
     });
+  }
+
+  async cancelOrder(order_id, user_id) {
+    try {
+      const order = await Order.findOne({
+        where: {
+          order_id,
+          user_id,
+        },
+        include: [{ model: SubOrder, as: "subOrders" }],
+      });
+
+      if (!order) {
+        throw new Error("Đơn hàng không tồn tại hoặc không thuộc về bạn");
+      }
+
+      if (order.status !== "pending") {
+        throw new Error("Chỉ có thể huỷ đơn hàng khi đang chờ xử lý (pending)");
+      }
+
+      // Cập nhật trạng thái huỷ
+      await order.update({ status: "cancelled" });
+
+      // Cập nhật trạng thái huỷ cho các subOrder liên quan
+      await Promise.all(
+        order.subOrders.map((sub) => sub.update({ status: "cancelled" }))
+      );
+
+      return {
+        message: "Huỷ đơn hàng thành công",
+        order_id: order.order_id,
+      };
+    } catch (err) {
+      console.error("Lỗi huỷ đơn:", err.message);
+      throw err;
+    }
   }
 }
 

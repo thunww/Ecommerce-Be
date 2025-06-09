@@ -2,7 +2,7 @@ const dotenv = require("dotenv");
 const sequelize = require("./config/database");
 const app = require("./app");
 const http = require('http');
-const { setupWebSocket } = require('./websocket/chatSocket');
+// const { setupWebSocket } = require('./websocket/chatSocket');
 
 dotenv.config();
 
@@ -14,7 +14,7 @@ sequelize
     const server = http.createServer(app);
 
     // Thiết lập WebSocket server
-    setupWebSocket(server);
+    // setupWebSocket(server);
 
     server.listen(8080, () => console.log("Server running on port 8080"));
   })

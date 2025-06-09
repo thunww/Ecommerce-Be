@@ -67,6 +67,28 @@ const getAddressById = async (req, res) => {
   }
 };
 
+const getDefaultAddress = async (req, res) => {
+  try {
+    const user_id = req.user?.id;
+    if (!user_id) {
+      return res.status(400).json({
+        status: "error",
+        message: "User ID is required",
+        data: null,
+      });
+    }
+
+    const result = await AddressService.getDefaultAddress(user_id);
+    return res.status(result.status === "success" ? 200 : 404).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: "Internal server error: " + error.message,
+      data: null,
+    });
+  }
+};
+
 const updateAddress = async (req, res) => {
   try {
     const user_id = req.user?.id;
@@ -147,4 +169,5 @@ module.exports = {
   updateAddress,
   deleteAddress,
   setDefaultAddress,
+  getDefaultAddress,
 };

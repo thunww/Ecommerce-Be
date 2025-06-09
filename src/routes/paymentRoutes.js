@@ -10,10 +10,10 @@ router.get('/:payment_id', authMiddleware, paymentController.getPaymentById);
 router.get('/order/:order_id', authMiddleware, paymentController.getPaymentsByOrderId);
 
 // Xử lý thanh toán qua Momo
-router.post('/momo/:order_id/:sub_order_id', authMiddleware, paymentController.processMomoPayment);
+router.post('/momo/:order_id/', authMiddleware, paymentController.processMomoPayment);
 
 // Xử lý thanh toán qua VNPay
-router.post('/vnpay/:order_id/:sub_order_id', authMiddleware, paymentController.processVNPayPayment);
+router.post('/vnpay/:order_id/', authMiddleware, paymentController.processVNPayPayment);
 
 // Callback từ Momo
 router.post('/momo/callback', paymentController.handleMomoCallback);

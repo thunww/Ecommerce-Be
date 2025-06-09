@@ -2,9 +2,6 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-
-
-
     await queryInterface.createTable("Carts", {
       cart_id: {
         type: Sequelize.INTEGER,
