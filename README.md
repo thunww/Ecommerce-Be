@@ -83,5 +83,5 @@ npx sequelize db:seed:all
 
 # (Tuỳ chọn) Undo migration
 # npx sequelize-cli db:migrate:undo:all
-### 2. Chạy server
+# Chạy server
 npm run dev
