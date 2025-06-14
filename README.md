@@ -6,8 +6,8 @@
 
 ## Thông tin đồ án
 
-- **Tên đề tài:** Hệ thống E-Commerce  
-**Nhóm 3 – Thành viên:**
+**Tên đề tài:** Hệ thống E-Commerce  
+**Thành viên:**
 - N22DCAT001 – Nguyễn Văn An  
 - N22DCAT018 – Trần Xuân Đông  
 - N22DCAT038 – Lê Đình Nghĩa  
@@ -32,25 +32,25 @@ Hệ thống **Backend** được xây dựng bằng **Node.js + Express**, kế
 - Phân quyền theo vai trò (Admin, Customer, Seller, Shipper)  
 - Quản lý sản phẩm, danh mục, shop  
 - Xử lý đơn hàng, giỏ hàng, đánh giá  
-- Hỗ trợ upload ảnh sản phẩm  
+- Upload ảnh sản phẩm lên **Cloudinary**  
 - Bảo mật với JWT và mã hoá mật khẩu bằng Bcrypt  
 
 ---
 
-## ⚙️ Công nghệ sử dụng
+## ⚙ Công nghệ sử dụng
 
 - **Node.js + Express**
-- **Sequelize ORM**
-- **MySQL**
+- **Sequelize ORM** + **MySQL**
+- **Cloudinary** (upload ảnh)
 - **JWT** – xác thực & phân quyền
 - **Bcrypt** – mã hoá mật khẩu
-- **Multer** – upload file
+- **Multer + Cloudinary Storage**
 - **Dotenv** – quản lý biến môi trường
 - **RESTful API**
 
 ---
 
-## 🚀 Cài đặt & khởi chạy
+##  Cài đặt & khởi chạy
 
 ### 1. Clone dự án, cài gói, khởi tạo database
 ```bash
@@ -68,6 +68,12 @@ DB_USER=root
 DB_PASSWORD=yourpassword
 DB_NAME=ecommerce
 ACCESS_TOKEN_SECRET=your_jwt_secret" > .env
+
+# Cloudinary config
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+" > .env
 
 # Tạo cơ sở dữ liệu
 npx sequelize db:create
