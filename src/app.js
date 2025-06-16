@@ -25,6 +25,8 @@ const chatRoutes = require("./routes/chatRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const shipperRoutes = require("./routes/shipperRoutes");
 const { handleUploadError } = require("./middleware/upload");
+const cookieParser = require("cookie-parser");
+const adminRoutes = require("./routes/usersRoutes");
 
 // Middleware
 app.use(helmet());
@@ -33,6 +35,7 @@ configCORS(app);
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // Cho form-data
+app.use(cookieParser());
 
 // Log middleware để debug
 app.use((req, res, next) => {
@@ -57,7 +60,7 @@ app.use("/api/v1/chat", chatRoutes);
 app.use("/api/v1/shops", shopRoutes);
 app.use("/api/v1/vendor", vendorRoutes);
 app.use("/api/v1/shippers", shipperRoutes);
-// app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/admin", adminRoutes);
 
 // Upload error handling
 app.use(handleUploadError);

@@ -14,6 +14,10 @@ const {
 const { handleFilterShopProducts } = require("../controllers/vendorController");
 const { upload } = require("../middleware/uploadMiddleware");
 
+
+
+// Middleware cho vendor routes
+const vendorMiddleware = [authMiddleware, roleMiddleware(["vendor"], true)];
 // Route đăng ký trở thành vendor (chỉ cần auth, không cần role)
 router.post(
   "/register",
@@ -22,10 +26,6 @@ router.post(
   vendorController.handleRegisterVendor,
   handleProductError
 );
-
-// Middleware cho vendor routes
-const vendorMiddleware = [authMiddleware, roleMiddleware(["vendor"], true)];
-
 // Lấy thông tin shop của vendor
 router.get("/my-shop", vendorMiddleware, shopController.handleGetMyShop);
 router.get(
