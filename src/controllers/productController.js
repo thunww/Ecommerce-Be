@@ -20,9 +20,6 @@ const getAllProducts = async (req, res) => {
     });
   }
 };
-// ham tao san pham
-// BE/src/controllers/productController.js
-// BE/src/controllers/productController.js
 
 const checkDuplicateProductName = async (req, res, next) => {
   try {
