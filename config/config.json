@@ -14,10 +14,10 @@
     "dialect": "mysql"
   },
   "production": {
-    "username": "root",
-    "password": "",
-    "database": "ecommerce_prod",
-    "host": "127.0.0.1",
+    "username": "freedb_annguyenax",
+    "password": "sy@nWcfkPVe9Z3*",
+    "database": "freedb_DBWeb",
+    "host": "sql.freedb.tech",
     "dialect": "mysql"
   }
-} 
+}
