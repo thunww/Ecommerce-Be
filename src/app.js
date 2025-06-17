@@ -29,8 +29,7 @@ const cookieParser = require("cookie-parser");
 const adminRoutes = require("./routes/usersRoutes");
 const { setupSocketServer } = require("./websocket/chatSocket");
 const http = require("http");
-const cors = require('cors');
-app.use(cors()); // Cho phép mọi domain – có thể cấu hình kỹ hơn sau
+
 // Middleware
 app.use(helmet());
 app.use(compression());
@@ -97,5 +96,4 @@ sequelize.sync().then(() => {
   });
 });
 
-
-module.exports = app; 
+module.exports = app;
