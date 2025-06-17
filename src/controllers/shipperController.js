@@ -492,6 +492,7 @@ exports.getOrders = async (req, res) => {
         },
         {
           model: Order,
+          as: "order",
           attributes: [
             "order_id",
             "user_id",
@@ -589,6 +590,7 @@ exports.getOrderDetails = async (req, res) => {
         },
         {
           model: Order,
+          as: "order",
           attributes: [
             "order_id",
             "user_id",
@@ -1255,6 +1257,7 @@ exports.filterIncomeByDate = async (req, res) => {
         },
         {
           model: Order,
+          as: "order",
           attributes: ["payment_method"],
           include: [
             {
@@ -1276,14 +1279,13 @@ exports.filterIncomeByDate = async (req, res) => {
     const formattedOrders = completedOrders.map((order) => ({
       id: order.sub_order_id,
       deliveryTime: order.shipment?.actual_delivery_date || order.updated_at,
-      deliveryTime: order.shipment?.actual_delivery_date || order.updated_at,
-      customerName: order.Order?.User
-        ? `${order.Order.User.first_name} ${order.Order.User.last_name}`
+      customerName: order.order?.User
+        ? `${order.order.User.first_name} ${order.order.User.last_name}`
         : "No name",
-      address: order.Order?.shipping_address
-        ? `${order.Order.shipping_address.address_line}, ${order.Order.shipping_address.city}`
+      address: order.order?.shipping_address
+        ? `${order.order.shipping_address.address_line}, ${order.order.shipping_address.city}`
         : "No address",
-      paymentMethod: order.Order?.payment_method || "COD",
+      paymentMethod: order.order?.payment_method || "COD",
       amount: parseFloat(order.shipping_fee || 0),
     }));
 
