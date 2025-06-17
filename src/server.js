@@ -1,23 +1,17 @@
-const dotenv = require("dotenv");
-const sequelize = require("./config/database");
-const app = require("./app");
+require('dotenv').config();
 const http = require('http');
-// const { setupWebSocket } = require('./websocket/chatSocket');
+const app = require('./app');
+const { setupWebSocket } = require('./websocket/chatSocket');
+const { sequelize } = require('./models');
 
-dotenv.config();
+const PORT = process.env.PORT || 8080;
 
-// Kết nối database & chạy server
-sequelize
-  .sync()
-  .then(() => {
-    console.log("Database connected");
-    const server = http.createServer(app);
+sequelize.sync().then(() => {
+  const server = http.createServer(app);
 
-    // Thiết lập WebSocket server
-    // setupWebSocket(server);
+  setupWebSocket(server); // Gắn WebSocket lên server này
 
-    server.listen(8080, () => console.log("Server running on port 8080"));
-  })
-  .catch((err) => {
-    console.error("Database connection error:", err);
-  });
+  // server.listen(PORT, () => {
+  //   console.log(`Server is running on port ${PORT}`);
+  // });
+});

@@ -24,7 +24,7 @@ SubOrder.init(
     },
     shipping_fee: {
       type: DataTypes.DECIMAL(10, 2),
-      defaultValue: 0.00,
+      defaultValue: 10000,
     },
     status: {
       type: DataTypes.STRING(20),
