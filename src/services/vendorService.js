@@ -2519,15 +2519,12 @@ const registerVendor = async (userId, shopData, uploadedImages) => {
 
     // Update role từ customer lên vendor_pending
 
+    // Tạo role mới cho user
+    await UserRole.create({
+      user_id: userId,
+      role_id: 4, // ID của role vendor_pending
+    });
 
-    await UserRole.update(
-      { role_id: 4 }, // ID của role vendor_pending
-      {
-        where: {
-          user_id: userId,
-        },
-      }
-    );
 
 
     return {
