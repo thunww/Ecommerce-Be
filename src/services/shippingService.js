@@ -1,41 +1,33 @@
 class ShippingService {
-  constructor() {
-    this.basePrice = 10000; // Giá cơ bản cố định
-    this.weightMultipliers = {
-      light: 1.0,    // < 5kg
-      medium: 1.2,   // 5-10kg
-      heavy: 1.5     // > 10kg
-    };
-  }
+  constructor() {}
 
-  // Xác định hệ số trọng lượng dựa trên tổng trọng lượng đơn hàng
-  getWeightMultiplier(totalWeight) {
-    if (totalWeight < 5) return this.weightMultipliers.light;
-    if (totalWeight <= 10) return this.weightMultipliers.medium;
-    return this.weightMultipliers.heavy;
-  }
-
-  // Tính phí vận chuyển
+  // Tính phí vận chuyển động theo trọng lượng
   async calculateShippingFee({ order_items }) {
     try {
-      // Tính tổng trọng lượng đơn hàng
-      const totalWeight = order_items.reduce((sum, item) => {
-        return sum + (item.quantity * item.product.weight);
-      }, 0);
+      // Tính tổng trọng lượng đơn hàng (gram)
+      let totalWeight = 0;
+      for (const item of order_items) {
+        // item.product.weight là trọng lượng 1 sản phẩm (kg), cần chuyển sang gram
+        const weight = item.product?.weight ? parseFloat(item.product.weight) : 0;
+        totalWeight += weight * 1000 * (item.quantity || 1);
+      }
 
-      // Lấy hệ số trọng lượng
-      const weightMultiplier = this.getWeightMultiplier(totalWeight);
+      // Xác định hệ số
+      let weightMultiplier = 1;
+      if (totalWeight < 100) weightMultiplier = 0.72;
+      else if (totalWeight < 300) weightMultiplier = 0.98;
+      else if (totalWeight < 1000) weightMultiplier = 1.6;
+      else if (totalWeight <= 5000) weightMultiplier = 2.3;
+      else if (totalWeight <= 10000) weightMultiplier = 7.1;
+      else weightMultiplier = 13.2;
 
-      // Tính phí vận chuyển theo công thức mới
-      const shippingFee = Math.round(
-        this.basePrice * weightMultiplier
-      );
+      // Tính phí ship
+      const shippingFee = 5000 + 5000 * weightMultiplier;
 
       return {
         totalWeight,
-        basePrice: this.basePrice,
         weightMultiplier,
-        shippingFee
+        shippingFee: Math.round(shippingFee)
       };
     } catch (error) {
       console.error('Lỗi khi tính phí vận chuyển:', error);
