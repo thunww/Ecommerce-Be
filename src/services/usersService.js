@@ -19,6 +19,7 @@ const getAllUsers = async () => {
           through: { attributes: [] }, // Loại bỏ thông tin từ bảng trung gian UserRole
         },
       ],
+      order: [["createdAt", "DESC"]],
     });
 
     // Chuyển đổi dữ liệu để trả về đúng format mong muốn
@@ -181,7 +182,6 @@ const updateUser = async (userId, updatedData) => {
 };
 // hàm lấy thông tin shop của user
 
-
 const uploadAvatar = async (user_id, imageUrl) => {
   try {
     const user = await User.findByPk(user_id, {
@@ -205,7 +205,6 @@ const uploadAvatar = async (user_id, imageUrl) => {
     throw new Error("Error updating avatar");
   }
 };
-
 
 module.exports = {
   getAllUsers,

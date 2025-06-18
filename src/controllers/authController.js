@@ -7,6 +7,7 @@ const {
 } = require("../services/authService");
 const { verifyToken } = require("../config/jwt");
 const { generateToken } = require("../config/jwt");
+require("dotenv").config();
 
 const handleregisterUser = async (req, res) => {
   try {
@@ -40,8 +41,8 @@ const handleLoginUser = async (req, res) => {
     // Set cookie với các options bảo mật
     res.cookie("accessToken", token, {
       httpOnly: true, // Ngăn JavaScript truy cập cookie
-      secure: process.env.NODE_ENV === "production", // Chỉ gửi cookie qua HTTPS trong môi trường production
-      sameSite: "lax", // Thay đổi từ "strict" sang "lax"
+      secure: true, //process.env.NODE_ENV === "production", // Chỉ gửi cookie qua HTTPS trong môi trường production
+      sameSite: "None",//"lax", // Thay đổi từ "strict" sang "lax"
       maxAge: 10 * 60 * 60 * 1000, // 10 giờ
       path: "/", // Cookie có hiệu lực cho toàn bộ domain
     });
@@ -73,7 +74,7 @@ const verifyEmail = async (req, res) => {
     user.is_verified = true;
     await user.save();
 
-    return res.redirect("http://localhost:5173/login");
+    return res.redirect(`${process.env.CLIENT_URL}/login`);
   } catch (error) {
     return res.status(400).json({ message: "Invalid or expired token" });
   }
