@@ -2,15 +2,14 @@ const jwt = require("../config/jwt");
 
 const authMiddleware = (req, res, next) => {
   try {
-    const authHeader = req.header("Authorization");
+    // Lấy token từ cookie thay vì header
+    const token = req.cookies.accessToken;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!token) {
       return res
         .status(401)
         .json({ message: "Unauthorized - No token provided" });
     }
-
-    const token = authHeader.split(" ")[1];
 
     let decoded;
     try {
@@ -29,7 +28,10 @@ const authMiddleware = (req, res, next) => {
     }
 
     req.user = decoded;
-    
+
+    // Thêm log trong authMiddleware
+    console.log("Token received:", token);
+    console.log("Decoded user:", decoded);
 
     next();
   } catch (error) {

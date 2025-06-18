@@ -2,7 +2,9 @@
 
 require("dotenv").config();
 const { Sequelize } = require("sequelize");
-
+const config = require("../config/config")[
+  process.env.NODE_ENV || "development"
+];
 
 // 🛠 Khởi tạo Sequelize từ file config/database.js
 const sequelize = require("../config/database");

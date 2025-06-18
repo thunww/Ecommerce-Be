@@ -60,6 +60,7 @@ class CouponService {
         return coupon;
     }
 
+    
     async createCoupon(data) {
         const exists = await Coupon.findOne({ where: { code: data.code } });
         if (exists) throw new Error('Mã giảm giá đã tồn tại');

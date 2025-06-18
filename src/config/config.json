@@ -6,18 +6,12 @@
     "host": "",
     "dialect": "mysql"
   },
-  "test": {
-    "username": "root",
-    "password": null,
-    "database": "database_test",
-    "host": "",
-    "dialect": "mysql"
-  },
   "production": {
-    "username": "freedb_annguyenax",
-    "password": "sy@nWcfkPVe9Z3*",
-    "database": "freedb_DBWeb",
-    "host": "sql.freedb.tech",
+    "username": "root",
+    "password": "LmUEXdlVFmmZGbCZokpCjGGTReZqtZTw",
+    "database": "railway",
+    "host": "tramway.proxy.rlwy.net",
+    "port": 55930,
     "dialect": "mysql"
   }
 }
