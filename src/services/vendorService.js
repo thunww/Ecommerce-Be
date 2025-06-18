@@ -465,11 +465,11 @@ const getOrdersWithFilter = async (
       // Tính giá item nếu có đủ dữ liệu
       item_total_price:
         item.orderItems?.productVariant?.price != null &&
-        item.orderItems?.quantity != null &&
-        item.orderItems?.product?.discount != null
+          item.orderItems?.quantity != null &&
+          item.orderItems?.product?.discount != null
           ? parseFloat(item.orderItems.productVariant.price) *
-            parseInt(item.orderItems.quantity, 10) *
-            (1 - (parseFloat(item.orderItems.product.discount) || 0) / 100)
+          parseInt(item.orderItems.quantity, 10) *
+          (1 - (parseFloat(item.orderItems.product.discount) || 0) / 100)
           : 0, // Hoặc null, tùy logic
 
       // Truy cập dữ liệu từ Order
@@ -497,8 +497,8 @@ const getOrdersWithFilter = async (
       payment_method: item.Order?.payment_method || "cod",
       order_date: item.Order?.created_at
         ? moment(item.Order.created_at)
-            .tz("Asia/Ho_Chi_Minh")
-            .format("YYYY-MM-DD HH:mm:ss")
+          .tz("Asia/Ho_Chi_Minh")
+          .format("YYYY-MM-DD HH:mm:ss")
         : "", // Ngày tạo Order
       note: item.Order?.note || null,
     }));
@@ -1077,9 +1077,9 @@ const getShopProducts = async (
           createdAt: product.reviews.created_at,
           user: product.reviews.user
             ? {
-                username: product.reviews.user.username,
-                profile_picture: product.reviews.user.profile_picture,
-              }
+              username: product.reviews.user.username,
+              profile_picture: product.reviews.user.profile_picture,
+            }
             : null,
           productId: productId,
           productName: product.product_name,
@@ -1105,9 +1105,9 @@ const getShopProducts = async (
           sold: product.sold,
           category: product.Category
             ? {
-                id: product.Category.category_id,
-                name: product.Category.category_name,
-              }
+              id: product.Category.category_id,
+              name: product.Category.category_name,
+            }
             : null,
           variants: [],
           images: {
@@ -1271,9 +1271,9 @@ const getShopProducts = async (
           sold: product.sold,
           category: product.Category
             ? {
-                id: product.Category.category_id,
-                name: product.Category.category_name,
-              }
+              id: product.Category.category_id,
+              name: product.Category.category_name,
+            }
             : null,
           variants: [],
           images: {
@@ -1427,10 +1427,10 @@ const updateOrderStatus = async (userId, subOrderId, newStatus) => {
       "Found product:",
       product
         ? {
-            product_id: product.product_id,
-            shop_id: product.shop_id,
-            status: product.status,
-          }
+          product_id: product.product_id,
+          shop_id: product.shop_id,
+          status: product.status,
+        }
         : null
     );
 
@@ -1447,9 +1447,9 @@ const updateOrderStatus = async (userId, subOrderId, newStatus) => {
       "Found shop:",
       shop
         ? {
-            shop_id: shop.shop_id,
-            owner_id: shop.owner_id,
-          }
+          shop_id: shop.shop_id,
+          owner_id: shop.owner_id,
+        }
         : null
     );
 
@@ -1531,10 +1531,10 @@ const processProduct = async (userId, productId) => {
       "Found product:",
       product
         ? {
-            product_id: product.product_id,
-            shop_id: product.shop_id,
-            status: product.status,
-          }
+          product_id: product.product_id,
+          shop_id: product.shop_id,
+          status: product.status,
+        }
         : null
     );
 
@@ -1551,9 +1551,9 @@ const processProduct = async (userId, productId) => {
       "Found shop:",
       shop
         ? {
-            shop_id: shop.shop_id,
-            owner_id: shop.owner_id,
-          }
+          shop_id: shop.shop_id,
+          owner_id: shop.owner_id,
+        }
         : null
     );
 
@@ -1659,9 +1659,8 @@ const updateSubordersStatusToProcessing = async (subOrderIds) => {
         if (variant.stock < orderItem.quantity) {
           return {
             success: false,
-            message: `Không đủ hàng cho sản phẩm ${orderItem.product_name} (${
-              variant.color || ""
-            } ${variant.size || ""})`,
+            message: `Không đủ hàng cho sản phẩm ${orderItem.product_name} (${variant.color || ""
+              } ${variant.size || ""})`,
           };
         }
       }
@@ -2008,7 +2007,7 @@ const getSubordersWithOrderItemsPaginated = async (
         },
         {
           model: Order,
-          as: "Order",
+          as: "order",
           attributes: [
             "created_at",
             "note",
@@ -2047,7 +2046,7 @@ const getSubordersWithOrderItemsPaginated = async (
           ],
         },
       ],
-      order: [[{ model: Order, as: "Order" }, "created_at", "DESC"]],
+      order: [[{ model: Order, as: "order" }, "created_at", "DESC"]],
       nest: true,
       raw: true,
     });
@@ -2519,11 +2518,14 @@ const registerVendor = async (userId, shopData, uploadedImages) => {
     });
 
     // Update role từ customer lên vendor_pending
+
     // Tạo role mới cho user
     await UserRole.create({
       user_id: userId,
       role_id: 4, // ID của role vendor_pending
     });
+
+
 
     return {
       shop_id: newShop.shop_id,

@@ -8,7 +8,7 @@ const {
   updateAddress,
   deleteAddress,
   setDefaultAddress,
-} = require("../controllers/AddressController");
+} = require("../controllers/addressController");
 
 // Áp dụng authMiddleware cho tất cả routes
 router.use(authMiddleware);
