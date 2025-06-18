@@ -188,6 +188,7 @@ module.exports = (db) => {
   ProductReview.belongsTo(Product, {
     foreignKey: "product_id",
     onDelete: "CASCADE",
+    as: "product",
   });
 
   // Quan hệ User - ProductReview (1-N)
