@@ -40,7 +40,7 @@ const handleLoginUser = async (req, res) => {
     // Set cookie với các options bảo mật
     res.cookie("accessToken", token, {
       httpOnly: true, // Ngăn JavaScript truy cập cookie
-      secure: process.env.NODE_ENV === "production", // Chỉ gửi cookie qua HTTPS trong môi trường production
+      secure: true, //process.env.NODE_ENV === "production", // Chỉ gửi cookie qua HTTPS trong môi trường production
       sameSite: "lax", // Thay đổi từ "strict" sang "lax"
       maxAge: 10 * 60 * 60 * 1000, // 10 giờ
       path: "/", // Cookie có hiệu lực cho toàn bộ domain
