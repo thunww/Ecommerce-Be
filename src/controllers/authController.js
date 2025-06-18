@@ -7,6 +7,7 @@ const {
 } = require("../services/authService");
 const { verifyToken } = require("../config/jwt");
 const { generateToken } = require("../config/jwt");
+require("dotenv").config();
 
 const handleregisterUser = async (req, res) => {
   try {
@@ -60,7 +61,7 @@ const verifyEmail = async (req, res) => {
     user.is_verified = true;
     await user.save();
 
-    return res.redirect("http://localhost:5173/login");
+    return res.redirect(`${process.env.CLIENT_URL}/login`);
   } catch (error) {
     return res.status(400).json({ message: "Invalid or expired token" });
   }
