@@ -3,21 +3,15 @@
     "username": "root",
     "password": "root",
     "database": "DBWeb",
-    "host": "127.0.0.1",
-    "dialect": "mysql"
-  },
-  "test": {
-    "username": "root",
-    "password": null,
-    "database": "database_test",
-    "host": "127.0.0.1",
+    "host": "",
     "dialect": "mysql"
   },
   "production": {
     "username": "root",
-    "password": null,
-    "database": "database_production",
-    "host": "127.0.0.1",
+    "password": "LmUEXdlVFmmZGbCZokpCjGGTReZqtZTw",
+    "database": "railway",
+    "host": "tramway.proxy.rlwy.net",
+    "port": 55930,
     "dialect": "mysql"
   }
 }
