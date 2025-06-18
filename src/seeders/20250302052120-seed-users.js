@@ -1,9 +1,13 @@
-const bcrypt = require("bcrypt");
+const crypto = require("crypto");
+
+function hashSHA256(password) {
+  return crypto.createHash("sha256").update(password).digest("hex");
+}
 
 module.exports = {
   up: async (queryInterface) => {
-    const hashedPassword = await bcrypt.hash("password123", 5);
-
+    const hashedPassword = hashSHA256("password123");
+    const adminPassword = hashSHA256("admin");
     await queryInterface.bulkInsert("Users", [
       {
         user_id: 1,
@@ -40,7 +44,7 @@ module.exports = {
         first_name: "Admin",
         last_name: "User",
         username: "admin",
-        password: await bcrypt.hash("admin", 5),
+        password: adminPassword,
         email: "admin@example.com",
         phone: "000000000",
         gender: "male",

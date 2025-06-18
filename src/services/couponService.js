@@ -1,5 +1,5 @@
-const { Coupon, Shop, Order, UserCoupon, User } = require('../models');
-const { Op } = require('sequelize');
+const { Coupon, Shop, Order, UserCoupon, User } = require("../models");
+const { Op } = require("sequelize");
 
 class CouponService {
     // Lấy tất cả các mã giảm giá với các bộ lọc
@@ -15,16 +15,25 @@ class CouponService {
         const coupons = await Coupon.findAll({
             where,
             attributes: [
-                'coupon_id', 'code', 'discount_percent', 'max_discount_amount',
-                'min_order_value', 'start_date', 'end_date', 'status',
-                'created_at', 'updated_at'
+                "coupon_id",
+                "code",
+                "discount_percent",
+                "max_discount_amount",
+                "min_order_value",
+                "start_date",
+                "end_date",
+                "status",
+                "created_at",
+                "updated_at",
             ],
-            include: [{
-                model: Shop,
-                as: 'shop',
-                attributes: ['shop_id', 'shop_name']
-            }],
-            order: [['created_at', 'DESC']]
+            include: [
+                {
+                    model: Shop,
+                    as: "shop",
+                    attributes: ["shop_id", "shop_name"],
+                },
+            ],
+            order: [["created_at", "DESC"]],
         });
 
         return coupons;
@@ -32,29 +41,32 @@ class CouponService {
 
     async getCouponById(coupon_id) {
         const coupon = await Coupon.findByPk(coupon_id);
-        if (!coupon) throw new Error('Mã giảm giá không tồn tại');
+        if (!coupon) throw new Error("Mã giảm giá không tồn tại");
         return coupon;
     }
 
     async getCouponByCode(code) {
         const coupon = await Coupon.findOne({
             where: { code },
-            include: [{
-                model: Shop,
-                as: 'shop',
-                attributes: ['shop_id', 'shop_name', 'logo']
-            }]
+            include: [
+                {
+                    model: Shop,
+                    as: "shop",
+                    attributes: ["shop_id", "shop_name", "logo"],
+                },
+            ],
         });
-        if (!coupon) throw new Error('Mã giảm giá không tồn tại');
+        if (!coupon) throw new Error("Mã giảm giá không tồn tại");
         return coupon;
     }
 
+    
     async createCoupon(data) {
         const exists = await Coupon.findOne({ where: { code: data.code } });
         if (exists) throw new Error('Mã giảm giá đã tồn tại');
 
-        if (data.status && !['active', 'inactive'].includes(data.status)) {
-            throw new Error('Trạng thái mã giảm giá không hợp lệ');
+        if (data.status && !["active", "inactive"].includes(data.status)) {
+            throw new Error("Trạng thái mã giảm giá không hợp lệ");
         }
 
         const coupon = await Coupon.create({
@@ -65,7 +77,7 @@ class CouponService {
             start_date: data.start_date,
             end_date: data.end_date,
             shop_id: data.shop_id || null,
-            status: data.status || 'active'
+            status: data.status || "active",
         });
 
         return this.getCouponById(coupon.coupon_id);
@@ -76,11 +88,11 @@ class CouponService {
 
         if (data.code && data.code !== coupon.code) {
             const exists = await Coupon.findOne({ where: { code: data.code } });
-            if (exists) throw new Error('Mã giảm giá đã tồn tại');
+            if (exists) throw new Error("Mã giảm giá đã tồn tại");
         }
 
-        if (data.status && !['active', 'inactive'].includes(data.status)) {
-            throw new Error('Trạng thái mã giảm giá không hợp lệ');
+        if (data.status && !["active", "inactive"].includes(data.status)) {
+            throw new Error("Trạng thái mã giảm giá không hợp lệ");
         }
 
         await coupon.update(data);
@@ -92,43 +104,50 @@ class CouponService {
         const usedCount = await UserCoupon.count({
             where: {
                 coupon_id,
-                used_at: { [Op.not]: null }
-            }
+                used_at: { [Op.not]: null },
+            },
         });
 
-        if (usedCount > 0) throw new Error('Không thể xóa mã giảm giá đã được sử dụng');
+        if (usedCount > 0)
+            throw new Error("Không thể xóa mã giảm giá đã được sử dụng");
 
         await UserCoupon.destroy({ where: { coupon_id } });
         await coupon.destroy();
 
-        return { message: 'Xóa mã giảm giá thành công' };
+        return { message: "Xóa mã giảm giá thành công" };
     }
 
     async validateCoupon(code, user_id, total_amount) {
         const coupon = await this.getCouponByCode(code);
 
         const now = new Date();
-        if (coupon.status !== 'active') throw new Error('Mã giảm giá không khả dụng');
+        if (coupon.status !== "active")
+            throw new Error("Mã giảm giá không khả dụng");
         if (now < coupon.start_date || now > coupon.end_date) {
-            throw new Error('Mã giảm giá không còn hiệu lực');
+            throw new Error("Mã giảm giá không còn hiệu lực");
         }
 
         if (coupon.min_order_value && total_amount < coupon.min_order_value) {
-            throw new Error(`Đơn hàng tối thiểu ${coupon.min_order_value}đ để áp dụng mã`);
+            throw new Error(
+                `Đơn hàng tối thiểu ${coupon.min_order_value}đ để áp dụng mã`
+            );
         }
 
         const alreadyUsed = await UserCoupon.findOne({
             where: {
                 user_id,
                 coupon_id: coupon.coupon_id,
-                used_at: { [Op.not]: null }
-            }
+                used_at: { [Op.not]: null },
+            },
         });
 
-        if (alreadyUsed) throw new Error('Bạn đã sử dụng mã này rồi');
+        if (alreadyUsed) throw new Error("Bạn đã sử dụng mã này rồi");
 
         let discount_amount = (total_amount * coupon.discount_percent) / 100;
-        if (coupon.max_discount_amount && discount_amount > coupon.max_discount_amount) {
+        if (
+            coupon.max_discount_amount &&
+            discount_amount > coupon.max_discount_amount
+        ) {
             discount_amount = coupon.max_discount_amount;
         }
 
@@ -138,16 +157,16 @@ class CouponService {
             discount_percent: coupon.discount_percent,
             max_discount_amount: coupon.max_discount_amount,
             discount_amount,
-            final_amount: total_amount - discount_amount
+            final_amount: total_amount - discount_amount,
         };
     }
 
     async applyCouponToOrder(order_id, coupon_code, user_id) {
         const order = await Order.findByPk(order_id);
-        if (!order) throw new Error('Đơn hàng không tồn tại');
+        if (!order) throw new Error("Đơn hàng không tồn tại");
 
         if (order.user_id !== user_id) {
-            throw new Error('Bạn không có quyền áp dụng mã cho đơn hàng này');
+            throw new Error("Bạn không có quyền áp dụng mã cho đơn hàng này");
         }
 
         const coupon = await this.getCouponByCode(coupon_code);
@@ -155,12 +174,14 @@ class CouponService {
 
         // Kiểm tra thời gian hiệu lực
         if (now < coupon.start_date || now > coupon.end_date) {
-            throw new Error('Mã giảm giá không còn hiệu lực');
+            throw new Error("Mã giảm giá không còn hiệu lực");
         }
 
         // Kiểm tra điều kiện giá trị đơn hàng tối thiểu
         if (coupon.min_order_value && order.total_amount < coupon.min_order_value) {
-            throw new Error(`Cần đơn hàng tối thiểu ${coupon.min_order_value}đ để dùng mã này`);
+            throw new Error(
+                `Cần đơn hàng tối thiểu ${coupon.min_order_value}đ để dùng mã này`
+            );
         }
 
         // Kiểm tra người dùng đã sử dụng mã chưa
@@ -168,12 +189,12 @@ class CouponService {
             where: {
                 user_id,
                 coupon_id: coupon.coupon_id,
-                used_at: { [Op.not]: null }
-            }
+                used_at: { [Op.not]: null },
+            },
         });
 
         if (userUsed) {
-            throw new Error('Bạn đã sử dụng mã giảm giá này');
+            throw new Error("Bạn đã sử dụng mã giảm giá này");
         }
 
         // Tính giảm giá
@@ -187,7 +208,7 @@ class CouponService {
         // Lưu UserCoupon nếu chưa tồn tại
         const [userCoupon] = await UserCoupon.findOrCreate({
             where: { user_id, coupon_id: coupon.coupon_id },
-            defaults: { user_id, coupon_id: coupon.coupon_id }
+            defaults: { user_id, coupon_id: coupon.coupon_id },
         });
 
         // Đánh dấu đã sử dụng
@@ -197,34 +218,41 @@ class CouponService {
         await order.update({
             coupon_id: coupon.coupon_id,
             discount_amount: discount,
-            final_amount: final_amount
+            final_amount: final_amount,
         });
 
         return {
             order_id: order.order_id,
             coupon: {
                 code: coupon.code,
-                discount_type: 'percentage',
+                discount_type: "percentage",
                 discount_value: coupon.discount_percent,
                 max_discount: coupon.max_discount_amount,
             },
             discount,
-            final_amount
+            final_amount,
         };
     }
-
 
     async getUserCoupons(user_id) {
         const list = await UserCoupon.findAll({
             where: { user_id },
-            include: [{
-                model: Coupon,
-                attributes: [
-                    'coupon_id', 'code', 'discount_percent', 'max_discount_amount',
-                    'min_order_value', 'start_date', 'end_date', 'status'
-                ]
-            }],
-            order: [['created_at', 'DESC']]
+            include: [
+                {
+                    model: Coupon,
+                    attributes: [
+                        "coupon_id",
+                        "code",
+                        "discount_percent",
+                        "max_discount_amount",
+                        "min_order_value",
+                        "start_date",
+                        "end_date",
+                        "status",
+                    ],
+                },
+            ],
+            order: [["created_at", "DESC"]],
         });
         return list;
     }
@@ -233,14 +261,14 @@ class CouponService {
         await this.getCouponById(coupon_id);
 
         const exists = await UserCoupon.findOne({ where: { user_id, coupon_id } });
-        if (exists) throw new Error('Bạn đã lưu mã giảm giá này rồi');
+        if (exists) throw new Error("Bạn đã lưu mã giảm giá này rồi");
 
         const userCoupon = await UserCoupon.create({ user_id, coupon_id });
         return {
             user_coupon_id: userCoupon.user_coupon_id,
             user_id,
             coupon_id,
-            created_at: userCoupon.created_at
+            created_at: userCoupon.created_at,
         };
     }
 

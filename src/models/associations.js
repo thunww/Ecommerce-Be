@@ -117,7 +117,10 @@ module.exports = (db) => {
     onDelete: "CASCADE",
     as: "subOrders",
   });
-  SubOrder.belongsTo(Order, { foreignKey: "order_id", onDelete: "CASCADE" });
+  SubOrder.belongsTo(Order, {
+    foreignKey: "order_id",
+    onDelete: "CASCADE",
+  });
 
   // Quan hệ SubOrder - OrderItem (1-N)
   SubOrder.hasMany(OrderItem, {
@@ -185,6 +188,7 @@ module.exports = (db) => {
   ProductReview.belongsTo(Product, {
     foreignKey: "product_id",
     onDelete: "CASCADE",
+    as: "product",
   });
 
   // Quan hệ User - ProductReview (1-N)

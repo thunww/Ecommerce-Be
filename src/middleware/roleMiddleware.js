@@ -1,6 +1,8 @@
 const roleMiddleware = (roles) => {
   return (req, res, next) => {
+    console.log(req.user)
     if (!req.user || !req.user.roles) {
+      
       return res.status(403).json({
         success: false,
         message: 'Access denied. No roles found.'

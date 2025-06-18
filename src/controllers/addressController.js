@@ -1,4 +1,4 @@
-const AddressService = require("../services/AddressService");
+const AddressService = require("../services/addressService");
 
 const getAllAddressesById = async (req, res) => {
   try {

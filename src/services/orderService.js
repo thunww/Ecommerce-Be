@@ -14,6 +14,8 @@ const {
 const couponService = require("./couponService");
 const { Op } = require("sequelize");
 const paymentService = require("./paymentService");
+const shippingService = require("./shippingService");
+
 class OrderService {
   async createOrder(orderData) {
     console.log(
@@ -120,6 +122,9 @@ class OrderService {
       }
 
       // Tạo từng SubOrder và các OrderItem chi tiết
+      let totalCalculatedShippingFee = 0;
+      let totalCalculatedPrice = 0;
+
       for (const [shopId, items] of Object.entries(subOrderGroups)) {
         const subTotal = items.reduce((sum, item) => {
           const price = parseFloat(item.price);
@@ -127,13 +132,30 @@ class OrderService {
           return sum + (price - discount) * item.quantity;
         }, 0);
 
+        // Tính phí ship động cho từng subOrder
+        // Lấy thông tin sản phẩm cho từng item
+        const itemsWithProduct = await Promise.all(
+          items.map(async (item) => {
+            // Lấy thông tin sản phẩm (bao gồm trọng lượng)
+            const product = await Product.findByPk(item.product_id);
+            return { ...item, product };
+          })
+        );
+        const shippingResult = await shippingService.calculateShippingFee({
+          order_items: itemsWithProduct,
+        });
+        const shipping_fee = shippingResult.shippingFee;
+
         const subOrder = await SubOrder.create({
           order_id: order.order_id,
           shop_id: parseInt(shopId),
-          total_price: subTotal,
-          shipping_fee: 0,
+          total_price: subTotal + shipping_fee,
+          shipping_fee: shipping_fee,
           status: "pending",
         });
+
+        totalCalculatedShippingFee += shipping_fee;
+        totalCalculatedPrice += subTotal;
 
         const subOrderItems = items.map((item) => {
           const quantity = item.quantity;
@@ -157,6 +179,12 @@ class OrderService {
         await OrderItem.bulkCreate(subOrderItems);
       }
 
+      // Cập nhật Order chính với tổng phí ship và tổng giá đã tính
+      await order.update({
+        total_price: totalCalculatedPrice + totalCalculatedShippingFee,
+        shipping_fee: totalCalculatedShippingFee,
+      });
+
       console.log("✅ Đã tạo xong các SubOrder và OrderItem đầy đủ");
       let paymentResult = null;
       if (payment_method === "vnpay") {
@@ -170,7 +198,7 @@ class OrderService {
       return {
         message: "Đặt hàng thành công",
         order,
-        payment_url: paymentResult ? paymentResult.payment_url : null
+        payment_url: paymentResult ? paymentResult.payment_url : null,
       };
     } catch (error) {
       console.error("❌ Lỗi khi tạo đơn hàng:", error);
@@ -341,39 +369,52 @@ class OrderService {
     });
   }
 
-  async cancelOrder(order_id, user_id) {
+  async cancelSubOrder(sub_order_id, user_id) {
     try {
-      const order = await Order.findOne({
-        where: {
-          order_id,
-          user_id,
-        },
-        include: [{ model: SubOrder, as: "subOrders" }],
+      // Lấy subOrder theo ID và kiểm tra quyền user
+      const subOrder = await SubOrder.findOne({
+        where: { sub_order_id },
+        include: [
+          {
+            model: Order,
+            where: { user_id },
+          },
+        ],
       });
 
-      if (!order) {
-        throw new Error("Đơn hàng không tồn tại hoặc không thuộc về bạn");
+      if (!subOrder) {
+        throw new Error("SubOrder không tồn tại hoặc không thuộc về bạn");
       }
 
-      if (order.status !== "pending") {
-        throw new Error("Chỉ có thể huỷ đơn hàng khi đang chờ xử lý (pending)");
+      if (subOrder.status !== "pending") {
+        throw new Error("Chỉ có thể huỷ subOrder khi đang chờ xử lý");
       }
 
-      // Cập nhật trạng thái huỷ
-      await order.update({ status: "cancelled" });
+      // Huỷ subOrder
+      await subOrder.update({ status: "cancelled" });
 
-      // Cập nhật trạng thái huỷ cho các subOrder liên quan
-      await Promise.all(
-        order.subOrders.map((sub) => sub.update({ status: "cancelled" }))
-      );
+      // Kiểm tra tất cả subOrder còn lại của đơn hàng
+      const allSubOrders = await SubOrder.findAll({
+        where: { order_id: subOrder.order_id },
+      });
+
+      const allCancelled = allSubOrders.every((s) => s.status === "cancelled");
+
+      if (allCancelled) {
+        // Cập nhật trạng thái của order (nếu tất cả subOrders đều bị huỷ)
+        await Order.update(
+          { status: "cancelled" },
+          { where: { order_id: subOrder.order_id } }
+        );
+      }
 
       return {
-        message: "Huỷ đơn hàng thành công",
-        order_id: order.order_id,
+        message: "Huỷ subOrder thành công",
+        sub_order_id: subOrder.sub_order_id,
       };
     } catch (err) {
-      console.error("Lỗi huỷ đơn:", err.message);
-      throw err;
+      console.error("Lỗi huỷ subOrder:", err.message);
+      throw new Error(`Không thể huỷ subOrder: ${err.message}`);
     }
   }
 }
