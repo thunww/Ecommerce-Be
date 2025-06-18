@@ -3,21 +3,21 @@
     "username": "root",
     "password": "root",
     "database": "DBWeb",
-    "host": "127.0.0.1",
+    "host": "",
     "dialect": "mysql"
   },
   "test": {
     "username": "root",
     "password": null,
     "database": "database_test",
-    "host": "127.0.0.1",
+    "host": "",
     "dialect": "mysql"
   },
   "production": {
-    "username": "root",
-    "password": null,
-    "database": "database_production",
-    "host": "127.0.0.1",
+    "username": "freedb_annguyenax",
+    "password": "sy@nWcfkPVe9Z3*",
+    "database": "freedb_DBWeb",
+    "host": "sql.freedb.tech",
     "dialect": "mysql"
   }
 }
