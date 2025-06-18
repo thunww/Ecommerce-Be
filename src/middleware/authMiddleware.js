@@ -29,9 +29,7 @@ const authMiddleware = (req, res, next) => {
 
     req.user = decoded;
 
-    // Thêm log trong authMiddleware
-    console.log("Token received:", token);
-    console.log("Decoded user:", decoded);
+    
 
     next();
   } catch (error) {

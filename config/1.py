@@ -10,11 +10,14 @@ expiration_time = current_time + 3600  # 1 hour from now
 
 # Payload similar to the provided token
 payload = {
-    "user_id": 6,
-    "email": "charlie@example.com",
-    "roles": ["admin","vendor"],  # Modified to include only admin role
-    "iat": current_time,
-    "exp": expiration_time
+  "user_id": 20,
+  "email": "trandongbnn10@gmail.com",
+  "roles": [
+    "admin",
+    "customer"
+  ],
+  "iat": 1750218186,
+  "exp": 1750254186
 }
 
 # Header
