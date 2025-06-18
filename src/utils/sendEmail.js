@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-
+require("dotenv").config();
 const sendVerificationEmail = async (email, token) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -9,7 +9,7 @@ const sendVerificationEmail = async (email, token) => {
     },
   });
 
-  const verificationUrl = `http://localhost:8080/api/v1/auth/verify-email?token=${token}`;
+  const verificationUrl = `${process.env.SERVER_URL}/api/v1/auth/verify-email?token=${token}`;
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -56,7 +56,7 @@ const sendResetPasswordEmail = async (email, token) => {
     },
   });
 
-  const resetUrl = `http://localhost:5173/reset-password?token=${token}`;
+  const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${token}`;
 
   // Thiết lập nội dung email với HTML và CSS
   const mailOptions = {
