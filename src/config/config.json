@@ -5,5 +5,13 @@
     "database": "DBWeb",
     "host": "127.0.0.1",
     "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": "LmUEXdlVFmmZGbCZokpCjGGTReZqtZTw",
+    "database": "railway",
+    "host": "tramway.proxy.rlwy.net",
+    "port": 55930,
+    "dialect": "mysql"
   }
 }
