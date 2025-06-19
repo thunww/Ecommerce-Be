@@ -2360,6 +2360,11 @@ const createProduct = async (userId, productData, variants) => {
         "Không tìm thấy shop liên kết với tài khoản của bạn hoặc bạn không có quyền thêm sản phẩm."
       );
     }
+    if (shop.status !== "active") {
+      throw new Error(
+        "Chưa được cấp phép để tạo sản phẩm"
+      );
+    }
 
     // Đảm bảo gán shop_id lấy được vào productData ngay sau khi tìm thấy shop
     productData.shop_id = shop.shop_id;
