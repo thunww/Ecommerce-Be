@@ -206,8 +206,10 @@ class PaymentService {
                 vnp_OrderType: ProductCode.Other,
                 vnp_ReturnUrl: `http://localhost:5173/payment`,
                 vnp_Locale: VnpLocale.VN,
-                vnp_CreateDate: dateFormat(new Date(), 'yyyyMMddHHmmss'),
-                vnp_ExpireDate: dateFormat(new Date(new Date().getTime() + 30 * 60 * 1000), 'yyyyMMddHHmmss'),
+                const now = new Date();
+                const vnTime = new Date(now.getTime() + 7 * 60 * 60 * 1000); // GMT+7
+                vnp_CreateDate: dateFormat(vnTime, 'yyyyMMddHHmmss'),
+                vnp_ExpireDate: dateFormat(new Date(vnTime.getTime() + 30 * 60 * 1000), 'yyyyMMddHHmmss'),,
             });
 
             return {
