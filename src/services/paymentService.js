@@ -198,19 +198,22 @@ class PaymentService {
             if (!order) {
                 throw new Error('Không tìm thấy đơn hàng');
             }
-            const vnpayResponse = await vnpay.buildPaymentUrl({
-                vnp_Amount: order.total_price,
-                vnp_IpAddr: '127.0.0.1',
-                vnp_TxnRef: `${order_id}`,
-                vnp_OrderInfo: `Thanh toán đơn hàng #${order_id}`,
-                vnp_OrderType: ProductCode.Other,
-                vnp_ReturnUrl: `http://localhost:5173/payment`,
-                vnp_Locale: VnpLocale.VN,
-                const now = new Date();
-                const vnTime = new Date(now.getTime() + 7 * 60 * 60 * 1000); // GMT+7
-                vnp_CreateDate: dateFormat(vnTime, 'yyyyMMddHHmmss'),
-                vnp_ExpireDate: dateFormat(new Date(vnTime.getTime() + 30 * 60 * 1000), 'yyyyMMddHHmmss'),,
-            });
+             const now = new Date();
+            const vnTime = new Date(now.getTime() + 7 * 60 * 60 * 1000); // GMT+7
+            const createDate = dateFormat(vnTime, 'yyyyMMddHHmmss');
+            const expireDate = dateFormat(new Date(vnTime.getTime() + 30 * 60 * 1000), 'yyyyMMddHHmmss');
+
+        const vnpayResponse = await vnpay.buildPaymentUrl({
+            vnp_Amount: order.total_price,
+            vnp_IpAddr: '127.0.0.1',
+            vnp_TxnRef: `${order_id}`,
+            vnp_OrderInfo: `Thanh toán đơn hàng #${order_id}`,
+            vnp_OrderType: ProductCode.Other,
+            vnp_ReturnUrl: `http://localhost:5173/payment`,
+            vnp_Locale: VnpLocale.VN,
+            vnp_CreateDate: createDate,
+            vnp_ExpireDate: expireDate,
+        });
 
             return {
                 message: 'Đơn hàng đã được tạo, vui lòng thanh toán',
