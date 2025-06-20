@@ -2,7 +2,7 @@ const { Payment, Order, SubOrder } = require('../models');
 const axios = require('axios');
 const crypto = require('crypto');
 const config = require('../config/config');
-
+require('dotenv').config();
 
 const { VNPay, ignoreLogger, ProductCode, VnpLocale, dateFormat } = require('vnpay');
 
@@ -209,7 +209,7 @@ class PaymentService {
             vnp_TxnRef: `${order_id}`,
             vnp_OrderInfo: `Thanh toán đơn hàng #${order_id}`,
             vnp_OrderType: ProductCode.Other,
-            vnp_ReturnUrl: `http://localhost:5173/payment`,
+            vnp_ReturnUrl: process.env.VNP_RETURN_URL,
             vnp_Locale: VnpLocale.VN,
             vnp_CreateDate: createDate,
             vnp_ExpireDate: expireDate,
